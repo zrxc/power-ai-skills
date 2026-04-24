@@ -1,7 +1,7 @@
 # Upgrade Advice Package
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-24T07:33:54.895Z`
+- generatedAt: `2026-04-24T07:37:55.727Z`
 - release level: `minor`
 - risk level: `medium`
 - blocked: false
@@ -39,7 +39,7 @@
 
 ## Notes
 
-- Impact task generated for maintainer follow-up: D:\webCode\Myd\power-ai-skills\manifest\impact-tasks\impact-task-20260424-153354.md
+- Impact task generated for maintainer follow-up: D:\webCode\Myd\power-ai-skills\manifest\impact-tasks\impact-task-20260424-153755.md
 - Recommended release level: minor; overall risk level: medium.
 - Current team policy default tool baseline: agents-md, codex, trae, cursor, claude-code.
 - Current team policy project profile count: 2.

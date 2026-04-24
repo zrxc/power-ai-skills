@@ -1,7 +1,7 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "recordedAt": "2026-04-24T07:33:55.009Z",
+  "recordedAt": "2026-04-24T07:37:55.879Z",
   "artifacts": {
     "skillsManifestPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\skills-manifest.json",
     "releaseNotesPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\release-notes-1.4.7.md",
@@ -14,8 +14,8 @@
     "governanceOperationsReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\governance-operations-report.json",
     "governanceOperationsMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\governance-operations-report.md",
     "automationReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\automation-report.json",
-    "notificationJsonPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260424-153354.json",
-    "notificationMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260424-153354.md",
+    "notificationJsonPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260424-153755.json",
+    "notificationMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260424-153755.md",
     "consumerCompatibilityMatrixPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\consumer-compatibility-matrix.json",
     "consumerCompatibilityMatrixMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\consumer-compatibility-matrix.md",
     "releaseGateReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\release-gate-report.json",
