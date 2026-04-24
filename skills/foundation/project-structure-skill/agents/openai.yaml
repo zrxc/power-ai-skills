@@ -1,0 +1,4 @@
+interface:
+  display_name: "项目结构规范"
+  short_description: "统一企业前端项目目录结构和模块职责"
+  default_prompt: "使用 $project-structure-skill 规范当前项目的目录结构。"

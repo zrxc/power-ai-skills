@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://power.example/schemas/template-registry.schema.json",
+  "title": "Power AI Skills Template Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "templates"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/template"
+      }
+    }
+  },
+  "$defs": {
+    "placeholderArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "output", "ownerTool", "placeholders"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerTool": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "placeholders": {
+          "$ref": "#/$defs/placeholderArray"
+        }
+      }
+    }
+  }
+}

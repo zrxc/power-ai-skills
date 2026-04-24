@@ -1,0 +1,30 @@
+stages:
+  - build
+  - skill-impact
+
+variables:
+  POWER_AI_SKILLS_REPO: "D:/webCode/Myd/power-ai-skills"
+  UPGRADE_CONSUMER_PROJECT: "D:/webCode/Myd/基础服务/powermonitor_front"
+
+upstream_build:
+  stage: build
+  script:
+    - echo "在这里执行上游仓库自己的 lint / test / build / publish 流程"
+
+upstream_skill_impact:
+  stage: skill-impact
+  script:
+    - corepack enable
+    - corepack prepare pnpm@10.28.2 --activate
+    - cd "$POWER_AI_SKILLS_REPO"
+    - pnpm install --frozen-lockfile
+    - node ./scripts/run-upgrade-automation.mjs --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --head "$CI_COMMIT_SHA" --repo "$CI_PROJECT_DIR" --consumer "$UPGRADE_CONSUMER_PROJECT"
+    - node ./scripts/generate-upgrade-payload.mjs
+  artifacts:
+    when: always
+    paths:
+      - manifest/changed-files.txt
+      - manifest/impact-report.json
+      - manifest/impact-tasks/
+      - manifest/automation-report.json
+      - manifest/notifications/

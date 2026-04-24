@@ -1,0 +1,1303 @@
+﻿# 升级路线图
+
+本文用于沉淀 `@power/power-ai-skills` 当前能力边界、后续升级方向与现有测试方案。
+
+当前路线图基于 `1.4.7` 版本代码现状制定，暂不包含 React / TSX 项目扫描扩展，后续如需扩展到非 Vue 技术栈，将单独开设专题方案。
+
+## 当前对齐状态
+
+这张表用于把最近讨论的 5 项统一映射到当前版本进度，方便后续持续对齐“哪些已经收口、哪些还在半程、哪些属于下一阶段”。
+
+| 事项 | 当前状态 | 当前落点 | 已落地范围 | 后续对齐点 |
+| --- | --- | --- | --- | --- |
+| 自动采集闭环标准化 | 已收口 | `1.2.0` - `1.2.6` 主链路已打通 | 已完成 `submit-auto-capture`、`queue-auto-capture-response`、`consume-auto-capture-response-inbox`、`consume-auto-capture-inbox`、`watch-auto-capture-inbox`，并统一了 terminal direct、response inbox bridge、host bridge 三种标准接法，形成 `AI reply -> 提取 -> 门禁 -> conversations 落盘` 闭环。 | 后续以 runtime 健康检查、wrapper 适配维护和文档补强为主，不再作为单独主线继续扩张。 |
+| 采集安全边界 | 半程 | 已有第一版边界治理，但还未完全平台化 | 已有 `.power-ai/capture-safety-policy.json`、`show-capture-safety-policy`、`validate-capture-safety-policy`、默认脱敏、scene / intent admission、retention、doctor 与 governance summary 联动。 | 继续补团队级统一策略、更细粒度敏感信息规则和更明确的 blocking / 审批联动；当前适合定义为“第一版已落地，尚未完全收口”。 |
+| proposal apply 扩展 | 半程 | `1.4.7 / P4-7` 到 `P5-5` 已完成第四阶段 | 已支持 `apply-evolution-proposal`、批量 review / apply、proposal aging、governance summary / upgrade summary / doctor / release gates 联动、applied draft follow-up 可见性、统一 `list-evolution-drafts` / `show-evolution-draft` 入口，以及 shared-skill / release-impact draft 的 handoff metadata、README / checklist scaffold。 | 目前 applied draft 已能被直接查看、直接 handoff，但仍停留在人工收口边界；后续若继续推进 proposal apply 主线，应评估更完整的 finalize / archive /跨阶段治理闭环，而不是越过边界直接自动注册 wrapper 或自动发版。 |
+| project-local 自动进化增强 | 半程 | `1.4.7 / P4-1` 到 `P4-4` 已完成骨架 | 已支持 `run-evolution-cycle`、`evolution-policy`、`generate-evolution-candidates`、`apply-evolution-actions`，并能在策略允许下自动刷新 `project-local` draft。 | 当前仍以 draft refresh 为边界，没有自动晋升到 `manual` / shared skill；后续重点是质量验证、治理策略细化和更稳的 promotion 边界。 |
+| 运营趋势视图 | 当前阶段 | `P5-6` 将作为当前活动阶段启动第一版趋势视图 | 已有 `generate-governance-summary` 与 `manifest/governance-operations-report.*` 两类快照，可看 backlog、SLA 和治理摘要。 | 当前应补跨版本 / 跨周期趋势对比，把 backlog aging、proposal apply 节奏、capture intake 健康度、治理吞吐做成趋势视图，而不只看单次快照。 |
+
+## 当前已支持的功能
+
+### 1. 项目初始化与单一真实源管理
+
+当前支持：
+
+- `init` 初始化项目，创建 `.power-ai/` 单一真实源目录
+- `sync` 同步公共 skills、shared、adapters、registry 与默认配置
+- `add-tool` / `remove-tool` 动态增删工具接入
+- `list-tools` / `show-defaults` 查看当前可用工具、preset、profile 与默认配置
+- `clean-reports` 清理 `.power-ai/reports/`
+- 通过 `selected-tools.json` 维护项目级实际启用工具集合
+- 支持 preset、profile、显式 tool 选择三种初始化方式
+
+核心价值：
+
+- 把消费者项目里的 AI 配置统一收敛到 `.power-ai/`
+- 降低多工具并存时的入口散落问题
+- 为后续 doctor、升级、治理提供稳定检查对象
+
+### 2. 项目扫描与 project-local skill 生成
+
+当前支持：
+
+- `scan-project`
+- `diff-project-scan`
+- `generate-project-local-skills`
+- `list-project-local-skills`
+- `promote-project-local-skill`
+
+当前扫描能力包括：
+
+- Vue SFC AST、template AST、script AST 分析
+- 页面模式识别
+- `pattern-review.json` 复核决策
+- `pattern-history.json` 历史快照
+- `pattern-diff.json` 扫描差异
+- `component-graph.json` 组件引用图
+- `component-propagation.json` 多跳传播结果
+- 生成 `.power-ai/skills/project-local/auto-generated/` 草案
+- 支持将草案晋升到 `project-local/manual/`
+
+核心价值：
+
+- 从“项目里已经存在的实现习惯”反推团队私有 skill
+- 让 AI 输出更贴近当前项目真实做法
+- 形成静态扫描驱动的项目知识沉淀
+
+### 3. Conversation Miner 会话沉淀
+
+当前支持：
+
+- `evaluate-session-capture`
+- `prepare-session-capture`
+- `confirm-session-capture`
+- `capture-session`
+- `analyze-patterns`
+- `generate-project-skill`
+- `generate-conversation-miner-strategy`
+
+当前能力包括：
+
+- 从结构化 summary 或 marked block 提取记录
+- 自动判定 `ask_capture` / `skip_irrelevant` / `skip_incomplete` / `skip_low_value` / `skip_duplicate` / `skip_already_covered`
+- 会话按日期沉淀到 `.power-ai/conversations/YYYY-MM-DD.json`
+- 从会话记录中聚合项目模式
+- 生成 conversation-driven project skill 草案
+- 输出会话评估报告与 conversation pattern 摘要
+- 按项目类型生成 `conversation-miner-config.json` 策略模板
+
+核心价值：
+
+- 让“AI 辅助开发过程”变成可复用的项目知识资产
+- 用真实对话行为补充静态扫描无法覆盖的项目习惯
+
+### 4. Auto Capture 与工具 wrapper 接入
+
+当前支持：
+
+- `submit-auto-capture`
+- `queue-auto-capture-response`
+- `consume-auto-capture-response-inbox`
+- `consume-auto-capture-inbox`
+- `watch-auto-capture-inbox`
+- `tool-capture-session`
+
+当前内置 wrapper / adapter 覆盖：
+
+- `codex`
+- `trae`
+- `cursor`
+- `claude-code`
+- `windsurf`
+- `gemini-cli`
+- `github-copilot`
+- `cline`
+- `aider`
+- `custom-tool`
+
+当前还支持：
+
+- host bridge example script
+- terminal capture example script
+- `custom-tool-capture.example.ps1`
+- `start-auto-capture-runtime.example.ps1`
+
+核心价值：
+
+- 降低不同 AI 工具接入成本
+- 统一 capture 协议和行为
+- 支撑 conversation-miner 自动化落地
+
+### 5. Wrapper Promotion 生命周期
+
+当前支持：
+
+- `scaffold-wrapper-promotion`
+- `review-wrapper-promotion`
+- `materialize-wrapper-promotion`
+- `apply-wrapper-promotion`
+- `finalize-wrapper-promotion`
+- `register-wrapper-promotion`
+- `archive-wrapper-promotion`
+- `restore-wrapper-promotion`
+- `list-wrapper-promotions`
+- `show-wrapper-promotion-timeline`
+- `generate-wrapper-promotion-audit`
+- `generate-wrapper-registry-governance`
+
+当前能力包括：
+
+- proposal 建模
+- 状态流转
+- 注册片段生成
+- 文档 scaffold 生成
+- 测试 scaffold 生成
+- 审计、筛选、排序、导出
+- 团队级 registry / proposal 治理视图
+- 归档与恢复
+
+核心价值：
+
+- 把“临时接入工具”升级为“正式支持工具”时的过程制度化
+- 降低新增 wrapper 时的人工改动和遗漏风险
+
+### 6. Doctor 与发布治理
+
+当前支持：
+
+- `doctor`
+- `release:prepare`
+- `check:release-consistency`
+- `verify:consumer`
+
+当前检查维度包括：
+
+- workspace
+- selection
+- entrypoints
+- conversation scaffolding
+- knowledge artifacts
+- release governance
+
+当前发布治理能力包括：
+
+- `version-record.json`
+- `release-notes-<version>.md`
+- `impact-report.json`
+- `upgrade-risk-report.json` / `upgrade-risk-report.md`
+- `automation-report.json`
+- `release-gate-report.json` / `release-gate-report.md`
+- notification payload
+- release artifact consistency 检查
+
+核心价值：
+
+- 为消费者项目和中心仓库分别提供健康度诊断
+- 降低升级、发版和回归时的不可见风险
+
+## 后续升级方向
+
+后续升级遵循两个原则：
+
+- 优先把现有能力做深做稳，不先扩技术栈
+- 优先提升治理、可维护性和规模化接入能力
+
+### 第一阶段：产品化现有能力
+
+目标：
+
+- 降低人工操作成本
+- 减少误用和重复劳动
+- 统一命令输出、报告和治理体验
+
+建议新增：
+
+- wrapper promotion dry-run 能力
+  - 在真正写入源码前预览将变更哪些文件、插入哪些片段
+- doctor 报告统一模板
+  - 输出统一 markdown / json 契约
+  - 便于 CI、人工审查、升级通知复用
+- project-local 技能增量更新模式
+  - 只更新变化草案，减少无效重写
+- conversation pattern 合并与归档能力
+  - 减少长期运行后 pattern 碎片化
+- scan-project 误报反馈闭环
+  - 让 pattern-review 不只是报告，还能反向影响后续扫描行为
+
+建议优先级：P0
+
+### 第二阶段：增强项目治理能力
+
+目标：
+
+- 提高多项目并行使用时的治理效率
+- 让项目扫描、会话沉淀、发布治理形成闭环
+
+建议新增：
+
+- 扫描结果风险分级
+  - 把 pattern 区分为高价值、待确认、低优先级
+- wrapper registry 的团队级治理视图
+  - 哪些 wrapper 已注册
+  - 哪些 proposal 长期停留在中间态
+  - 哪些 proposal 已可注册但未注册
+- conversation-miner 的项目策略模板
+  - 按项目类型生成默认 `conversation-miner-config.json`
+- 统一升级摘要生成
+  - 基于 impact report、doctor 结果、wrapper 审计结果输出一份团队可读升级摘要
+- 项目基线检查
+  - 比较当前项目与团队默认 preset / knowledge / adapters 的差距
+
+建议优先级：P1
+
+### 第三阶段：平台化发布与消费治理
+
+目标：
+
+- 从命令集演进为团队级治理平台
+- 让升级动作、消费验证和通知生成自动闭环
+
+建议新增：
+
+- 团队级策略中心
+  - 哪些工具允许启用
+  - 哪些 wrapper 只能试点使用
+  - 哪些 skills 必须随项目初始化
+- 升级风险分级
+  - 文档变更
+  - skill 内容变更
+  - adapter 行为变更
+  - wrapper 协议变更
+- 消费项目兼容矩阵增强
+  - 不同消费者模板、不同初始化策略、不同工具组合的验证结果
+- 自动升级建议包
+  - 已完成第一版：`pnpm upgrade:advice -- --automation-report manifest/automation-report.json`
+  - 当前会生成 `manifest/upgrade-advice-package.md/json`，沉淀消费者命令、维护者命令、人工检查项和阻断状态
+  - 当前 notification payload 与 `upgrade-summary` 会直接复用这份 advice package，输出更可读的升级摘要
+- CI 门禁增强
+  - wrapper proposal 未完成关键状态时阻断注册
+  - release artifacts 不一致时阻断发布
+
+建议优先级：P2
+
+#### P2-5 当前已完成
+
+- 团队级策略中心第一版已落地：
+  - 新增 `config/team-policy.json`
+  - 新增 `show-team-policy`
+  - 新增 `validate-team-policy`
+  - 新增 `check-team-policy-drift`
+- `sync` 现在会同步 `.power-ai/team-policy.json`，消费项目拥有可审计的策略快照。
+- `doctor` 已接入 `policy` 分组，覆盖策略快照存在性、快照一致性、allowed tools、required skills、默认工具基线覆盖、wrapper rollout 阶段提示。
+- `init` / `add-tool` 已开始消费 team policy，对 `allowedTools` 之外或 rollout 为 `disabled` 的工具做前置拦截；`pilot` / `compatible-only` 工具会保留 warning。
+- `projectProfiles` 已开始驱动真实初始化策略：`init --project-profile <name>` 会按画像默认 preset 生成工具集合，并把 `selectedProjectProfile` / `requiredSkills` 一起持久化到 `.power-ai/selected-tools.json`。
+- `init` / `show-defaults` 在未显式指定 `--project-profile` 时，已经开始根据工作区与 `scan-project` 画像信号自动推荐并应用团队画像。
+- `show-defaults --project-profile <name>` 会直接预览指定团队画像的 preset、工具集合与 required skills。
+- 已绑定 `selectedProjectProfile` 的项目，后续 `add-tool` 也会继续受该 profile 的 `allowedTools` 约束，避免增量绕开项目级策略边界。
+- `doctor`、`check-project-baseline` 与 `upgrade:advice` 已开始把“推荐 project profile 与已绑定画像是否漂移”纳入治理提醒链路。
+- `check:release-gates` 已接入 team policy governance gate，并默认继承 `teamPolicy.releasePolicies.enforceConsumerMatrix`。
+- `upgrade:advice` 已接入 team policy，自动补充 `check-team-policy-drift` / `validate-team-policy` 建议动作。
+- `sync` / `init` 现在会自动补齐 `.power-ai/governance/project-profile-decision.json` 与 `.power-ai/governance/project-profile-decision-history.json`，把 project profile recommendation 推进成可审计决策记录。
+- 新增 `show-project-profile-decision` 与 `review-project-profile`，当前支持 `accepted` / `rejected` / `deferred` 三种人工决策，以及 recommendation / selected profile 变化后的 `auto-recommended` 自动回退。
+- `check-team-policy-drift`、`doctor` 与 `check-project-baseline` 现在都会带出 `projectProfileDecision`、`decisionReason` 与 `nextReviewAt`，帮助团队区分“未处理漂移”和“已审阅但暂不迁移”。
+- `upgrade:advice` 现在会补充 `show-project-profile-decision --json` 建议动作，让消费者升级后可以直接查看当前画像决策记录。
+- 当前这一版已经把团队策略从“只读治理中心”推进到了“初始化 / 发布 / 建议包”联动；后续可以继续把它深入接进更多消费命令和项目画像自动识别链路。
+
+## 明确暂不纳入的内容
+
+当前路线图暂不纳入：
+
+- React / TSX 项目扫描
+- 非 Vue 技术栈的页面模式识别
+- 与 React 生态绑定的 preset / base skill
+
+原因：
+
+- 当前现有能力主战场仍是 Vue + 企业前端模板体系
+- 先把 Vue 侧扫描、conversation-miner、wrapper promotion 和 release governance 做深，更能提升现阶段交付效率
+- 非 Vue 技术栈扩展需要单独设计模式识别、知识资产结构和测试基线，适合在后续专题方案中推进
+
+## 建议的版本升级节奏
+
+### 近期两次迭代
+
+第 1 次迭代：
+
+- wrapper promotion dry-run
+  - 已完成第一版：`apply-wrapper-promotion --dry-run [--json]`
+  - 当前可预览源码改动、proposal/doc scaffold 写入路径以及 post-apply checklist 路径
+- doctor 报告模板统一
+  - 已完成第一版：`doctor` 自动生成统一 `markdown/json` 报告
+  - 当前会写出项目级 `.power-ai/reports/doctor-report.*` 与仓库级 `manifest/doctor-report.*`
+- project-local skill 增量更新
+  - 已完成第一版：`generate-project-local-skills` 默认走增量同步
+  - 当前会区分 `created / updated / unchanged / removed`，并自动清理不再命中的旧草案
+
+第 2 次迭代：
+
+- scan-project 误报反馈闭环
+  - 已完成第一版：`review-project-pattern --decision/--clear [--json]`
+  - 当前会维护 `.power-ai/analysis/pattern-feedback.json` 与 `.power-ai/reports/project-scan-feedback.md`
+  - 当前人工反馈会反向影响后续 `scan-project` 的 `pattern-review.json`，并直接影响 `generate-project-local-skills`
+- conversation pattern 合并 / 归档
+  - 已完成第一版：`merge-conversation-pattern` / `archive-conversation-pattern` / `restore-conversation-pattern`
+  - 当前会维护 `.power-ai/patterns/pattern-governance.json` 与 `conversation-pattern-governance.md`
+- 升级摘要生成
+  - 已完成第一版：`generate-upgrade-summary --json`
+  - 消费项目侧会输出 `.power-ai/reports/upgrade-summary.md/json`
+  - 仓库维护侧会输出 `manifest/upgrade-summary.md/json`，并汇总 doctor、wrapper audit、impact、automation、version record 与 notification payload
+
+### 中期两次迭代
+
+第 3 次迭代：
+
+- 项目基线检查
+  - 已完成第一版：`check-project-baseline --json`
+  - 消费项目侧会输出 `.power-ai/reports/project-baseline.md/json`
+  - 当前会比较团队默认 preset / tool selection、`.power-ai/skills` 知识目录、registry 快照、adapter 模板产物与 selected entrypoints
+- wrapper registry 治理视图
+  - 已完成第一版：`generate-wrapper-registry-governance --json`
+  - 当前会输出 `.power-ai/reports/wrapper-registry-governance.md/json`
+  - 当前会合并内置 capture wrapper registry 与 wrapper promotion proposal，标记 ready-for-registration、pending follow-ups 和 stale proposal
+- conversation-miner 项目策略模板
+  - 已完成第一版：`generate-conversation-miner-strategy --type enterprise-vue|strict-governance|exploration|manual-review [--dry-run] --json`
+  - 当前会生成 `.power-ai/conversation-miner-config.json`，并输出 `.power-ai/reports/conversation-miner-strategy.md/json`
+  - 当前支持企业 Vue 默认、严格治理、探索沉淀、人工复核四类项目策略
+
+第 4 次迭代：
+
+- 升级风险分级
+  - 已完成第一版：`pnpm upgrade:risk` 与 release automation 集成
+  - 当前会生成 `manifest/upgrade-risk-report.md/json`，并把风险等级、风险分类数接入 `automation-report.json`、notification payload、doctor release checks 与 `generate-upgrade-summary`
+- consumer compatibility matrix 增强
+  - 已完成第一版：`verify-consumer` 支持输出 `consumer-compatibility-matrix.md/json`
+  - 当前会沉淀场景数、通过/失败数、初始化策略、fixture / project 维度和 selected tools，并接入 `upgrade-summary` 与 release gate
+- 发布门禁增强
+  - 已完成第一版：`pnpm check:release-gates -- --require-consumer-matrix`
+  - 当前会统一校验 release artifact consistency、wrapper proposal governance 与 consumer compatibility matrix，并生成 `manifest/release-gate-report.md/json`
+  - 当前 `release:prepare`、`doctor` package-maintenance 模式与最终 `check:release-consistency -- --require-release-gate` 都会消费这份门禁报告
+
+## 现有功能测试方案
+
+### 1. 当前测试文件分布
+
+当前测试文件：
+
+- `tests/conversation-miner.test.mjs`
+- `tests/doctor.test.mjs`
+- `tests/governance-enhancements.test.mjs`
+- `tests/project-scan.test.mjs`
+- `tests/project-baseline.test.mjs`
+- `tests/release-governance.test.mjs`
+- `tests/rendering.test.mjs`
+- `tests/selection.test.mjs`
+- `tests/upgrade-summary.test.mjs`
+- `tests/verify-consumer.test.mjs`
+
+### 2. 当前测试覆盖重点
+
+`conversation-miner.test.mjs` 覆盖：
+
+- capture-session 端到端
+- evaluate / prepare / confirm 流程
+- auto-capture inbox / response inbox
+- 多工具 wrapper capture
+- host bridge example script
+- wrapper promotion 全生命周期
+- wrapper promotion audit / export
+
+`governance-enhancements.test.mjs` 覆盖：
+
+- wrapper registry 团队级治理视图
+- ready-for-registration proposal 识别
+- stale proposal 识别
+- conversation-miner 项目策略模板写入
+- conversation-miner 策略 dry-run 不改写配置
+
+`project-scan.test.mjs` 覆盖：
+
+- scan-project
+- diff-project-scan
+- component graph
+- component propagation
+- malformed vue 容错
+- project-local 草案生成与晋升
+
+`doctor.test.mjs` 覆盖：
+
+- single-source 健康检查
+- knowledge artifacts 缺失提示
+- conversation scaffolding 缺失提示
+- wrapper promotion follow-up / ready-for-registration 警告
+- release governance 检查
+
+`project-baseline.test.mjs` 覆盖：
+
+- 团队默认 preset 初始化后的项目基线检查
+- 显式裁剪工具集合时的 preset drift 报告
+- `.power-ai/reports/project-baseline.md/json` 报告落盘
+
+`selection.test.mjs` 覆盖：
+
+- preset / profile / tool 解析
+- positional 参数识别
+- project root 解析
+
+`release-governance.test.mjs` 覆盖：
+
+- release artifact refresh
+- consistency check
+- version record / notification drift
+
+`verify-consumer.test.mjs` 覆盖：
+
+- 消费项目 fixture 验证
+
+`rendering.test.mjs` 覆盖：
+
+- 模板渲染与 placeholder 校验
+
+`upgrade-summary.test.mjs` 覆盖：
+- 消费项目升级摘要生成
+- 仓库维护模式升级摘要生成
+
+### 3. 推荐测试分层
+
+#### 日常开发最小集
+
+```bash
+pnpm test
+```
+
+适用场景：
+
+- 普通逻辑改动
+- 小范围重构
+- 命令输出微调
+
+#### 功能改动标准集
+
+```bash
+pnpm test
+pnpm check:package
+pnpm check:docs
+pnpm validate
+```
+
+适用场景：
+
+- 增加命令参数
+- 调整工具入口
+- 修改技能、模板、输出格式
+
+#### 治理 / 发布 / 接入改动增强集
+
+```bash
+pnpm test
+pnpm check:package
+pnpm check:docs
+pnpm validate
+pnpm check:tooling-config
+pnpm check:component-knowledge
+pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-risk-report --require-automation-report --require-notification-payload
+node ./bin/power-ai-skills.mjs doctor
+```
+
+适用场景：
+
+- wrapper promotion 改动
+- doctor 改动
+- release governance 改动
+- tool registry / defaults / template registry 改动
+
+#### 发布前完整验收
+
+```bash
+pnpm release:prepare
+```
+
+适用场景：
+
+- 版本发布前
+- 中心仓库交付前
+
+### 4. 建议补强的测试点
+
+建议后续新增的测试方向：
+
+- wrapper promotion dry-run 快照测试
+- scan-project 误报抑制回归测试
+- conversation pattern 合并 / 归档测试
+- 大量会话记录下的性能回归测试
+- 损坏输入与异常中断恢复测试
+- `--json` 输出契约测试
+- pack 内容精确校验测试
+- doctor 报告模板快照测试
+
+## 升级验收建议
+
+每个新功能上线时，建议都按以下顺序验收：
+
+1. 单模块测试通过
+2. 全量测试通过
+3. `check:package`、`check:docs`、`validate` 通过
+4. 如涉及治理能力，补跑 `doctor`、`check:release-consistency`、`check:tooling-config`
+5. `npm pack --dry-run --json` 检查新增文件是否被正确收包
+
+## 结论
+
+当前项目已经具备以下四条主线能力：
+
+- 项目初始化与单一真实源治理
+- 项目扫描与 project-local skill 自动生成
+- conversation-miner 会话知识沉淀
+- wrapper promotion 与发布治理
+
+后续升级不应优先扩技术栈，而应优先把这四条主线做深做稳，尤其是：
+
+- 减少误报
+- 提高增量维护能力
+- 提高 wrapper 生命周期治理能力
+- 强化发布与消费侧的升级闭环
+
+在上述能力稳定后，再考虑单独规划非 Vue 技术栈扩展。
+
+## 后续治理执行清单（Trellis 参考版）
+
+本节用于承接后续治理演进，目标不是把当前项目改造成 Trellis 的开发工作流，而是吸收其中最有价值的治理骨架：
+
+- 上下文装配
+- 决策记录
+- 状态流转
+- 稳定知识与原始过程分层
+
+适用边界：
+
+- 继续围绕 `team policy`、`project profile`、`conversation-miner`、`promotion`、`doctor`、`release governance` 演进
+- 不引入开发者个人 `workspace/journal` 模型
+- 不新增一套通用 task 系统
+- 不让原始会话绕过 review 和 decision 直接进入正式资产
+
+### 总体开发顺序
+
+- [ ] `P2-6` 项目画像决策流
+- [x] `P2-7` 会话洞察决策账本
+- [x] `P2-8` promotion 全链路追溯
+- [x] `P2-9` 治理上下文快照
+- [x] `P2-10` 发布与消费闭环增强
+
+### 通用开发约束
+
+- [ ] 所有新增治理能力优先落在 `.power-ai/` 下的结构化 JSON 文件
+- [ ] 所有新增治理对象都必须有固定状态枚举，禁止自由文本驱动流程
+- [ ] 所有新增命令都必须支持 `--json`
+- [ ] 所有新增结果优先接入 `doctor`、`check-project-baseline`、`upgrade-advice`
+- [ ] 只有会影响发布判断时才接入 `release-gates`
+- [ ] 所有治理文件都要考虑旧项目无文件时的兼容行为
+- [ ] 新增字段时优先复用已有概念，不重复造同义字段
+
+### `P2-6` 项目画像决策流
+
+目标：
+把“推荐画像”与“已绑定画像”的差异，从 warning 升级为正式决策对象。
+
+建议新增产物：
+
+- [x] `.power-ai/governance/project-profile-decision.json`
+- [x] `.power-ai/governance/project-profile-decision-history.json`
+
+建议固定状态：
+
+- [x] `auto-recommended`
+- [x] `accepted`
+- [x] `rejected`
+- [x] `deferred`
+
+建议固定字段：
+
+- [x] `selectedProjectProfile`
+- [x] `recommendedProjectProfile`
+- [x] `decision`
+- [x] `decisionReason`
+- [x] `decisionSource`
+- [x] `decidedBy`
+- [x] `decidedAt`
+- [x] `sourceSignals`
+- [x] `nextReviewAt`
+
+开发清单：
+
+- [x] `sync` 自动补齐 governance 目录与 decision 文件骨架
+- [x] 新增 `review-project-profile`
+- [x] 支持 `review-project-profile --accept <profile>`
+- [x] 支持 `review-project-profile --reject --reason "..."`
+- [x] 支持 `review-project-profile --defer --reason "..." --next-review-at YYYY-MM-DD`
+- [x] 新增 `show-project-profile-decision --json`
+- [x] `doctor` 接入 project profile decision 状态
+- [x] `doctor` 对“已漂移但已 reject/defer”的情况降级为 warning
+- [x] `check-project-baseline` 输出推荐画像、已绑定画像与决策状态
+- [x] `upgrade-advice` 基于 decision 状态输出差异化动作建议
+- [x] 推荐画像变化后自动追加 history
+
+完成标准：
+
+- [x] 新项目执行 `sync` 后自动具备 decision 文件
+- [x] 漂移不再只是 warning，而是可查询、可解释、可复核
+- [x] `doctor`、`baseline`、`advice` 对同一项目给出一致结论
+
+### `P2-7` 会话洞察决策账本
+
+目标：
+让每条从 `conversation-miner` 提炼出的 pattern，都有状态、去向、理由和来源。
+
+建议新增产物：
+
+- [x] `.power-ai/governance/conversation-decisions.json`
+- [x] `.power-ai/governance/conversation-decision-history.json`
+
+建议固定状态：
+
+- [x] `detected`
+- [x] `review`
+- [x] `accepted`
+- [x] `rejected`
+- [x] `promoted`
+- [x] `archived`
+
+建议固定目标类型：
+
+- [x] `project-local-skill`
+- [x] `team-rule`
+- [x] `wrapper-proposal`
+- [x] `docs`
+- [x] `ignored`
+
+建议固定字段：
+
+- [x] `patternId`
+- [x] `sourceConversationIds`
+- [x] `decision`
+- [x] `target`
+- [x] `decisionReason`
+- [x] `reviewedBy`
+- [x] `reviewedAt`
+- [x] `trace`
+
+开发清单：
+
+- [x] `analyze-patterns` 对新 pattern 自动写入 `detected/review`
+- [x] 新增 `review-conversation-pattern`
+- [x] 支持 `review-conversation-pattern --accept --target <type>`
+- [x] 支持 `review-conversation-pattern --reject --reason "..."`
+- [x] 支持 `review-conversation-pattern --archive`
+- [x] `merge-conversation-pattern` 同步归并 decision
+- [x] `archive-conversation-pattern` 同步写入 `archived`
+- [x] `restore-conversation-pattern` 恢复到合理状态，而不是默认 `accepted`
+- [x] `generate-project-skill` 成功后将相关 pattern 标记为 `promoted`
+- [x] 对每个 decision 保留 `sourceConversationIds`
+- [x] `doctor` 增加长期 `review` 未处理 pattern 的提示
+- [x] `upgrade-summary` 展示待处理 conversation decisions 数量
+
+完成标准：
+
+- [x] 每个 pattern 都能回答“现在是什么状态、为什么、去哪里了”
+- [x] 会话记录进入可治理的候选知识池，而不只是原始存档
+- [x] pattern 治理与 skill、wrapper、docs 的去向建立明确关系
+
+### `P2-8` promotion 全链路追溯
+
+目标：
+把 `conversation -> pattern -> decision -> skill/wrapper/docs -> release` 变成可追溯链条。
+
+建议新增产物：
+
+- [x] `.power-ai/governance/promotion-trace.json`
+
+建议固定关系类型：
+
+- [x] `pattern->project-skill`
+- [ ] `project-skill->shared-skill`
+- [x] `project-skill->manual-project-skill`
+- [x] `pattern->wrapper-proposal`
+- [x] `decision->release`
+
+开发清单：
+
+- [x] `generate-project-skill` 写入 trace
+- [x] `promote-project-local-skill` 写入 trace
+- [x] `scaffold-wrapper-promotion` 写入 trace
+- [x] `register-wrapper-promotion` 更新 trace 状态
+- [x] `generate-upgrade-summary` 引用 trace 中的 conversation-derived assets 摘要
+- [x] `refresh-release-artifacts` 把 trace 摘要带入 release 产物
+- [x] 新增 `show-promotion-trace --pattern <id>`
+- [x] 新增 `show-promotion-trace --skill <name>`
+- [x] 新增 `show-promotion-trace --release <version>`
+- [x] 保证 trace 文件对重复执行具备幂等性
+
+当前第一版说明：
+
+- 当前已落地的 promotion trace 会同时输出 `.power-ai/reports/promotion-trace.md`，并支持 `pattern`、`skill`、`tool`、`release` 四类查询视角。
+- `project-skill->shared-skill` 仍保留为后续扩展项；本轮先以 `project-skill->manual-project-skill` 覆盖项目内“自动草案 -> 人工维护 skill”这条实际存在的晋升链路。
+- 包维护侧还会额外生成 `manifest/promotion-trace-report.json` 与 `manifest/promotion-trace-report.md`，用于说明当前 release 实际命中了哪些 promotion trace 关系。
+
+完成标准：
+
+- [x] 任意 conversation-derived asset 都能追溯到来源模式和决策
+- [x] 任意 release 都能回答“本次吸收了哪些会话洞察”
+- [x] promotion 不再是孤立动作，而是治理链条上的节点
+
+### `P2-9` 治理上下文快照
+
+目标：
+把项目当前治理状态整理成统一快照，供多个命令复用。
+
+建议新增产物：
+
+- [x] `.power-ai/context/project-governance-context.json`
+
+建议固定字段：
+
+- [x] `selectedProjectProfile`
+- [x] `recommendedProjectProfile`
+- [x] `projectProfileDecision`
+- [x] `teamPolicyVersion`
+- [x] `allowedTools`
+- [x] `requiredSkills`
+- [x] `conversationMinerStrategy`
+- [x] `baselineStatus`
+- [x] `policyDriftStatus`
+- [x] `pendingConversationReviews`
+- [x] `pendingWrapperProposals`
+
+开发清单：
+
+- [x] `sync` 负责生成和刷新治理上下文快照
+- [x] `doctor` 优先消费上下文快照，而不是重复装配同一批状态
+- [x] `check-project-baseline` 复用快照中的 current state
+- [x] `generate-upgrade-summary` 复用快照中的决策与待办计数
+- [x] 如快照缺失，命令能够回退到现有逻辑
+- [x] 新增 `show-project-governance-context --json`
+
+当前第一版说明：
+
+- 当前快照由 `src/governance-context/index.mjs` 统一生成，并通过 `.power-ai/context/project-governance-context.json` 作为项目治理状态的单一 JSON 入口。
+- `baselineStatus` 当前以最近一次 `check-project-baseline` 结果为准；如果项目尚未执行基线检查，则会落为 `not-run`。
+- `conversationMinerStrategy` 当前会读取 `.power-ai/conversation-miner-config.json` 中的 `strategy.projectType`、`capture.mode` 和 `autoCapture.enabled`，兼容“未显式生成策略模板，但已有默认 config”的项目。
+- 当前消费者侧的升级建议复用点先落在 `generate-upgrade-summary`；后续如果需要进一步推进 package-maintenance 侧 `upgrade-advice`，可以继续复用同一份上下文快照。
+
+完成标准：
+
+- [x] 项目当前治理状态可以由单一 JSON 快照表达
+- [x] `doctor`、`baseline`、`advice` 的核心字段保持对齐
+- [x] 后续如做 UI 或 dashboard，可直接复用这份上下文
+
+### `P2-10` 发布与消费闭环增强
+
+目标：
+让 release governance 真正消费前面几步沉淀下来的决策数据。
+
+开发清单：
+
+- [x] `release-gates` 接入未处理的 project profile decision 风险判断
+- [x] `release-gates` 接入长期未处理的 conversation reviews 判断
+- [x] 明确哪些治理问题属于 warning，哪些属于 blocking
+- [x] `upgrade-advice` 输出基于历史决策的差异化升级动作
+- [x] `consumer compatibility matrix` 增加与 project profile decision 相关的维度
+- [x] `version-record` 增加治理决策摘要字段
+- [x] notification payload 引入治理摘要
+- [x] `doctor` release checks 增加必要的治理提示
+- [x] 对 `deferred/rejected` 决策提供升级后复核提示，而不是一律要求迁移
+
+完成标准：
+
+- [ ] 发布链路能区分“未处理风险”和“已知但已决策风险”
+- [ ] 消费项目收到的升级建议不再是通用话术，而是带治理上下文的动作包
+- [ ] 发布治理开始真正消费项目决策数据
+
+### 每一批都必须补的测试清单
+
+- [ ] service 层单测
+- [ ] CLI 命令测试
+- [ ] `--json` 输出契约测试
+- [ ] 老数据兼容测试
+- [ ] 幂等测试
+- [ ] 与 `doctor` 联动测试
+- [ ] 与 `check-project-baseline` 联动测试
+- [ ] 与 `upgrade-advice` 联动测试
+- [ ] 如涉及发布，再补 `release-gates` 联动测试
+
+### 每一批都必须补的文档清单
+
+- [ ] 更新 `docs/command-manual.md`
+- [ ] 更新 `docs/upgrade-roadmap.md`
+- [ ] 如新增 doctor 提示码，更新 `docs/doctor-error-codes.md`
+- [ ] 如影响发布策略，更新 `docs/versioning-policy.md`
+
+### 推荐的开发节奏
+
+- [ ] 第一批只做 `P2-6`
+- [x] 第二批做 `P2-7`
+- [x] 第三批已完成 `P2-8` 与 `P2-9`
+- [x] 第四批做 `P2-10`
+
+### `1.4.6 / P3-1` 决策过期提醒
+
+- 目标：把已有的治理决策从“静态记录”推进成“可催办、可提醒、可汇总”的运营对象，第一版先覆盖 `project-profile-decision.nextReviewAt`。
+- 已完成第一版：
+  - 新增 `check-governance-review-deadlines --json`
+  - 输出 `.power-ai/reports/governance-review-deadlines.md/json`
+  - 统一沉淀 `not-scheduled` / `scheduled` / `due-today` / `overdue`
+  - `show-project-profile-decision` 回显 review deadline 状态
+  - governance context 新增 overdue / due-today 计数与下次 review 日期
+  - `doctor`、`check-project-baseline`、`generate-upgrade-summary`、consumer compatibility matrix、`upgrade:advice` 已接入该状态
+- 后续可继续扩展：
+  - 把同样的 review deadline 模型扩到 conversation decision ledger
+  - 在 release gates 中增加 overdue governance reviews 的运营 warning gate
+  - 补批量复核动作，例如按状态批量 defer / archive / accept
+
+### 推荐的验收命令模板
+
+- [ ] `pnpm test`
+- [ ] `pnpm check:docs`
+- [ ] `pnpm check:tooling-config`
+- [ ] 如涉及发布链路，执行 `pnpm release:prepare`
+
+### `1.4.6 / P3-2` Governance summary
+
+- 目标：把 `project profile decision`、review deadline、conversation backlog、wrapper backlog、promotion trace、baseline 和 policy drift 汇总成统一的项目治理运营总览。
+- 已完成第一版：
+  - 新增 `generate-governance-summary --json`
+  - 输出 `.power-ai/reports/governance-summary.md/json`
+  - 汇总 `project-profile-decision`、governance review deadline、conversation decision ledger、wrapper promotion audit、promotion trace、project baseline、team policy drift、project governance context
+  - 报表直接给出 `overdue governance reviews`、`pending conversation reviews`、`pending wrapper proposals`、`ready for registration`、`pending wrapper follow-ups` 等关键计数
+  - 推荐作为消费项目日常治理巡检入口，与 `show-project-governance-context --json`、`check-governance-review-deadlines --json`、`check-project-baseline --json` 配合使用
+
+### `1.4.6 / P3-3` Batch governance review
+
+- 目标：降低治理运营的人肉点选成本，把已有单条审阅动作推进成批量处理入口。
+- 已完成第一版：
+  - `review-project-profile` 新增 `--accept-recommended`
+  - `review-conversation-pattern` 新增 `--from-review`、`--from-state <state>`、`--limit <n>` 批量审阅入口
+  - 当前支持把 `review` 状态的 conversation pattern 批量执行 `--accept`、`--reject`、`--archive`
+  - 批量处理后仍复用同一套 decision ledger 和 governance context 刷新链路
+
+### `1.4.6 / P3-4` Governance history query
+
+- 目标：把已经存在的 decision / promotion 历史数据统一成一个可查询入口，便于追溯最近发生了什么治理动作。
+- 已完成第一版：
+  - 新增 `show-governance-history --type profile-decision|conversation-decision|promotion --limit <n> --json`
+  - 输出 `.power-ai/reports/governance-history.md/json`
+  - 当前会复用 `project-profile-decision-history.json`、`conversation-decision-history.json` 和 `promotion-trace.json`
+  - 支持按治理类型过滤，并按最近记录时间倒序输出
+
+## 1.4.6 / P3-5 治理运营摘要
+
+目标：
+- 新增 manifest/governance-operations-report.json / manifest/governance-operations-report.md，作为 release 视角下的治理运营摘要
+- 摘要包含 release gate 状态、consumer compatibility matrix 健康度、project profile decision backlog、governance review deadline backlog、conversation backlog、wrapper proposal backlog、promotion trace 健康度、manual checks 待办等治理活动
+- refresh-release-artifacts 现在会自动刷新 governance operations report
+- upgrade-payload / version-record.json 现在会附带 governance operations summary 与 artifact 路径
+- check-release-consistency 新增 --require-governance-operations，用于校验产物 markdown 是否与最新结构一致
+
+当前策略：
+- 当前处于 1.4.6 收口阶段，会把 governance operations summary 直接生成 release notes 摘要
+- 预计在 1.4.7，会把 governance operations report 做成跨版本对比，而不仅限于当前 release 的汇总
+
+## 1.4.6 版本收口
+
+目标：
+- 为 P3-2 和 P3-5 补充自动化测试，覆盖 governance summary、governance history、batch review、governance operations report、release consistency 等，以及 package-maintenance doctor/release-gates 的数据产出
+- 当前 1.4.6 测试链路已经覆盖 consumer governance、history/summary、release governance operations 和 release validation 全部治理自动化回归范围
+
+下一步：
+- 下一步直接进入 1.4.6 版本收口与发布准备，不再补充不同粒度的治理测试
+
+## 1.4.7 / P4-1 自进化调度器
+
+目标：
+- 新增 `run-evolution-cycle --json`，作为自进化第一版调度入口
+- 根据“自上次 `analyze-patterns` 之后新增的会话数”判断是否触发自动分析
+- 第一版先串起 `analyze-patterns`、治理上下文刷新和 `generate-governance-summary`
+- 输出 `.power-ai/reports/evolution-cycle-report.md/json`，为后续 evolution policy 和 candidate generation 打基础
+
+当前第一版说明：
+
+- 当前默认阈值是 `3` 条新增会话，可通过 `--min-new-conversations <n>` 临时覆盖
+- `--force` 可忽略阈值直接触发，`--dry-run` 只输出 would-run 结果，不实际执行分析
+- 当前只负责“自动分析调度”和“治理报告刷新”，还不会自动升级 shared skill、wrapper registry 或 release 流程
+- 后续 `P4-2` 会继续补 evolution policy，`P4-3` 再接 candidate generation
+
+## 1.4.7 / P4-2 进化策略配置
+
+目标：
+- 新增项目级 `.power-ai/evolution-policy.json`，定义自进化自动化边界
+- 新增 `show-evolution-policy --json` 与 `validate-evolution-policy --json`
+- 让 `run-evolution-cycle` 不再只依赖命令行阈值，而是优先读取项目策略
+
+当前第一版说明：
+
+- `init` / `sync` 会自动补齐 evolution policy
+- 默认策略会开启：
+  - `autoAnalyzeEnabled`
+  - `autoRefreshGovernanceContext`
+  - `autoRefreshGovernanceSummary`
+- 默认策略会关闭高风险自动化：
+  - `allowAutoProjectLocalSkillRefresh`
+  - `allowAutoSharedSkillPromotion`
+  - `allowAutoWrapperProposal`
+  - `allowAutoReleaseActions`
+- `project-governance-context` 已经纳入 evolution policy 摘要，后续 `P4-3` 和 `P4-4` 可以直接复用这份状态
+
+## 1.4.7 / P4-3 候选升级生成器
+
+目标：
+- 自动把会话分析结果推进成候选升级项，而不是直接修改正式资产
+- 生成 evolution candidate ledger、candidate history 和 evolution summary
+- 把候选层接入治理上下文和治理汇总，形成可持续扩展的自进化骨架
+
+当前第一版说明：
+
+- 新增 `generate-evolution-candidates --json`
+- 当前会生成：
+  - `.power-ai/governance/evolution-candidates.json`
+  - `.power-ai/governance/evolution-candidate-history.json`
+  - `.power-ai/reports/evolution-summary.md/json`
+- 当前已支持的候选类型：
+  - `project-local-skill-draft`
+  - `wrapper-proposal-candidate`
+  - `docs-candidate`
+  - `profile-adjustment-candidate`
+- `run-evolution-cycle` 在触发分析后会自动刷新 evolution candidates
+- `project-governance-context` 和 `generate-governance-summary` 已经开始消费 candidate 计数与高风险摘要
+
+## 1.4.7 / P4-4 低风险自动落地
+
+目标：
+- 在候选层之上，放开项目内低风险自动动作
+- 先支持 project-local drafts 与治理快照刷新，不碰 shared skill、wrapper registry 和 release
+- 为后续高风险 proposal 化提供明确的动作记录层
+
+当前第一版说明：
+
+- 新增 `apply-evolution-actions --json`
+- 生成 `.power-ai/governance/evolution-actions.json`
+- 当前支持的低风险动作：
+  - `refresh-project-local-skill-draft`
+  - `refresh-governance-context`
+  - `refresh-governance-summary`
+- `run-evolution-cycle` 在分析和候选生成后，会自动尝试执行这些动作
+- `allowAutoProjectLocalSkillRefresh` 默认仍关闭，只有明确打开策略时，才会自动刷新 project-local drafts
+
+## 1.4.7 / P4-5 高风险升级提案化
+
+目标：
+- 把高风险 evolution candidate 推进成正式 proposal，而不是继续自动执行
+- 让 shared skill、wrapper rollout、project profile adjustment、release impact escalation 都能进入可审计治理流
+- 为后续人工审阅、批量治理和 release gate 联动保留稳定提案层
+
+当前第一版说明：
+
+- 新增 `generate-evolution-proposals --json`
+- 当前会生成：
+  - `.power-ai/governance/evolution-proposals.json`
+  - `.power-ai/governance/evolution-proposal-history.json`
+  - `.power-ai/reports/evolution-proposals.md/json`
+- 当前 proposal 类型包括：
+  - `project-profile-adjustment-proposal`
+  - `wrapper-rollout-adjustment-proposal`
+  - `shared-skill-promotion-proposal`
+  - `release-impact-escalation-proposal`
+- 每条 proposal 都会在 `.power-ai/proposals/evolution/<proposal>/` 下生成独立目录，包含 `proposal.json` 与 `README.md`
+- `run-evolution-cycle` 现在已经会在 candidate generation 和低风险 actions 之后自动刷新 evolution proposals
+- 当前这一层仍然只负责“生成提案”，不会直接修改 shared skill、wrapper registry、team policy 或 release 产物
+
+## 1.4.7 / P4-6 提案审阅流
+
+目标：
+- 让 evolution proposal 不只是“能生成”，还可以被团队查看、审阅和归档
+- 把 proposal backlog 接入项目治理总览，而不是停留在独立 ledger 中
+- 为后续更细粒度的 apply / release gate 联动打基础
+
+当前第一版说明：
+
+- 新增 `list-evolution-proposals --json`
+- 新增 `review-evolution-proposal --proposal <id> --accept|--reject|--archive|--review --json`
+- proposal 审阅后会回写：
+  - `.power-ai/governance/evolution-proposals.json`
+  - `.power-ai/governance/evolution-proposal-history.json`
+  - `.power-ai/reports/evolution-proposals.md/json`
+- `show-project-governance-context` 现在会直接展示 evolution proposal 摘要
+- `generate-governance-summary` 现在会把 evolution proposals 数量、review backlog 和建议动作带进治理总览
+- 当前第一版仍然只处理“治理状态流转”，不做自动 apply，不直接修改 shared skill、wrapper registry、team policy 或 release 产物
+
+## 1.4.7 / P4-7 提案应用与门禁联动
+
+目标：
+- 为已接受的 evolution proposal 提供受控 apply 入口，而不是停留在“accepted but not applied”
+- 把 evolution proposal backlog 接进 doctor 与 release gate 的治理提醒
+- 继续坚持“高风险不自动落地”，但让人工 apply 有正式入口
+
+当前第一版说明：
+
+- 新增 `apply-evolution-proposal --proposal <id> --json`
+- 当前版本支持已 `accepted` 的以下 proposal：
+  - `project-profile-adjustment-proposal`
+  - `shared-skill-promotion-proposal`
+  - `wrapper-rollout-adjustment-proposal`
+  - `release-impact-escalation-proposal`
+- 对 shared skill、wrapper rollout 和 release impact，apply 不会直接自动落地到正式注册/正式发版，而是推进成下一层可执行 draft artifact
+- `doctor` 新增 evolution proposal backlog warning：
+  - review backlog
+  - accepted but not applied backlog
+- consumer compatibility matrix 与 release gates 现在会汇总：
+  - pending evolution proposal reviews
+  - accepted evolution proposals
+  - high-risk evolution proposals
+- release gates 当前先以 warning 方式提示 evolution proposal backlog，不直接 blocking
+
+## 1.4.7 / P4-8 提案老化与运营提醒
+
+目标：
+- 把 evolution proposal backlog 从“有状态”继续推进到“有 SLA、可催办、可运营提醒”
+- 让 stale review 和 accepted-but-not-applied proposal 能稳定出现在治理总览、doctor、release gates 与运营报表中
+- 为后续 proposal aging、批量处理和运营汇总提供统一度量
+
+当前第一版说明：
+
+- evolution proposal 现在会自动区分：
+  - `review` 超过 `7` 天记为 stale review
+  - `accepted` 超过 `3` 天且未 apply 记为 stale accepted proposal
+- `project-governance-context`、`generate-governance-summary`、consumer compatibility matrix、release gates、upgrade advice、governance operations report 都会汇总：
+  - `staleEvolutionProposalReviews`
+  - `staleAcceptedEvolutionProposals`
+  - 对应的 SLA 与 oldest age
+- `doctor` 新增 `PAI-POLICY-011`，用于提示 evolution proposal backlog 已经超过治理 SLA
+- governance summary 会自动给出建议动作，优先引导：
+  - `list-evolution-proposals --json`
+  - `review-evolution-proposal --proposal <id> --accept|--reject|--archive`
+  - `apply-evolution-proposal --proposal <id>`
+
+## 1.4.7 / P4-9 提案批量治理
+
+目标：
+- 把 evolution proposal 从“逐条审阅、逐条应用”推进到“可按状态批量处理”
+- 在不突破当前风险边界的前提下，降低治理 backlog 的人工成本
+- 保持昨天拆分后的模块边界稳定，不把 proposal manager 重新堆回超大文件
+
+当前第一版说明：
+
+- `list-evolution-proposals` 新增 `--limit`，便于按窗口查看 backlog
+- `review-evolution-proposal` 现在支持两种入口：
+  - 单条：`--proposal <id>`
+  - 批量：`--from-status <status> [--type <proposal-type>] [--limit <n>] [--archived]`
+- `apply-evolution-proposal` 现在也支持同样的批量入口：
+  - 单条：`--proposal <id>`
+  - 批量：`--from-status <status> [--type <proposal-type>] [--limit <n>] [--archived]`
+- 批量 review / apply 都会返回：
+  - `processedCount`
+  - `skippedCount`
+  - `skipped`
+- 批量 apply 现在会对受控 proposal 执行两类动作：
+  - `project-profile-adjustment-proposal`：真正应用到 project profile selection
+  - `shared-skill-promotion-proposal` / `wrapper-rollout-adjustment-proposal` / `release-impact-escalation-proposal`：生成下一层可执行 draft artifact
+- 即使完成 apply，仍然不会自动注册 wrapper、不会自动发版，保持现有治理边界不变
+- proposal manager 已继续拆分为更小模块，storage / selection / artifact 落盘逻辑移到独立文件，保持单文件不再回到超大体积
+
+## 1.4.7 / P5-1 采集安全边界收口
+
+目标：
+- 把采集安全策略从“项目本地默认值”推进到“团队基线 + 项目覆盖”
+- 让 `init` / `sync` / `show-capture-safety-policy` / `validate-capture-safety-policy` / 实际采集判定共享同一套边界来源
+- 为后续更细粒度敏感信息规则、blocking 策略和审批联动打基础
+
+当前完成说明：
+
+- 在 `team-policy` 中正式引入团队级 `captureSafetyPolicy` 基线
+- `init` / `sync` 现在会按团队基线脚手架 `.power-ai/capture-safety-policy.json`
+- 运行时统一按“内置默认值 -> team policy captureSafetyPolicy -> 项目 `.power-ai/capture-safety-policy.json`”三层顺序合并
+- `show-capture-safety-policy --json` 与 `validate-capture-safety-policy --json` 现在都会输出同一份生效策略
+- `capture-session`、auto-capture admission、capture retention 现在统一复用这份生效策略
+- `check-team-policy-drift` 与 `doctor` 新增了团队级 `captureSafetyPolicy` 漂移提示
+- 本阶段补上了第一批更细粒度规则：
+  - `admission.blockedGeneratedFilePatterns`
+  - `admission.reviewGeneratedFilePatterns`
+- 这两组规则已经接入：
+  - team policy schema
+  - team baseline
+  - show / validate 输出
+  - capture evaluation 运行时判定
+  - doctor / governance summary / upgrade summary 摘要计数
+- 当前默认团队基线已经可对 `.env`、证书 / 密钥文件、`secrets/`、`credentials/` 等高风险输出做 blocking，对 `migrations/`、`deploy/`、`ops/`、`scripts/release` 等高风险变更目录做 review 提示
+- 已补充自动化测试，并确认全量测试通过
+
+阶段收口判断：
+
+- 团队策略可以定义 capture safety 基线
+- 新项目初始化后会按团队基线生成采集安全策略文件
+- 项目局部覆盖后，运行时仍能保留团队基线剩余规则
+- `show-capture-safety-policy --json` 和 `validate-capture-safety-policy --json` 输出一致的生效结果
+- 有对应自动化测试，且现有 doctor 链路不回归
+
+结论：
+
+- `P5-1` 已按原阶段定义收口，后续进入 `P5-2`，继续推进 capture safety 与治理动作联动
+
+## P5-2 采集安全治理联动
+
+目标：
+- 把已经收口的采集安全边界继续推进到更明确的治理动作
+- 让 capture safety 的风险状态能稳定映射到 blocking / warning / review 三层处理语义
+- 为后续 release-gates blocking 升级和审批联动保留统一接口
+
+当前完成说明：
+
+- 已明确 capture safety 风险等级与治理动作映射：
+  - `warning` 对应低信号但允许采集的记录
+  - `review` 对应允许进入待确认边界、但必须人工确认的记录
+  - `blocking` 对应违反采集边界、禁止进入采集链路的记录
+- 已将 capture safety 风险摘要接入 `doctor`、governance summary、upgrade summary 与 `release-gates`
+- `doctor` 已新增：
+  - `PAI-CONVERSATION-035`：warning-level conversation captures are acknowledged
+  - `PAI-CONVERSATION-036`：review-level conversation captures are triaged
+- `release-gates` 已新增并稳定输出：
+  - `conversation-capture-warning-governance`
+  - `conversation-capture-admission-governance`
+- 已统一 auto-capture / manual capture 在 review 场景下的确认边界：
+  - `prepare-session-capture -> confirm-session-capture` 负责手工确认流
+  - `submit-auto-capture --consume-now` 命中 review 边界时不会绕过确认，而是返回 `review_required`
+- 已补充自动化测试，覆盖 capture safety 规则命中、review boundary 和治理汇总链路
+- 已更新 `docs/command-manual.md`，补充 capture safety governance semantics、troubleshooting 与 release linkage 的命令手册说明
+
+阶段收口判断：
+
+- capture safety 规则命中后已有明确且一致的治理语义
+- `doctor`、governance summary、release-gates 对 capture safety 风险的表达一致
+- review 场景下的 capture 入口行为一致
+- 有对应自动化测试，且现有治理链路不回归
+
+结论：
+
+- `P5-2` 已按原阶段定义收口；`docs/upgrade-roadmap.md` 应在下一次进入时写入新的活动阶段，而不是继续追加本阶段内容
+
+## P5-3 提案 Apply 收口
+
+目标：
+
+- 把 evolution proposal 在 `apply` 之后生成的 draft artifact 真正纳入治理视图，而不是只停留在 proposal ledger
+- 让团队能从 governance context / governance summary / upgrade summary 直接看到“已经 apply 了什么、下一步还要收什么尾”
+- 继续保持高风险 proposal 的边界：不在这一阶段引入自动注册 wrapper 或自动发版
+
+当前完成说明：
+
+- `project-governance-context` 现在会稳定汇总 applied proposal artifact，包括：
+  - `appliedProjectProfileSelections`
+  - `appliedWrapperPromotionDrafts`
+  - `appliedSharedSkillDrafts`
+  - `appliedReleaseImpactDrafts`
+  - `appliedDraftsWithFollowUps`
+  - `followUpActionCount`
+  - `nextActionPreview`
+- `generate-governance-summary` 与 `generate-upgrade-summary` 现在都会显式展示 applied draft follow-up，并补充后续建议动作
+- consumer compatibility matrix 与 `release-gates` 现在会继续汇总：
+  - `appliedEvolutionProposalFollowUps`
+  - `scenariosWithAppliedEvolutionProposalFollowUps`
+  - `appliedEvolutionProposalFollowUpActionCount`
+  - applied wrapper / shared-skill / release-impact draft 数量
+- `doctor` 已新增 `PAI-POLICY-013`，用于提示“已 apply 但仍有 follow-up actions 的 evolution draft”
+- `release-gates` 已复用 `evolution-proposal-governance` gate，把 applied draft follow-up 映射为非 blocking warning
+- 已更新 `docs/command-manual.md` 与 `docs/doctor-error-codes.md`，补齐 apply 后续动作、doctor 与 release-gates 联动说明
+- 已补充自动化测试，覆盖 governance summary、upgrade summary、doctor、release-gates 与 verify-consumer 相关回归
+
+阶段收口判断：
+
+- applied evolution proposal 生成的 draft artifact 已能在治理摘要中稳定看见
+- 团队可以直接从摘要里看到 apply 后的 follow-up 动作，而不必只翻 proposal ledger
+- `doctor` 与 `release-gates` 对 applied draft follow-up 的治理表达一致
+- 高风险 proposal 仍保持人工收口边界，没有引入自动注册 wrapper、自动发版或 shared skill 自动正式晋升
+
+结论：
+
+- `P5-3` 已按原阶段定义收口；下一阶段应继续推进 draft artifact 的统一收口入口，而不是回到仅靠摘要做提示
+
+## P5-4 Draft Artifact 收口入口
+
+目标：
+
+- 把 apply 后生成的 shared-skill / wrapper / release-impact draft 从“摘要里可见”推进到“团队可以直接查看、直接继续处理”
+- 为 applied draft artifact 提供统一入口，避免团队只能依赖 `evolution-proposals.json` 或零散路径手工定位
+- 继续保持高风险 proposal 的边界：不在这一阶段引入自动 shared skill 晋升、自动 wrapper 注册或自动发版
+
+当前完成说明：
+
+- 已新增统一 draft 视图和数据模型，覆盖：
+  - `draftId`
+  - `artifactType`
+  - `proposalId` / `proposalType`
+  - `draftRoot`
+  - `generatedFiles`
+  - `nextActions`
+  - `metadata`
+- 已新增两个 CLI 入口：
+  - `list-evolution-drafts`
+  - `show-evolution-draft`
+- `doctor`、`governance-context` 和 `generate-governance-summary` 现在对 applied draft follow-up 的汇总已复用同一套 helper，而不是重复装配
+- 已更新 `docs/command-manual.md`，补齐 draft list / show 的使用方式与字段说明
+- 已补充自动化测试，覆盖 evolution draft list/show、CLI project root 解析、doctor 与 governance summary 回归
+
+阶段收口判断：
+
+- 团队无需手工翻 `evolution-proposals.json` 就能定位 applied draft artifact 与下一步动作
+- shared-skill / wrapper / release-impact draft 的核心字段表达一致
+- `doctor` 与 `governance summary` 对 applied draft 的治理表达开始复用同一套底层投影逻辑
+- 高风险 proposal 仍保持人工收口边界，没有引入自动 shared skill 晋升、自动注册或自动发版
+
+结论：
+
+- `P5-4` 已按原阶段定义收口；下一阶段应继续推进 draft artifact 的人工交接与收口脚手架，而不只是“能看见、能定位”
+
+## P5-5 Draft Handoff 脚手架
+
+目标：
+
+- 把 apply 后生成的 `shared-skill` / `release-impact` draft 从“可查看”推进到“有明确 handoff 和收尾脚手架”
+- 让团队在进入 draft 之后，能直接拿到面向人工治理的 checklist、说明和后续责任边界
+- 继续保持高风险 proposal 的边界：不在这一阶段引入自动 shared skill 晋升、自动 wrapper 注册或自动发版
+
+当前完成说明：
+
+- `shared-skill` / `release-impact` draft 现在已补齐统一 handoff metadata，覆盖：
+  - `handoff.status`
+  - `handoff.ownerHint`
+  - `handoff.nextReviewAt`
+  - `handoff.nextAction`
+  - `handoff.checklistPath`
+  - `handoff.boundary`
+- `shared-skill` draft 现在会补齐 `manual-checklist.md`，并在 `skill.meta.json` 中写入：
+  - `draftId`
+  - `draftRoot`
+  - `generatedFiles`
+  - `handoff`
+- `release-impact` draft 现在会在 `release-impact-draft.json` 中写入同样的 handoff / draft linkage 字段，并与 README / checklist 的表达保持一致
+- `list-evolution-drafts` / `show-evolution-draft` 已直接展示：
+  - `handoff`
+  - `handoffStatus`
+  - `ownerHint`
+  - `checklistPath`
+  - `nextAction`
+  - `nextReviewAt`
+- `project-governance-context`、`generate-governance-summary`、`generate-upgrade-summary` 与 `doctor` 现在都会继续带出 applied draft handoff preview，而不是只显示 `nextActions`
+- `generate-governance-summary` 与 `generate-upgrade-summary` 的 markdown 已新增 `draft handoff preview`
+- `PAI-POLICY-013` 现在会带出 owner hint、checklist 与 next action，方便直接进行人工交接
+- 已更新 `docs/command-manual.md` 与 `docs/doctor-error-codes.md`
+- 已补充自动化测试，覆盖 evolution draft handoff、doctor、governance summary 与 upgrade summary 回归
+
+阶段收口判断：
+
+- 团队进入 `shared-skill` / `release-impact` draft 后，可以直接看到清晰的 handoff / checklist / 下一步治理动作
+- draft 的人工收口边界表达一致，不需要再依赖零散 README 文本猜测
+- `list/show`、governance summary、upgrade summary 与 doctor 对 applied draft handoff 的表达已对齐
+- 高风险 proposal 仍保持人工收口边界，没有引入自动 shared skill 晋升、自动注册或自动发版
+
+结论：
+
+- `P5-5` 已按原阶段定义收口；下一阶段应转向运营趋势视图，把现有摘要视图推进成跨周期趋势对比，而不是继续在当前文件里堆叠已完成阶段

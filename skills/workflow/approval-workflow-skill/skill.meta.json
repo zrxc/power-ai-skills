@@ -1,0 +1,12 @@
+{
+  "name": "approval-workflow-skill",
+  "displayName": "审批流页面生成",
+  "owners": ["biz-platform-team", "fe-arch-team"],
+  "tags": ["approval", "workflow", "process"],
+  "status": "beta",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["detail-page-skill", "message-skill", "permission-page"]
+}

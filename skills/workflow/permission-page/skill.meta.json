@@ -1,0 +1,12 @@
+{
+  "name": "permission-page",
+  "displayName": "权限页面处理",
+  "owners": ["fe-arch-team", "platform-team"],
+  "tags": ["permission", "auth", "page"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["message-skill"]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "接口模块生成"
+  short_description: "生成类型化接口模块与请求响应定义"
+  default_prompt: "使用 $api-skill 为当前功能生成接口模块和类型定义。"

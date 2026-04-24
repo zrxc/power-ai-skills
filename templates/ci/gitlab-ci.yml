@@ -1,0 +1,40 @@
+stages:
+  - lint
+  - impact
+  - consumer
+
+variables:
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-home"
+
+before_script:
+  - corepack enable
+  - corepack prepare pnpm@10.28.2 --activate
+  - pnpm install --frozen-lockfile
+
+skill_ci_check:
+  stage: lint
+  script:
+    - pnpm ci:check
+  artifacts:
+    when: always
+    paths:
+      - manifest/skills-manifest.json
+
+skill_impact_report:
+  stage: impact
+  script:
+    - git diff --name-only "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA" > changed-files.txt
+    - node ./scripts/impact-check.mjs --from-file changed-files.txt > manifest/impact-report.json
+    - node ./scripts/generate-impact-task.mjs --report manifest/impact-report.json
+  artifacts:
+    when: always
+    paths:
+      - manifest/impact-report.json
+      - manifest/impact-tasks/
+
+skill_consumer_verify:
+  stage: consumer
+  script:
+    - node ./scripts/verify-consumer.mjs D:/webCode/Myd/基础服务/powermonitor_front
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

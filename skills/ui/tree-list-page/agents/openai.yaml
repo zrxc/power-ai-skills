@@ -1,0 +1,4 @@
+interface:
+  display_name: "左树右表页面"
+  short_description: "生成树节点联动列表的管理页面"
+  default_prompt: "使用 $tree-list-page 生成当前功能的左树右表页面。"

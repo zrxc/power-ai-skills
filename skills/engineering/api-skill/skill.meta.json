@@ -1,0 +1,12 @@
+{
+  "name": "api-skill",
+  "displayName": "接口模块生成",
+  "owners": ["fe-arch-team"],
+  "tags": ["api", "typescript", "request"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": []
+}

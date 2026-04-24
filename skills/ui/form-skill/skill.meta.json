@@ -1,0 +1,12 @@
+{
+  "name": "form-skill",
+  "displayName": "普通表单生成",
+  "owners": ["ui-team"],
+  "tags": ["form", "validation"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["message-skill"]
+}

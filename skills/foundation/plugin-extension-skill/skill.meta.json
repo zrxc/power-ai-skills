@@ -1,0 +1,12 @@
+{
+  "name": "plugin-extension-skill",
+  "displayName": "插件扩展",
+  "owners": ["fe-arch-team", "ui-team"],
+  "tags": ["plugin", "setup", "install", "foundation"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-component-library", "runtime-extension-skill", "style-theme-skill"]
+}

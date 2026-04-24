@@ -1,0 +1,375 @@
+{
+  "$schema": "./schemas/tool-registry.schema.json",
+  "schemaVersion": 2,
+  "instructionRendering": {
+    "sharedExecutionFlow": [
+      "用户只描述功能时，先读取 `.power-ai/skills/orchestration/entry-skill/` 做 skill 路由；如果场景已经明显，也至少先读取对应主 skill 再开始编码。",
+      "开始实现前先明确主 skill 和辅助 skill；“树列表 + 增删改”默认按 `tree-list-page + dialog-skill + api-skill + message-skill + form-skill` 处理。",
+      "命中 skill 后必须遵循对应 `SKILL.md` 和 `references/` 的页面骨架、状态约定和组件模式，不要绕开企业 skill 自行发挥。",
+      "项目已接入 `@power/runtime-vue3`、`@power/p-components` 时，必须优先使用公司组件和容器；只有确认企业组件不满足需求时，才允许回退到原生组件或自定义实现。",
+      "用户提到 `树列表`、`左树右表`、`左侧部门右侧用户`、`点击部门显示用户` 时，默认命中 `tree-list-page`，布局优先 `CommonLayoutContainer + pc-table-warp`。",
+      "涉及企业组件时，先读取 `.power-ai/skills/foundation/power-component-library/references/generated/component-registry.json`，再按需读取命中的 `component-guides/` 和 `page-recipes/`。",
+      "如果 skill 或页面引用的组件名在注册表里查不到，不要猜它的 API；先按别名、候选组件或页面配方收敛。",
+      "生成代码时默认使用中文，并补充有信息量的中文注释，重点说明复杂状态、组件联动、分页重置、弹窗提交和边界处理。"
+    ]
+  },
+  "tools": [
+    {
+      "name": "agents-md",
+      "displayName": "AGENTS.md",
+      "level": "compatible",
+      "status": "stable",
+      "description": "生成根目录 AGENTS.md，供采用 AGENTS.md 约定的工具读取。",
+      "tags": ["shared-context", "agent-protocol"],
+      "recommendedScenarios": ["跨工具基础说明", "需要最大兼容性"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": ["AI 工具在开发时优先读取 `AGENTS.md` 的内容，并以这里的规则作为项目级最高优先级入口说明。"],
+        "roleLabel": "对采用 `AGENTS.md` 协议的工具",
+        "primarySourceType": "file",
+        "primarySources": ["AGENTS.md"],
+        "supplementalSources": [],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`AGENTS.md`", "`project-local`", "企业公共 skill"],
+        "overrideNote": "其中页面骨架和组件选型继续优先遵循工具入口文件与当前项目约定。"
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "shared/AGENTS.md",
+          "target": "AGENTS.md"
+        }
+      ]
+    },
+    {
+      "name": "codex",
+      "displayName": "Codex",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 .codex/skills 目录，并依赖 AGENTS.md 作为项目级说明。",
+      "tags": ["terminal-agent", "openai"],
+      "recommendedScenarios": ["终端型代码代理", "需要直接读取 skill 目录"],
+      "dependsOn": ["agents-md"],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Codex",
+        "primarySourceType": "mixed",
+        "primarySources": ["AGENTS.md", ".codex/skills/"],
+        "supplementalSources": [],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`AGENTS.md`", "`.codex/skills/`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "directory-link",
+          "source": "skills",
+          "target": ".codex/skills"
+        }
+      ]
+    },
+    {
+      "name": "trae",
+      "displayName": "Trae",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 .trae/skills 目录，供 Trae 类工具读取企业 skill。",
+      "tags": ["editor-agent", "trae"],
+      "recommendedScenarios": ["团队已有 Trae 使用习惯", "需要兼容既有 .trae 目录"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Trae",
+        "primarySourceType": "directory",
+        "primarySources": [".trae/skills/"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`.trae/skills/`", "`AGENTS.md`", "`project-local`", "企业公共 skill"],
+        "overrideNote": "Trae 的稳定主入口仍然是 `.trae/skills/`。"
+      },
+      "entrypoints": [
+        {
+          "type": "directory-link",
+          "source": "skills",
+          "target": ".trae/skills"
+        }
+      ]
+    },
+    {
+      "name": "cursor",
+      "displayName": "Cursor",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 .cursor/rules/skills.mdc，并依赖 AGENTS.md 作为补充上下文。",
+      "tags": ["editor-agent", "cursor"],
+      "recommendedScenarios": ["编辑器内联开发", "规则文件驱动的协作模式"],
+      "dependsOn": ["agents-md"],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Cursor",
+        "primarySourceType": "file",
+        "primarySources": [".cursor/rules/skills.mdc"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`skills.mdc`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "adapters/cursor/skills.mdc",
+          "target": ".cursor/rules/skills.mdc"
+        }
+      ]
+    },
+    {
+      "name": "claude-code",
+      "displayName": "Claude Code",
+      "level": "native",
+      "status": "stable",
+      "description": "生成根目录 CLAUDE.md，供 Claude Code 读取项目级规则。",
+      "tags": ["terminal-agent", "anthropic"],
+      "recommendedScenarios": ["Claude Code 终端协作", "需要专用项目规则文件"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Claude Code",
+        "primarySourceType": "file",
+        "primarySources": ["CLAUDE.md"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`CLAUDE.md`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "shared/CLAUDE.md",
+          "target": "CLAUDE.md"
+        }
+      ]
+    },
+    {
+      "name": "cline",
+      "displayName": "Cline",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 .clinerules/01-power-ai.md，供 Cline 读取企业约定。",
+      "tags": ["editor-agent", "cline"],
+      "recommendedScenarios": ["Cline 工作流", "编辑器内代码对话式开发"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Cline",
+        "primarySourceType": "file",
+        "primarySources": [".clinerules/01-power-ai.md"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`01-power-ai.md`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "adapters/cline/01-power-ai.md",
+          "target": ".clinerules/01-power-ai.md"
+        }
+      ]
+    },
+    {
+      "name": "windsurf",
+      "displayName": "Windsurf",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 .windsurf/rules/01-power-ai.md，供 Windsurf 读取工作区规则。",
+      "tags": ["editor-agent", "windsurf"],
+      "recommendedScenarios": ["Windsurf 工作区规则", "团队使用 Cascade / Memories"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Windsurf",
+        "primarySourceType": "file",
+        "primarySources": [".windsurf/rules/01-power-ai.md"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`01-power-ai.md`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "adapters/windsurf/01-power-ai.md",
+          "target": ".windsurf/rules/01-power-ai.md"
+        }
+      ]
+    },
+    {
+      "name": "gemini-cli",
+      "displayName": "Gemini CLI",
+      "level": "native",
+      "status": "stable",
+      "description": "生成根目录 GEMINI.md，供 Gemini CLI 读取项目上下文。",
+      "tags": ["terminal-agent", "google"],
+      "recommendedScenarios": ["Gemini CLI 接入", "Google 生态代理场景"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Gemini CLI",
+        "primarySourceType": "file",
+        "primarySources": ["GEMINI.md"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`GEMINI.md`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "shared/GEMINI.md",
+          "target": "GEMINI.md"
+        }
+      ]
+    },
+    {
+      "name": "aider",
+      "displayName": "Aider",
+      "level": "native",
+      "status": "stable",
+      "description": "生成 CONVENTIONS.md 和 .aider.conf.yml，供 Aider 读取项目约定。",
+      "tags": ["terminal-agent", "aider"],
+      "recommendedScenarios": ["Aider 协作", "终端对话式改码"],
+      "dependsOn": [],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "Aider",
+        "primarySourceType": "file",
+        "primarySources": ["CONVENTIONS.md"],
+        "supplementalSources": ["AGENTS.md"],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`CONVENTIONS.md`", "`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": [
+        {
+          "type": "file-link",
+          "source": "shared/CONVENTIONS.md",
+          "target": "CONVENTIONS.md"
+        },
+        {
+          "type": "file-link",
+          "source": "shared/aider.conf.yml",
+          "target": ".aider.conf.yml"
+        }
+      ]
+    },
+    {
+      "name": "github-copilot",
+      "displayName": "GitHub Copilot",
+      "level": "compatible",
+      "status": "stable",
+      "description": "通过 AGENTS.md 兼容接入，不单独生成专属目录。",
+      "tags": ["compatible", "github"],
+      "recommendedScenarios": ["只需要 AGENTS.md 兼容", "不维护额外项目入口文件"],
+      "dependsOn": ["agents-md"],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "GitHub Copilot",
+        "primarySourceType": "file",
+        "primarySources": ["AGENTS.md"],
+        "supplementalSources": [],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": []
+    },
+    {
+      "name": "vscode-agent",
+      "displayName": "VS Code Agent Mode",
+      "level": "compatible",
+      "status": "beta",
+      "description": "通过 AGENTS.md 兼容接入，不单独生成专属目录。",
+      "tags": ["compatible", "vscode"],
+      "recommendedScenarios": ["VS Code Agent Mode 试点接入", "只需要共享 AGENTS.md"],
+      "dependsOn": ["agents-md"],
+      "instructionLoading": {
+        "executionFlowIntro": [],
+        "roleLabel": "VS Code Agent Mode",
+        "primarySourceType": "file",
+        "primarySources": ["AGENTS.md"],
+        "supplementalSources": [],
+        "routingPath": ".power-ai/skills/orchestration/entry-skill/",
+        "projectLocalPath": ".power-ai/skills/project-local/",
+        "conflictPriority": ["`AGENTS.md`", "`project-local`", "企业公共 skill"]
+      },
+      "entrypoints": []
+    }
+  ],
+  "profiles": [
+    {
+      "name": "minimal",
+      "displayName": "最小接入",
+      "status": "stable",
+      "description": "仅生成单一源目录和 AGENTS.md。",
+      "tags": ["baseline", "minimal"],
+      "recommendedScenarios": ["先搭基础目录", "只需要兼容 AGENTS.md 的工具"],
+      "tools": ["agents-md"]
+    },
+    {
+      "name": "openai",
+      "displayName": "OpenAI 终端",
+      "status": "stable",
+      "description": "适合 Codex 与 AGENTS.md 兼容工具。",
+      "tags": ["openai", "terminal"],
+      "recommendedScenarios": ["Codex 主工作流", "终端型代理为主"],
+      "tools": ["codex"]
+    },
+    {
+      "name": "editor",
+      "displayName": "编辑器协作",
+      "status": "stable",
+      "description": "适合桌面编辑器场景，包含 Cursor、Cline、Windsurf。",
+      "tags": ["editor", "collaboration"],
+      "recommendedScenarios": ["多编辑器协作", "规则文件驱动开发"],
+      "tools": ["cursor", "cline", "windsurf"]
+    },
+    {
+      "name": "anthropic",
+      "displayName": "Claude Code",
+      "status": "stable",
+      "description": "适合 Claude Code。",
+      "tags": ["anthropic", "terminal"],
+      "recommendedScenarios": ["Claude Code 主工作流"],
+      "tools": ["claude-code"]
+    },
+    {
+      "name": "google",
+      "displayName": "Gemini CLI",
+      "status": "stable",
+      "description": "适合 Gemini CLI。",
+      "tags": ["google", "terminal"],
+      "recommendedScenarios": ["Gemini CLI 主工作流"],
+      "tools": ["gemini-cli"]
+    },
+    {
+      "name": "terminal",
+      "displayName": "终端全家桶",
+      "status": "stable",
+      "description": "适合终端型代理，包含 Codex、Claude Code、Gemini CLI、Aider。",
+      "tags": ["terminal", "multi-agent"],
+      "recommendedScenarios": ["终端代理并行试用", "需要多代理对比"],
+      "tools": ["codex", "claude-code", "gemini-cli", "aider"]
+    },
+    {
+      "name": "all-native",
+      "displayName": "全部原生入口",
+      "status": "beta",
+      "description": "生成当前仓库内置支持的全部原生工具入口。",
+      "tags": ["all-in-one", "evaluation"],
+      "recommendedScenarios": ["工具评估环境", "企业内部统一试点"],
+      "tools": ["codex", "trae", "cursor", "claude-code", "cline", "windsurf", "gemini-cli", "aider"]
+    }
+  ]
+}

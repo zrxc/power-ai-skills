@@ -1,0 +1,11 @@
+{
+  "name": "power-component-library",
+  "displayName": "Power 组件库",
+  "owners": ["ui-team", "platform-team"],
+  "tags": ["components", "design-system", "selection"],
+  "status": "stable",
+  "compatibility": {
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": []
+}

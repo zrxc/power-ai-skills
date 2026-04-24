@@ -1,0 +1,35 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "generatedAt": "2026-04-24T07:33:54.840Z",
+  "available": true,
+  "tracePath": "C:\\Users\\82591\\AppData\\Local\\Temp\\power-ai-skills-promotion-trace-XTLGEu\\promotion-trace.json",
+  "changedFilesPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\changed-files.txt",
+  "summary": {
+    "changedFileCount": 11,
+    "totalRelations": 2,
+    "matchedRelations": 1
+  },
+  "matchedRelations": [
+    {
+      "traceKey": "pattern->project-skill::pattern::pattern_tree_list_page::project-skill::tree-list-page-conversation-project",
+      "relationType": "pattern->project-skill",
+      "source": {
+        "type": "pattern",
+        "id": "pattern_tree_list_page",
+        "label": "pattern_tree_list_page",
+        "path": "src/evolution/index.mjs"
+      },
+      "target": {
+        "type": "project-skill",
+        "id": "tree-list-page-conversation-project",
+        "label": "tree-list-page-conversation-project",
+        "path": "skills/tree-list-page-project/SKILL.md"
+      },
+      "metadata": {},
+      "matchedPaths": [
+        "src/evolution/index.mjs"
+      ]
+    }
+  ]
+}

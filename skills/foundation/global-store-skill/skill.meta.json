@@ -1,0 +1,12 @@
+{
+  "name": "global-store-skill",
+  "displayName": "全局状态接入",
+  "owners": ["platform-team", "fe-arch-team"],
+  "tags": ["store", "global", "runtime"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-foundation-app"]
+}

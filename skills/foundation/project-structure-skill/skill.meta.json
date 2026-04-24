@@ -1,0 +1,12 @@
+{
+  "name": "project-structure-skill",
+  "displayName": "项目结构规范",
+  "owners": ["fe-arch-team"],
+  "tags": ["structure", "architecture", "project"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-foundation-app"]
+}

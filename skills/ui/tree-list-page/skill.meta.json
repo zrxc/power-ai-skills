@@ -1,0 +1,12 @@
+{
+  "name": "tree-list-page",
+  "displayName": "左树右表页面",
+  "owners": ["ui-team", "fe-arch-team"],
+  "tags": ["tree", "list", "layout"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["api-skill", "dialog-skill", "message-skill"]
+}

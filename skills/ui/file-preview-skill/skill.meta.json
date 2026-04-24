@@ -1,0 +1,12 @@
+{
+  "name": "file-preview-skill",
+  "displayName": "文件预览生成",
+  "owners": ["ui-team"],
+  "tags": ["file", "preview", "attachment"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["message-skill"]
+}

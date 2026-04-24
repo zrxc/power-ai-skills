@@ -1,0 +1,4 @@
+interface:
+  display_name: "普通表单生成"
+  short_description: "生成带校验规则的标准项目表单"
+  default_prompt: "使用 $form-skill 生成当前功能的标准表单。"

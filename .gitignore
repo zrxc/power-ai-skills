@@ -1,0 +1,18 @@
+.tmp-consumer-verify/
+.tmp-*/
+*.tgz
+.power-ai/
+deps-updates.json
+node_modules/
+
+# 运行时产物（由脚本生成，发布时动态生成）
+manifest/notifications/upgrade-payload-*.json
+manifest/notifications/upgrade-payload-*.md
+manifest/impact-tasks/impact-task-*.md
+manifest/archive/notifications/
+manifest/archive/impact-tasks/
+manifest/changed-files.txt
+
+# 保留核心文件（使用 ! 取消忽略）
+!manifest/notifications/.npmignore
+!manifest/impact-tasks/.npmignore

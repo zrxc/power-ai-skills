@@ -1,0 +1,12 @@
+{
+  "name": "form-designer-skill",
+  "displayName": "表单设计器",
+  "owners": ["ui-team", "platform-form-team"],
+  "tags": ["form-designer", "dynamic-form"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["api-skill", "message-skill"]
+}

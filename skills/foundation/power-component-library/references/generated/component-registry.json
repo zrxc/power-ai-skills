@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-03-12",
+  "source": {
+    "mode": "manual-bootstrap",
+    "upstreamProject": "@power/p-components",
+    "upstreamRepoHint": "power-base-common-front/packages/p-components",
+    "notes": [
+      "第一版注册表依据 p-components 源码、powerdoc 文档和 demo 人工整理。",
+      "后续建议演进为脚本生成或半自动同步。"
+    ]
+  },
+  "components": [
+    {
+      "name": "PcContainer",
+      "displayName": "PcContainer",
+      "aliases": ["pc-container"],
+      "category": "container",
+      "status": "stable",
+      "description": "企业标准页面容器，用于普通列表页、表单页和详情页的页面外壳。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "PcContainer"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/pc-container.md",
+      "references": {
+        "sourcePath": "src/components/pc-container",
+        "powerdocPath": "",
+        "demoPaths": []
+      },
+      "contract": {
+        "props": [],
+        "events": [],
+        "slots": ["default", "extra"],
+        "expose": []
+      },
+      "recommendedScenarios": [
+        "standard-list-page",
+        "form-page",
+        "detail-page"
+      ],
+      "antiPatterns": [
+        "左树右表页面继续使用 PcContainer 替代分栏容器",
+        "把页面容器当成树、列表或弹窗能力的替代品"
+      ]
+    },
+    {
+      "name": "CommonLayoutContainer",
+      "displayName": "CommonLayoutContainer",
+      "aliases": ["PcLayoutMainContainer", "pc-layout-main-container"],
+      "category": "layout",
+      "status": "stable",
+      "description": "当前企业 tree-list 场景的首选骨架组件。真实落地中它默认承载左侧树区域，外部通常通过 current-node-key、default-expanded-keys 和 node-click 驱动右侧列表联动。若消费项目本地仍以 PcLayoutMainContainer 或 pc-layout-main-container 暴露，应只在确认没有 CommonLayoutContainer 导出时按别名映射落地。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "CommonLayoutContainer",
+          "notes": "优先使用该真实导出名。"
+        },
+        {
+          "from": "@power/p-components",
+          "name": "PcLayoutMainContainer",
+          "notes": "只有在消费项目确实没有 CommonLayoutContainer 导出时，才按该别名落地，并在代码中补充中文注释说明它映射到 CommonLayoutContainer。"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/common-layout-container.md",
+      "references": {
+        "sourcePath": "published export: @power/p-components > CommonLayoutContainer",
+        "powerdocPath": "",
+        "demoPaths": [
+          "D:/webCode/Myd/longjiang/powermodel-front/src/views/DepartmentUser/index.vue",
+          "D:/webCode/Myd/longjiang/power-portal-front/src/plugins/custom-components.ts"
+        ]
+      },
+      "contract": {
+        "props": ["current-node-key", "default-expanded-keys", "gap-placement"],
+        "events": ["node-click"],
+        "slots": ["content-header", "content-main"],
+        "expose": []
+      },
+      "recommendedScenarios": [
+        "department-tree-user-list",
+        "left-tree-right-content",
+        "tree-list-page",
+        "table-with-aside-filter"
+      ],
+      "antiPatterns": [
+        "树列表场景默认手工拼 pc-tree + pc-layout-main-container",
+        "树列表场景改用 pc-layout-page-common",
+        "用 el-container 或自定义布局重搭同样的分栏骨架"
+      ]
+    },
+    {
+      "name": "pc-tree",
+      "displayName": "PcTree",
+      "aliases": ["PcTree"],
+      "category": "tree",
+      "status": "stable",
+      "description": "企业标准树组件，封装搜索、节点标题、节点按钮和拖拽能力。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "PcTree"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/pc-tree.md",
+      "references": {
+        "sourcePath": "src/components/pc-tree/index.vue",
+        "powerdocPath": "apps/powerdoc/src/p-components/pc-tree.md",
+        "demoPaths": [
+          "apps/powerdoc/examples/pc-tree/show-title.vue",
+          "apps/powerdoc/examples/pc-tree/search.vue",
+          "apps/powerdoc/examples/pc-tree/node-btn.vue"
+        ]
+      },
+      "contract": {
+        "props": [
+          "title",
+          "data",
+          "nodeKey",
+          "isShowAddRootNode",
+          "isShowSearch",
+          "searchPlaceholder",
+          "remoteSearchMethod",
+          "filterNodeMethod",
+          "showAddBtn",
+          "showEditBtn",
+          "showDeleteBtn"
+        ],
+        "events": ["handleAddRootNode", "handleNodeBtn"],
+        "slots": [
+          "root-node-btn",
+          "node-label-icon",
+          "node-label",
+          "add-node",
+          "edit-node",
+          "delete-node",
+          "node-btn-before",
+          "node-btn-after"
+        ],
+        "expose": ["treeRef"]
+      },
+      "recommendedScenarios": [
+        "tree-selector",
+        "left-tree-filter",
+        "category-tree-management"
+      ],
+      "antiPatterns": [
+        "企业树场景回退到 el-tree",
+        "不传 nodeKey 就直接渲染树结构",
+        "在组件外重复实现节点操作按钮"
+      ]
+    },
+    {
+      "name": "pc-table-warp",
+      "displayName": "PcTableWarp",
+      "aliases": ["PcTableWarp"],
+      "category": "table",
+      "status": "stable",
+      "description": "企业标准列表封装，集成搜索、表格、列设置、分页、导入导出和操作按钮。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "PcTableWarp"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/pc-table-warp.md",
+      "references": {
+        "sourcePath": "src/components/pc-table/index.vue",
+        "powerdocPath": "apps/powerdoc/src/p-components/pc-table.md",
+        "demoPaths": [
+          "apps/powerdoc/examples/pc-table/search-basic.vue",
+          "apps/powerdoc/examples/pc-table/custom-button.vue",
+          "apps/powerdoc/examples/pc-table/setting.vue"
+        ]
+      },
+      "contract": {
+        "props": [
+          "searchValue",
+          "pageValue",
+          "searchList",
+          "moreSearchList",
+          "data",
+          "columnList",
+          "loading",
+          "total",
+          "settingColumnConfig",
+          "actionBtnConfig",
+          "gapPlacement"
+        ],
+        "events": [
+          "on-search",
+          "on-search-reset",
+          "update:searchValue",
+          "update:pageValue"
+        ],
+        "slots": [
+          "title-front",
+          "button-front",
+          "button-backend",
+          "search-comment-front",
+          "search-comment-backend",
+          "search-cpt-front",
+          "search-cpt",
+          "search-cpt-backend",
+          "check-search-item",
+          "column-header-*",
+          "column-default-*",
+          "import-top",
+          "import-bottom"
+        ],
+        "expose": ["tableRef", "pcTableRef"]
+      },
+      "recommendedScenarios": [
+        "standard-list-page",
+        "crud-list-page",
+        "right-table-in-tree-page"
+      ],
+      "antiPatterns": [
+        "标准 CRUD 列表页退回到 el-table + el-pagination",
+        "明明需要企业搜索和列设置能力却绕开 pc-table-warp"
+      ]
+    },
+    {
+      "name": "pc-dialog",
+      "displayName": "PcDialog",
+      "aliases": ["PcDialog"],
+      "category": "dialog",
+      "status": "stable",
+      "description": "企业标准弹窗，封装标题区、扩展操作区、底部按钮和确认取消 loading 流程。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "PcDialog"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/pc-dialog.md",
+      "references": {
+        "sourcePath": "src/components/pc-dialog/index.vue",
+        "powerdocPath": "apps/powerdoc/src/p-components/pc-dialog.md",
+        "demoPaths": [
+          "apps/powerdoc/examples/pc-dialog/basic.vue",
+          "apps/powerdoc/examples/pc-dialog/fullscreen.vue",
+          "apps/powerdoc/examples/pc-dialog/footer-basic.vue"
+        ]
+      },
+      "contract": {
+        "props": [
+          "modelValue",
+          "title",
+          "defaultFullScreen",
+          "canFullScreen",
+          "showFooter",
+          "showConfirmButton",
+          "confirmButtonText",
+          "cancelButtonText",
+          "confirmButtonType",
+          "cancelButtonType"
+        ],
+        "events": ["update:modelValue", "onConfirm", "onCancel", "close"],
+        "slots": ["default", "header", "extra", "footer"],
+        "expose": []
+      },
+      "recommendedScenarios": [
+        "create-edit-dialog",
+        "detail-dialog",
+        "tree-node-maintenance-dialog"
+      ],
+      "antiPatterns": [
+        "企业弹窗场景回退到 el-dialog",
+        "不用组件约定，手工重写确认取消 loading 流程"
+      ]
+    },
+    {
+      "name": "pc-tree-list",
+      "displayName": "PcTreeList",
+      "aliases": ["PcTreeList"],
+      "category": "tree",
+      "status": "candidate",
+      "description": "更高层的树业务组件，内置搜索、节点操作和节点级 CRUD 交互。",
+      "imports": [
+        {
+          "from": "@power/p-components",
+          "name": "PcTreeList"
+        }
+      ],
+      "guidePath": "skills/foundation/power-component-library/references/generated/component-guides/pc-tree-list.md",
+      "references": {
+        "sourcePath": "src/components/pc-tree-list/index.vue",
+        "powerdocPath": "",
+        "demoPaths": [
+          "src/views/aa-demo/p-components/pc-components/pc-tree-list/index.vue"
+        ]
+      },
+      "contract": {
+        "props": [
+          "currentKey",
+          "title",
+          "checkbox",
+          "isclickshow",
+          "operation",
+          "checkedkeys",
+          "datas",
+          "form",
+          "exhibition"
+        ],
+        "events": ["nodeClick", "submit", "deleteData", "nodeCheck", "exhibitionClick"],
+        "slots": [],
+        "expose": []
+      },
+      "recommendedScenarios": [
+        "tree-management-widget",
+        "tree-with-built-in-node-crud"
+      ],
+      "antiPatterns": [
+        "把 pc-tree-list 当成所有左树右表页面的默认骨架",
+        "未确认业务耦合程度就替代通用树加表组合"
+      ]
+    }
+  ],
+  "aliases": []
+}

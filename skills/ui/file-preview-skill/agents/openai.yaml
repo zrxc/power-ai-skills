@@ -1,0 +1,4 @@
+interface:
+  display_name: "文件预览生成"
+  short_description: "生成企业附件预览与文件查看方案"
+  default_prompt: "使用 $file-preview-skill 为当前功能生成文件预览方案。"

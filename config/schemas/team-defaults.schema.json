@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://power.example/schemas/team-defaults.schema.json",
+  "title": "Power AI Skills Team Defaults",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "presetSelections", "defaultSelection", "description", "guidance"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 2
+    },
+    "presetSelections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/presetSelection"
+      }
+    },
+    "defaultSelection": {
+      "$ref": "#/$defs/selection"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["whenToUse", "overrideRule"],
+      "properties": {
+        "whenToUse": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overrideRule": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "presets": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profiles": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "tools": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "excludeTools": {
+          "$ref": "#/$defs/stringArray"
+        }
+      },
+      "anyOf": [
+        { "required": ["preset"] },
+        { "required": ["presets"] },
+        { "required": ["profile"] },
+        { "required": ["profiles"] },
+        { "required": ["tools"] }
+      ]
+    },
+    "presetSelection": {
+      "allOf": [
+        { "$ref": "#/$defs/selection" },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "displayName",
+            "status",
+            "description",
+            "tags",
+            "recommendedScenarios"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "enum": ["stable", "beta", "deprecated"]
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tags": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "recommendedScenarios": {
+              "$ref": "#/$defs/stringArray"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

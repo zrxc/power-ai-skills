@@ -1,0 +1,60 @@
+{
+  "name": "basic-list-crud",
+  "displayName": "标准列表 CRUD",
+  "version": 1,
+  "intents": [
+    "列表页",
+    "管理列表",
+    "台账",
+    "清单页",
+    "标准 CRUD 列表"
+  ],
+  "primarySkill": "basic-list-page",
+  "secondarySkills": [
+    "dialog-skill",
+    "api-skill",
+    "message-skill",
+    "form-skill"
+  ],
+  "componentStack": {
+    "page": "PcContainer",
+    "table": "pc-table-warp",
+    "dialog": "pc-dialog"
+  },
+  "aliasNotes": [
+    "标准列表页默认走企业列表组件组合，不要按个人习惯自由拼装原生表格。",
+    "如果只是简单展示少量数据，也要优先确认企业列表组件是否已经覆盖需求。"
+  ],
+  "dataContracts": {
+    "listQueryRequiredFields": [
+      "pageNum",
+      "pageSize"
+    ],
+    "commonDisplayFields": [
+      "name",
+      "status",
+      "createTime"
+    ]
+  },
+  "interactionContracts": [
+    "搜索条件变化时重置 pageNum 为 1",
+    "点击搜索后刷新列表",
+    "点击分页后刷新列表",
+    "新增、编辑、删除成功后刷新列表"
+  ],
+  "prohibitedPatterns": [
+    "el-table",
+    "el-pagination",
+    "手写搜索区 + 原生表格 + 原生分页拼装"
+  ],
+  "validationAssertions": [
+    "页面容器必须优先使用企业容器",
+    "列表主体必须优先使用 pc-table-warp",
+    "弹窗增删改场景必须优先使用 pc-dialog"
+  ],
+  "commentRequirements": [
+    "生成代码默认使用中文注释",
+    "中文注释要说明搜索、分页、列表刷新和弹窗提交之间的关系",
+    "不要补充低信息量注释，只说明复杂状态和关键分支"
+  ]
+}

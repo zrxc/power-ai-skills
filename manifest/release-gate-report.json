@@ -1,0 +1,217 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "generatedAt": "2026-04-22T10:20:37.908Z",
+  "overallStatus": "pass",
+  "summary": {
+    "totalGates": 7,
+    "passedGates": 7,
+    "warningGates": 0,
+    "failedGates": 0,
+    "blockingIssues": 0,
+    "teamPolicyErrorCount": 0,
+    "readyForRegistration": 0,
+    "pendingFollowUps": 0,
+    "stalledProposalCount": 0,
+    "failedCompatibilityScenarios": 0,
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "scenariosWithOverdueGovernanceReviews": 0,
+    "pendingConversationReviews": 0,
+    "scenariosWithPendingConversationReviews": 0,
+    "pendingWrapperProposals": 0,
+    "scenariosWithPendingWrapperProposals": 0,
+    "pendingEvolutionProposalReviews": 0,
+    "scenariosWithPendingEvolutionProposalReviews": 0,
+    "acceptedEvolutionProposals": 0,
+    "scenariosWithAcceptedEvolutionProposals": 0,
+    "highRiskEvolutionProposals": 0,
+    "staleEvolutionProposalReviews": 0,
+    "scenariosWithStaleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "scenariosWithStaleAcceptedEvolutionProposals": 0
+  },
+  "gates": [
+    {
+      "id": "release-artifact-consistency",
+      "title": "release artifacts consistent",
+      "status": "pass",
+      "ok": true,
+      "blocking": true,
+      "details": {
+        "stdout": "发布产物一致性校验通过",
+        "stderr": ""
+      },
+      "remediation": "Run `pnpm refresh:release-artifacts` and `pnpm check:release-consistency` before re-running release gates."
+    },
+    {
+      "id": "wrapper-promotion-governance",
+      "title": "wrapper promotion governance clean",
+      "status": "pass",
+      "ok": true,
+      "blocking": true,
+      "details": {
+        "readyForRegistration": 0,
+        "pendingFollowUps": 0,
+        "stalledProposalCount": 0
+      },
+      "remediation": "Finalize, register, or clean up active wrapper promotion proposals before release."
+    },
+    {
+      "id": "team-policy-governance",
+      "title": "team policy governance valid",
+      "status": "pass",
+      "ok": true,
+      "blocking": true,
+      "details": {
+        "available": true,
+        "errorCount": 0,
+        "warningCount": 0,
+        "enforceConsumerMatrix": true,
+        "enforceReleaseGates": true
+      },
+      "remediation": "Run `npx power-ai-skills validate-team-policy --json` and fix `config/team-policy.json` before release."
+    },
+    {
+      "id": "consumer-compatibility",
+      "title": "consumer compatibility matrix green",
+      "status": "pass",
+      "ok": true,
+      "blocking": true,
+      "details": {
+        "required": true,
+        "available": true,
+        "scenarioCount": 1,
+        "passedScenarios": 1,
+        "failedScenarios": 0
+      },
+      "remediation": "Generate the consumer compatibility matrix and fix failed scenarios before release."
+    },
+    {
+      "id": "project-profile-decision-governance",
+      "title": "project profile recommendations are reviewed",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "unresolvedProjectProfileDecisions": 0,
+        "deferredProjectProfileDecisions": 0,
+        "rejectedProjectProfileDecisions": 0
+      },
+      "remediation": "Review unresolved project profile recommendations in consumer workspaces and persist accepted, rejected, or deferred decisions before broad rollout."
+    },
+    {
+      "id": "conversation-review-governance",
+      "title": "conversation review backlog is acknowledged",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "pendingConversationReviews": 0,
+        "scenariosWithPendingConversationReviews": 0,
+        "pendingWrapperProposals": 0,
+        "scenariosWithPendingWrapperProposals": 0
+      },
+      "remediation": "Review pending conversation-pattern decisions and wrapper follow-ups so conversation-derived changes are intentionally promoted or archived."
+    },
+    {
+      "id": "evolution-proposal-governance",
+      "title": "evolution proposal backlog is governed",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "pendingEvolutionProposalReviews": 0,
+        "scenariosWithPendingEvolutionProposalReviews": 0,
+        "acceptedEvolutionProposals": 0,
+        "scenariosWithAcceptedEvolutionProposals": 0,
+        "highRiskEvolutionProposals": 0,
+        "staleEvolutionProposalReviews": 0,
+        "scenariosWithStaleEvolutionProposalReviews": 0,
+        "staleAcceptedEvolutionProposals": 0,
+        "scenariosWithStaleAcceptedEvolutionProposals": 0
+      },
+      "remediation": "Review or apply accepted evolution proposals so high-risk self-evolution changes do not stay in limbo, especially for items that have exceeded proposal governance SLA."
+    }
+  ],
+  "consistency": {
+    "ok": true,
+    "exitCode": 0,
+    "stdout": "发布产物一致性校验通过",
+    "stderr": ""
+  },
+  "wrapperGovernance": {
+    "summary": {
+      "registeredWrapperCount": 9,
+      "proposalCount": 0,
+      "activeProposalCount": 0,
+      "archivedProposalCount": 0,
+      "registeredProposalCount": 0,
+      "readyForRegistration": 0,
+      "pendingFollowUps": 0,
+      "stalledProposalCount": 0,
+      "registeredWrappersWithoutProposal": 9
+    },
+    "recommendedActions": [],
+    "readyForRegistration": [],
+    "pendingFollowUps": [],
+    "stalledProposals": []
+  },
+  "compatibilityMatrix": {
+    "required": true,
+    "available": true,
+    "scenarioCount": 1,
+    "passedScenarioCount": 1,
+    "failedScenarioCount": 0
+  },
+  "governance": {
+    "matrixAvailable": true,
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "scenariosWithOverdueGovernanceReviews": 0,
+    "pendingConversationReviews": 0,
+    "scenariosWithPendingConversationReviews": 0,
+    "pendingWrapperProposals": 0,
+    "scenariosWithPendingWrapperProposals": 0,
+    "pendingEvolutionProposalReviews": 0,
+    "scenariosWithPendingEvolutionProposalReviews": 0,
+    "acceptedEvolutionProposals": 0,
+    "scenariosWithAcceptedEvolutionProposals": 0,
+    "highRiskEvolutionProposals": 0,
+    "staleEvolutionProposalReviews": 0,
+    "scenariosWithStaleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "scenariosWithStaleAcceptedEvolutionProposals": 0
+  },
+  "teamPolicy": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "releasePolicies": {
+      "requiredReports": [
+        "impact-report",
+        "upgrade-risk-report",
+        "consumer-compatibility-matrix",
+        "release-gate-report",
+        "upgrade-advice-package"
+      ],
+      "requiredChecks": [
+        "release-consistency",
+        "consumer-matrix",
+        "release-gates"
+      ],
+      "enforceConsumerMatrix": true,
+      "enforceReleaseGates": true
+    }
+  },
+  "recommendedActions": []
+}

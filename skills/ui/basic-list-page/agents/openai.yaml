@@ -1,0 +1,4 @@
+interface:
+  display_name: "基础列表页"
+  short_description: "生成可搜索分页的标准 CRUD 列表页"
+  default_prompt: "使用 $basic-list-page 生成当前功能的基础列表页。"

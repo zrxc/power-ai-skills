@@ -1,0 +1,4 @@
+interface:
+  display_name: "消息反馈处理"
+  short_description: "生成成功失败确认等统一消息反馈"
+  default_prompt: "使用 $message-skill 为当前流程补充消息反馈。"

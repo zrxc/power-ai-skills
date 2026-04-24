@@ -1,0 +1,175 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "generatedAt": "2026-04-24T07:33:54.895Z",
+  "releaseLevel": "minor",
+  "overallRiskLevel": "medium",
+  "blocked": false,
+  "audiences": [
+    "consumer",
+    "maintainer"
+  ],
+  "summary": {
+    "consumerCommandCount": 9,
+    "maintainerCommandCount": 4,
+    "manualCheckCount": 9,
+    "blockingCheckCount": 1,
+    "compatibilityFailures": 0,
+    "releaseGateFailures": 0,
+    "releaseGateWarnings": 0,
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "pendingConversationReviews": 0,
+    "warningLevelConversationRecords": 0,
+    "reviewLevelConversationRecords": 0,
+    "captureLevelConversationRecords": 0,
+    "scenariosWithWarningLevelConversationRecords": 0,
+    "scenariosWithReviewLevelConversationRecords": 0,
+    "pendingWrapperProposals": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "staleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "autoCaptureWarningScenarios": 0,
+    "autoCaptureAttentionScenarios": 0,
+    "autoCaptureCaptureBacklog": 0,
+    "autoCaptureResponseBacklog": 0,
+    "autoCaptureFailedRequests": 0,
+    "scenariosWithAutoCaptureBacklog": 0,
+    "scenariosWithAutoCaptureFailures": 0,
+    "teamPolicyDefaultToolCount": 5,
+    "teamProjectProfileCount": 2
+  },
+  "consumerCommands": [
+    {
+      "command": "pnpm exec power-ai-skills sync",
+      "reason": "Sync the latest skills, shared files, adapters, registry, and team policy snapshot.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills doctor",
+      "reason": "Validate the current consumer project's .power-ai workspace, entrypoints, and knowledge artifacts.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills show-defaults --format summary",
+      "reason": "Preview the current default selection and the recommended team project profile for this workspace.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills check-team-policy-drift --json",
+      "reason": "Confirm the project still matches the team policy baseline after upgrade.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills show-project-profile-decision --json",
+      "reason": "Inspect the current project profile decision record before accepting, rejecting, or deferring any new recommendation.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills check-governance-review-deadlines --json",
+      "reason": "Check whether any governance review deadlines are due today or already overdue after upgrade.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills check-auto-capture-runtime --json",
+      "reason": "Confirm the consumer project's auto-capture queues, failures, and bridge scaffolding are healthy after upgrade.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills check-capture-retention --json",
+      "reason": "Confirm conversation retention backlog is still within project policy before trusting self-evolution data.",
+      "audience": "consumer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills show-project-governance-context --json",
+      "reason": "Inspect the unified governance snapshot after upgrade, including profile decisions, pending conversation reviews, and baseline status.",
+      "audience": "consumer"
+    }
+  ],
+  "maintainerCommands": [
+    {
+      "command": "pnpm refresh:release-artifacts",
+      "reason": "Refresh release notes, impact, risk, payload, and other release artifacts.",
+      "audience": "maintainer"
+    },
+    {
+      "command": "pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-risk-report --require-automation-report --require-notification-payload",
+      "reason": "Validate that the core release artifacts are internally consistent.",
+      "audience": "maintainer"
+    },
+    {
+      "command": "pnpm check:release-gates -- --require-consumer-matrix",
+      "reason": "Run final release gates, including wrapper governance, team policy, and consumer compatibility checks.",
+      "audience": "maintainer"
+    },
+    {
+      "command": "pnpm exec power-ai-skills validate-team-policy --json",
+      "reason": "Validate config/team-policy.json again before publishing.",
+      "audience": "maintainer"
+    }
+  ],
+  "manualChecks": [
+    {
+      "title": "Handle impact follow-up",
+      "detail": "更新 baseline/current.json 中的 @power/utils 版本",
+      "audience": "consumer",
+      "blocking": false
+    },
+    {
+      "title": "Handle impact follow-up",
+      "detail": "更新 docs/compatibility-matrix.md 的 utils 兼容矩阵",
+      "audience": "consumer",
+      "blocking": false
+    },
+    {
+      "title": "Confirm recommended project profile drift",
+      "detail": "After upgrading, run `power-ai-skills show-defaults --format summary`, `check-team-policy-drift --json`, and `show-project-profile-decision --json` to confirm whether the recommended team project profile still matches the project's bound profile and whether a manual decision should be refreshed.",
+      "audience": "consumer",
+      "blocking": false
+    },
+    {
+      "title": "Team policy requires consumer matrix",
+      "detail": "The current team policy requires a green consumer compatibility matrix before release.",
+      "audience": "maintainer",
+      "blocking": true
+    },
+    {
+      "title": "Handle risk recommendation",
+      "detail": "确认 README、命令手册、发布文档和路线图与当前行为一致。",
+      "audience": "maintainer",
+      "blocking": false
+    },
+    {
+      "title": "Handle risk recommendation",
+      "detail": "补跑 `pnpm check:docs`，避免生成文档与仓库内容漂移。",
+      "audience": "maintainer",
+      "blocking": false
+    },
+    {
+      "title": "Handle risk recommendation",
+      "detail": "重点复核受影响域：utils。",
+      "audience": "maintainer",
+      "blocking": false
+    },
+    {
+      "title": "Handle risk recommendation",
+      "detail": "检查 3 个受影响 skill 的示例、兼容字段与升级说明。",
+      "audience": "maintainer",
+      "blocking": false
+    },
+    {
+      "title": "Handle risk recommendation",
+      "detail": "人工复核未命中风险分类的文件，避免遗漏新的治理面。",
+      "audience": "maintainer",
+      "blocking": false
+    }
+  ],
+  "notices": [
+    "Impact task generated for maintainer follow-up: D:\\webCode\\Myd\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260424-153354.md",
+    "Recommended release level: minor; overall risk level: medium.",
+    "Current team policy default tool baseline: agents-md, codex, trae, cursor, claude-code.",
+    "Current team policy project profile count: 2."
+  ]
+}

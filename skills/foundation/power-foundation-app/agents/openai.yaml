@@ -1,0 +1,4 @@
+interface:
+  display_name: "Power 基础框架"
+  short_description: "描述企业前端基础框架与默认开发基线"
+  default_prompt: "使用 $power-foundation-app 说明当前项目的企业前端基础框架基线。"

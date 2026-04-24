@@ -1,0 +1,4 @@
+interface:
+  display_name: "Power 组件库"
+  short_description: "描述企业组件库核心组件与页面选型规则"
+  default_prompt: "使用 $power-component-library 说明当前需求应优先选择哪些企业组件。"

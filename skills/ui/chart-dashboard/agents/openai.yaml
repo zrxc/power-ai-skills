@@ -1,0 +1,4 @@
+interface:
+  display_name: "图表看板生成"
+  short_description: "生成企业图表看板和统计卡片页面"
+  default_prompt: "使用 $chart-dashboard 生成当前功能的图表看板页面。"

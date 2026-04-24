@@ -1,0 +1,150 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "generatedAt": "2026-04-24T07:33:54.947Z",
+  "summary": {
+    "releaseGateStatus": "pass",
+    "releaseGateWarnings": 0,
+    "blockingIssues": 0,
+    "failedCompatibilityScenarios": 0,
+    "consumerMatrixScenarioCount": 1,
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "pendingConversationReviews": 0,
+    "reviewLevelConversationRecords": 0,
+    "captureLevelConversationRecords": 0,
+    "recordsWithAdmissionMetadata": 0,
+    "scenariosWithReviewLevelConversationRecords": 0,
+    "pendingWrapperProposals": 0,
+    "staleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "autoCaptureWarningScenarios": 0,
+    "autoCaptureAttentionScenarios": 0,
+    "autoCaptureCaptureBacklog": 0,
+    "autoCaptureResponseBacklog": 0,
+    "autoCaptureFailedRequests": 0,
+    "readyForRegistration": 0,
+    "pendingFollowUps": 0,
+    "stalledProposalCount": 0,
+    "matchedPromotionRelations": 1,
+    "totalPromotionRelations": 2,
+    "manualCheckCount": 9,
+    "blockingCheckCount": 1,
+    "recentActivityCount": 6
+  },
+  "backlog": {
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "pendingConversationReviews": 0,
+    "reviewLevelConversationRecords": 0,
+    "captureLevelConversationRecords": 0,
+    "recordsWithAdmissionMetadata": 0,
+    "scenariosWithReviewLevelConversationRecords": 0,
+    "pendingWrapperProposals": 0,
+    "staleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "autoCaptureWarningScenarios": 0,
+    "autoCaptureAttentionScenarios": 0,
+    "autoCaptureCaptureBacklog": 0,
+    "autoCaptureResponseBacklog": 0,
+    "autoCaptureFailedRequests": 0,
+    "readyForRegistration": 0,
+    "pendingFollowUps": 0,
+    "stalledProposalCount": 0
+  },
+  "releaseReadiness": {
+    "releaseGateStatus": "pass",
+    "blockingIssues": 0,
+    "warningGates": 0,
+    "canPublish": true,
+    "broadRolloutReady": true,
+    "requiresExplicitAcknowledgement": false
+  },
+  "recentActivities": [
+    {
+      "id": "upgrade-automation",
+      "type": "automation",
+      "generatedAt": "2026-04-24T07:33:54.897Z",
+      "summary": "Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release.",
+      "details": {
+        "changedFileCount": 11,
+        "affectedDomainCount": 1,
+        "affectedSkillCount": 3,
+        "overallRiskLevel": "medium"
+      }
+    },
+    {
+      "id": "version-record",
+      "type": "version-record",
+      "generatedAt": "2026-04-24T07:33:54.897Z",
+      "summary": "Version record last updated for @power/power-ai-skills@1.4.7.",
+      "details": {
+        "version": "1.4.7",
+        "recordedAt": "2026-04-24T07:33:54.897Z"
+      }
+    },
+    {
+      "id": "upgrade-advice",
+      "type": "upgrade-advice",
+      "generatedAt": "2026-04-24T07:33:54.895Z",
+      "summary": "Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s).",
+      "details": {
+        "consumerCommandCount": 9,
+        "maintainerCommandCount": 4,
+        "manualCheckCount": 9,
+        "blockingCheckCount": 1
+      }
+    },
+    {
+      "id": "promotion-trace",
+      "type": "promotion-trace",
+      "generatedAt": "2026-04-24T07:33:54.840Z",
+      "summary": "Promotion trace matched 1 relation(s) from 2 tracked relation(s).",
+      "details": {
+        "matchedRelations": 1,
+        "totalRelations": 2,
+        "changedFileCount": 11
+      }
+    },
+    {
+      "id": "release-gates",
+      "type": "release-gates",
+      "generatedAt": "2026-04-22T10:20:37.908Z",
+      "summary": "Release gates finished with status pass (0 blocking, 0 warning).",
+      "details": {
+        "overallStatus": "pass",
+        "failedGates": 0,
+        "warningGates": 0,
+        "totalGates": 7
+      }
+    },
+    {
+      "id": "consumer-compatibility",
+      "type": "consumer-compatibility",
+      "generatedAt": "2026-04-22T10:20:37.414Z",
+      "summary": "Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s).",
+      "details": {
+        "totalScenarios": 1,
+        "passedScenarios": 1,
+        "failedScenarios": 0
+      }
+    }
+  ],
+  "artifacts": {
+    "automationReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\automation-report.json",
+    "releaseGateReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\release-gate-report.json",
+    "upgradeAdvicePackagePath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-advice-package.json",
+    "consumerCompatibilityMatrixPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\consumer-compatibility-matrix.json",
+    "promotionTraceReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\promotion-trace-report.json",
+    "versionRecordPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\version-record.json"
+  },
+  "recommendedActions": [
+    "The current team policy requires a green consumer compatibility matrix before release."
+  ]
+}

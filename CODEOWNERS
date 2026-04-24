@@ -1,0 +1,19 @@
+# 基础框架与入口
+/skills/orchestration/ @fe-arch-team
+/skills/foundation/ @fe-arch-team
+
+# 通用 UI 能力
+/skills/ui/ @ui-team
+
+# 流程与权限
+/skills/workflow/ @workflow-fe-team
+
+# 工程化与测试
+/skills/engineering/ @fe-platform-team
+
+# 仓库治理
+/scripts/ @fe-platform-team
+/docs/ @fe-arch-team
+/templates/ @fe-arch-team
+/baseline/ @fe-arch-team
+/manifest/ @fe-platform-team

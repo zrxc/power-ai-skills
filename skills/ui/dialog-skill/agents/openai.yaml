@@ -1,0 +1,4 @@
+interface:
+  display_name: "弹窗流程生成"
+  short_description: "生成新增编辑查看等标准弹窗流程"
+  default_prompt: "使用 $dialog-skill 生成当前功能的弹窗流程。"

@@ -1,0 +1,62 @@
+{
+  "$schema": "./schemas/template-registry.schema.json",
+  "schemaVersion": 1,
+  "templates": [
+    {
+      "name": "shared-agents",
+      "source": "shared/AGENTS.md",
+      "output": "shared/AGENTS.md",
+      "ownerTool": "agents-md",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "shared-claude",
+      "source": "shared/CLAUDE.md",
+      "output": "shared/CLAUDE.md",
+      "ownerTool": "claude-code",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "shared-gemini",
+      "source": "shared/GEMINI.md",
+      "output": "shared/GEMINI.md",
+      "ownerTool": "gemini-cli",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "shared-conventions",
+      "source": "shared/CONVENTIONS.md",
+      "output": "shared/CONVENTIONS.md",
+      "ownerTool": "aider",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "shared-aider-config",
+      "source": "shared/aider.conf.yml",
+      "output": "shared/aider.conf.yml",
+      "ownerTool": "aider",
+      "placeholders": []
+    },
+    {
+      "name": "cursor-rules",
+      "source": "adapters/cursor/skills.mdc",
+      "output": "adapters/cursor/skills.mdc",
+      "ownerTool": "cursor",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "cline-rules",
+      "source": "adapters/cline/01-power-ai.md",
+      "output": "adapters/cline/01-power-ai.md",
+      "ownerTool": "cline",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    },
+    {
+      "name": "windsurf-rules",
+      "source": "adapters/windsurf/01-power-ai.md",
+      "output": "adapters/windsurf/01-power-ai.md",
+      "ownerTool": "windsurf",
+      "placeholders": ["POWER_AI_EXECUTION_FLOW", "POWER_AI_READ_PRIORITY", "POWER_AI_CONVERSATION_CAPTURE"]
+    }
+  ]
+}

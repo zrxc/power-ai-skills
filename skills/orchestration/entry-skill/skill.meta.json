@@ -1,0 +1,34 @@
+{
+  "name": "entry-skill",
+  "displayName": "入口技能",
+  "owners": ["fe-arch-team"],
+  "tags": ["entry", "routing", "orchestration"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": [
+    "basic-list-page",
+    "tree-list-page",
+    "form-skill",
+    "dialog-skill",
+    "api-skill",
+    "form-designer-skill",
+    "message-skill",
+    "permission-page",
+    "upload-import-export",
+    "chart-dashboard",
+    "advanced-search-skill",
+    "detail-page-skill",
+    "approval-workflow-skill",
+    "file-preview-skill",
+    "route-menu-skill",
+    "global-store-skill",
+    "runtime-extension-skill",
+    "style-theme-skill",
+    "utils-extension-skill",
+    "plugin-extension-skill",
+    "project-structure-skill"
+  ]
+}

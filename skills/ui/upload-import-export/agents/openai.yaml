@@ -1,0 +1,4 @@
+interface:
+  display_name: "上传导入导出"
+  short_description: "生成企业上传导入导出和下载处理方案"
+  default_prompt: "使用 $upload-import-export 为当前功能生成上传导入导出方案。"

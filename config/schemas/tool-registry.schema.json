@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://power.example/schemas/tool-registry.schema.json",
+  "title": "Power AI Skills Tool Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "instructionRendering", "tools", "profiles"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 2
+    },
+    "instructionRendering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sharedExecutionFlow"],
+      "properties": {
+        "sharedExecutionFlow": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/tool"
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "source", "target"],
+      "properties": {
+        "type": {
+          "enum": ["file-link", "directory-link"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "instructionLoading": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roleLabel",
+        "primarySourceType",
+        "primarySources",
+        "supplementalSources",
+        "routingPath",
+        "projectLocalPath",
+        "conflictPriority"
+      ],
+      "properties": {
+        "executionFlowIntro": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "roleLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primarySourceType": {
+          "enum": ["file", "directory", "mixed"]
+        },
+        "primarySources": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "routingPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projectLocalPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "conflictPriority": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "overrideNote": {
+          "type": "string"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "displayName",
+        "level",
+        "status",
+        "description",
+        "tags",
+        "recommendedScenarios",
+        "dependsOn",
+        "instructionLoading",
+        "entrypoints"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "enum": ["native", "compatible", "experimental"]
+        },
+        "status": {
+          "enum": ["stable", "beta", "deprecated"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "recommendedScenarios": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "dependsOn": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "instructionLoading": {
+          "$ref": "#/$defs/instructionLoading"
+        },
+        "entrypoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entrypoint"
+          }
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "displayName",
+        "status",
+        "description",
+        "tags",
+        "recommendedScenarios",
+        "tools"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": ["stable", "beta", "deprecated"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "recommendedScenarios": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "tools": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    }
+  }
+}

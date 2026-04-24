@@ -1,0 +1,12 @@
+{
+  "name": "style-theme-skill",
+  "displayName": "主题样式",
+  "owners": ["ui-team", "fe-arch-team"],
+  "tags": ["style", "theme", "scss", "token"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-foundation-app"]
+}

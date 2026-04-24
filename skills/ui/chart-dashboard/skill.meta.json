@@ -1,0 +1,12 @@
+{
+  "name": "chart-dashboard",
+  "displayName": "图表看板生成",
+  "owners": ["ui-team", "data-vis-team"],
+  "tags": ["dashboard", "chart", "echarts"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["api-skill", "message-skill"]
+}

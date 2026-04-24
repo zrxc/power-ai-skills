@@ -1,0 +1,4 @@
+interface:
+  display_name: "功能入口路由"
+  short_description: "根据自然语言需求识别主 skill、辅助 skill、页面配方和组件知识入口"
+  default_prompt: "使用 $entry-skill 分析当前需求，先确定主 skill 和辅助 skill；如果命中页面场景，同时给出对应的页面配方、企业组件注册表和关键组件 guide，再开始实现。默认中文输出，并在生成代码时补充有信息量的中文注释。"

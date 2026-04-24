@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-04-22T10:20:37.414Z",
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "commands": [
+    "init",
+    "sync",
+    "doctor"
+  ],
+  "profile": "",
+  "requestedTools": [],
+  "summary": {
+    "totalScenarios": 1,
+    "passedScenarios": 1,
+    "failedScenarios": 0,
+    "fixtureScenarioCount": 1,
+    "projectScenarioCount": 0,
+    "strategies": [
+      {
+        "strategy": "team-default",
+        "count": 1
+      }
+    ],
+    "fixtures": [
+      {
+        "fixtureName": "basic",
+        "count": 1
+      }
+    ],
+    "selectedTools": [
+      {
+        "toolName": "claude-code",
+        "count": 1
+      },
+      {
+        "toolName": "codex",
+        "count": 1
+      },
+      {
+        "toolName": "cursor",
+        "count": 1
+      },
+      {
+        "toolName": "trae",
+        "count": 1
+      }
+    ],
+    "selectedProjectProfiles": [],
+    "projectProfileDecisions": [
+      {
+        "decision": "auto-recommended",
+        "count": 1
+      }
+    ],
+    "unresolvedProjectProfileDecisions": 0,
+    "deferredProjectProfileDecisions": 0,
+    "rejectedProjectProfileDecisions": 0,
+    "pendingConversationReviews": 0,
+    "scenariosWithPendingConversationReviews": 0,
+    "pendingWrapperProposals": 0,
+    "scenariosWithPendingWrapperProposals": 0,
+    "overdueGovernanceReviews": 0,
+    "dueTodayGovernanceReviews": 0,
+    "scenariosWithOverdueGovernanceReviews": 0,
+    "pendingEvolutionProposalReviews": 0,
+    "scenariosWithPendingEvolutionProposalReviews": 0,
+    "acceptedEvolutionProposals": 0,
+    "scenariosWithAcceptedEvolutionProposals": 0,
+    "highRiskEvolutionProposals": 0,
+    "staleEvolutionProposalReviews": 0,
+    "scenariosWithStaleEvolutionProposalReviews": 0,
+    "staleAcceptedEvolutionProposals": 0,
+    "scenariosWithStaleAcceptedEvolutionProposals": 0
+  },
+  "dimensions": {
+    "commandSet": [
+      "init",
+      "sync",
+      "doctor"
+    ],
+    "initStrategy": "team-default",
+    "profiles": [],
+    "requestedTools": [],
+    "selectedTools": [
+      "claude-code",
+      "codex",
+      "cursor",
+      "trae"
+    ],
+    "selectedProjectProfiles": [],
+    "projectProfileDecisions": [
+      "auto-recommended"
+    ],
+    "fixtures": [
+      "basic"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenarioId": "basic",
+      "scenarioLabel": "fixture:basic",
+      "targetType": "fixture",
+      "fixtureName": "basic",
+      "projectRoot": "C:\\Users\\82591\\AppData\\Local\\Temp\\power-ai-skills-verify-basic-mYtmxL\\basic",
+      "initStrategy": "team-default",
+      "commands": [
+        "init",
+        "sync",
+        "doctor"
+      ],
+      "ok": true,
+      "doctorOk": true,
+      "artifactOk": true,
+      "selectedPresets": [
+        "enterprise-standard"
+      ],
+      "selectedTools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "trae"
+      ],
+      "expandedTools": [
+        "agents-md",
+        "claude-code",
+        "codex",
+        "cursor",
+        "trae"
+      ],
+      "governanceContext": {
+        "selectedProjectProfile": "",
+        "recommendedProjectProfile": "",
+        "projectProfileDecision": "auto-recommended",
+        "projectProfileDecisionReviewStatus": "not-scheduled",
+        "overdueGovernanceReviews": 0,
+        "dueTodayGovernanceReviews": 0,
+        "baselineStatus": "not-run",
+        "policyDriftStatus": "ok",
+        "pendingConversationReviews": 0,
+        "pendingWrapperProposals": 0,
+        "evolutionProposalReviewCount": 0,
+        "acceptedEvolutionProposals": 0,
+        "highRiskEvolutionProposals": 0,
+        "staleEvolutionProposalReviews": 0,
+        "staleAcceptedEvolutionProposals": 0,
+        "hasRecommendedProfileDrift": false
+      },
+      "failureCodes": [],
+      "failedCommands": [],
+      "missingArtifacts": [],
+      "artifactCheckCount": 10
+    }
+  ]
+}

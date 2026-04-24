@@ -1,0 +1,30 @@
+---
+description: 使用企业统一前端 skill 库处理 @power 基础框架和组件库相关任务。
+globs:
+alwaysApply: true
+---
+
+<!-- generated-by: @power/power-ai-skills -->
+
+# 企业前端 skill
+
+- 单一源目录：`.power-ai/skills`
+- 项目私有 overlay：`.power-ai/skills/project-local`
+- 当前工具选择：`.power-ai/selected-tools.json`
+- 生成代码时补详细中文注释，重点说明复杂逻辑和边界处理
+{{POWER_AI_EXECUTION_FLOW}}
+
+# 读取优先级
+
+{{POWER_AI_READ_PRIORITY}}
+
+# Conversation Capture
+{{POWER_AI_CONVERSATION_CAPTURE}}
+
+# 核心模式
+
+- 标准页面：`PcContainer`
+- 左树右表：`CommonLayoutContainer`
+- 列表：`pc-table-warp`
+- 弹窗：`pc-dialog`
+- 动态表单：`pc-form-designer`

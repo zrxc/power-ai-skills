@@ -1,0 +1,12 @@
+{
+  "name": "utils-extension-skill",
+  "displayName": "Utils 扩展",
+  "owners": ["platform-team", "fe-arch-team"],
+  "tags": ["utils", "helper", "shared", "toolkit"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-foundation-app"]
+}

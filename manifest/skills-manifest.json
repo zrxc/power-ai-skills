@@ -1,0 +1,556 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "generatedAt": "2026-04-24T07:33:54.582Z",
+  "skills": [
+    {
+      "name": "advanced-search-skill",
+      "displayName": "高级搜索生成",
+      "owners": [
+        "ui-team"
+      ],
+      "tags": [
+        "search",
+        "advanced-search",
+        "filter"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "message-skill"
+      ],
+      "skillPath": "ui/advanced-search-skill"
+    },
+    {
+      "name": "api-skill",
+      "displayName": "接口模块生成",
+      "owners": [
+        "fe-arch-team"
+      ],
+      "tags": [
+        "api",
+        "typescript",
+        "request"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [],
+      "skillPath": "engineering/api-skill"
+    },
+    {
+      "name": "approval-workflow-skill",
+      "displayName": "审批流页面生成",
+      "owners": [
+        "biz-platform-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "approval",
+        "workflow",
+        "process"
+      ],
+      "status": "beta",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "detail-page-skill",
+        "message-skill",
+        "permission-page"
+      ],
+      "skillPath": "workflow/approval-workflow-skill"
+    },
+    {
+      "name": "basic-list-page",
+      "displayName": "基础列表页",
+      "owners": [
+        "ui-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "list",
+        "crud",
+        "table"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "dialog-skill",
+        "api-skill",
+        "message-skill"
+      ],
+      "skillPath": "ui/basic-list-page"
+    },
+    {
+      "name": "chart-dashboard",
+      "displayName": "图表看板生成",
+      "owners": [
+        "ui-team",
+        "data-vis-team"
+      ],
+      "tags": [
+        "dashboard",
+        "chart",
+        "echarts"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "api-skill",
+        "message-skill"
+      ],
+      "skillPath": "ui/chart-dashboard"
+    },
+    {
+      "name": "detail-page-skill",
+      "displayName": "详情页生成",
+      "owners": [
+        "ui-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "detail",
+        "read-only",
+        "page"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "api-skill"
+      ],
+      "skillPath": "ui/detail-page-skill"
+    },
+    {
+      "name": "dialog-skill",
+      "displayName": "弹窗流程生成",
+      "owners": [
+        "ui-team"
+      ],
+      "tags": [
+        "dialog",
+        "modal",
+        "form"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "message-skill"
+      ],
+      "skillPath": "ui/dialog-skill"
+    },
+    {
+      "name": "entry-skill",
+      "displayName": "入口技能",
+      "owners": [
+        "fe-arch-team"
+      ],
+      "tags": [
+        "entry",
+        "routing",
+        "orchestration"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "basic-list-page",
+        "tree-list-page",
+        "form-skill",
+        "dialog-skill",
+        "api-skill",
+        "form-designer-skill",
+        "message-skill",
+        "permission-page",
+        "upload-import-export",
+        "chart-dashboard",
+        "advanced-search-skill",
+        "detail-page-skill",
+        "approval-workflow-skill",
+        "file-preview-skill",
+        "route-menu-skill",
+        "global-store-skill",
+        "runtime-extension-skill",
+        "style-theme-skill",
+        "utils-extension-skill",
+        "plugin-extension-skill",
+        "project-structure-skill"
+      ],
+      "skillPath": "orchestration/entry-skill"
+    },
+    {
+      "name": "file-preview-skill",
+      "displayName": "文件预览生成",
+      "owners": [
+        "ui-team"
+      ],
+      "tags": [
+        "file",
+        "preview",
+        "attachment"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "message-skill"
+      ],
+      "skillPath": "ui/file-preview-skill"
+    },
+    {
+      "name": "form-designer-skill",
+      "displayName": "表单设计器",
+      "owners": [
+        "ui-team",
+        "platform-form-team"
+      ],
+      "tags": [
+        "form-designer",
+        "dynamic-form"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "api-skill",
+        "message-skill"
+      ],
+      "skillPath": "ui/form-designer-skill"
+    },
+    {
+      "name": "form-skill",
+      "displayName": "普通表单生成",
+      "owners": [
+        "ui-team"
+      ],
+      "tags": [
+        "form",
+        "validation"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "message-skill"
+      ],
+      "skillPath": "ui/form-skill"
+    },
+    {
+      "name": "global-store-skill",
+      "displayName": "全局状态接入",
+      "owners": [
+        "platform-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "store",
+        "global",
+        "runtime"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-foundation-app"
+      ],
+      "skillPath": "foundation/global-store-skill"
+    },
+    {
+      "name": "message-skill",
+      "displayName": "消息反馈处理",
+      "owners": [
+        "ui-team"
+      ],
+      "tags": [
+        "message",
+        "feedback",
+        "confirm"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [],
+      "skillPath": "ui/message-skill"
+    },
+    {
+      "name": "permission-page",
+      "displayName": "权限页面处理",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "tags": [
+        "permission",
+        "auth",
+        "page"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "message-skill"
+      ],
+      "skillPath": "workflow/permission-page"
+    },
+    {
+      "name": "plugin-extension-skill",
+      "displayName": "插件扩展",
+      "owners": [
+        "fe-arch-team",
+        "ui-team"
+      ],
+      "tags": [
+        "plugin",
+        "setup",
+        "install",
+        "foundation"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-component-library",
+        "runtime-extension-skill",
+        "style-theme-skill"
+      ],
+      "skillPath": "foundation/plugin-extension-skill"
+    },
+    {
+      "name": "power-component-library",
+      "displayName": "Power 组件库",
+      "owners": [
+        "ui-team",
+        "platform-team"
+      ],
+      "tags": [
+        "components",
+        "design-system",
+        "selection"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [],
+      "skillPath": "foundation/power-component-library"
+    },
+    {
+      "name": "power-foundation-app",
+      "displayName": "Power 基础框架",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "tags": [
+        "framework",
+        "runtime",
+        "baseline"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0",
+        "style": "^6.5.0"
+      },
+      "dependsOn": [],
+      "skillPath": "foundation/power-foundation-app"
+    },
+    {
+      "name": "project-structure-skill",
+      "displayName": "项目结构规范",
+      "owners": [
+        "fe-arch-team"
+      ],
+      "tags": [
+        "structure",
+        "architecture",
+        "project"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-foundation-app"
+      ],
+      "skillPath": "foundation/project-structure-skill"
+    },
+    {
+      "name": "route-menu-skill",
+      "displayName": "路由菜单规划",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "tags": [
+        "router",
+        "menu",
+        "module"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "project-structure-skill",
+        "permission-page"
+      ],
+      "skillPath": "foundation/route-menu-skill"
+    },
+    {
+      "name": "runtime-extension-skill",
+      "displayName": "Runtime 扩展",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "tags": [
+        "runtime",
+        "router",
+        "store",
+        "hooks"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-foundation-app",
+        "utils-extension-skill",
+        "style-theme-skill"
+      ],
+      "skillPath": "foundation/runtime-extension-skill"
+    },
+    {
+      "name": "style-theme-skill",
+      "displayName": "主题样式",
+      "owners": [
+        "ui-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "style",
+        "theme",
+        "scss",
+        "token"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-foundation-app"
+      ],
+      "skillPath": "foundation/style-theme-skill"
+    },
+    {
+      "name": "tree-list-page",
+      "displayName": "左树右表页面",
+      "owners": [
+        "ui-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "tree",
+        "list",
+        "layout"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "api-skill",
+        "dialog-skill",
+        "message-skill"
+      ],
+      "skillPath": "ui/tree-list-page"
+    },
+    {
+      "name": "upload-import-export",
+      "displayName": "上传导入导出",
+      "owners": [
+        "ui-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "upload",
+        "import",
+        "export",
+        "download"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "api-skill",
+        "message-skill"
+      ],
+      "skillPath": "ui/upload-import-export"
+    },
+    {
+      "name": "utils-extension-skill",
+      "displayName": "Utils 扩展",
+      "owners": [
+        "platform-team",
+        "fe-arch-team"
+      ],
+      "tags": [
+        "utils",
+        "helper",
+        "shared",
+        "toolkit"
+      ],
+      "status": "stable",
+      "compatibility": {
+        "runtimeVue3": "^6.5.0",
+        "pComponents": "^6.5.0"
+      },
+      "dependsOn": [
+        "power-foundation-app"
+      ],
+      "skillPath": "foundation/utils-extension-skill"
+    }
+  ]
+}

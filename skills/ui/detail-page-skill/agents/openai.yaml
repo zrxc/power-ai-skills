@@ -1,0 +1,4 @@
+interface:
+  display_name: "详情页生成"
+  short_description: "生成企业详情页与信息展示页面"
+  default_prompt: "使用 $detail-page-skill 生成当前功能的详情页。"

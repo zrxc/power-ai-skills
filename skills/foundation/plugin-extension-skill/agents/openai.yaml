@@ -1,0 +1,4 @@
+interface:
+  display_name: "插件扩展"
+  short_description: "扩展 p-components / runtime-vue3 的插件注册、全局安装和 setup 逻辑。"
+  default_prompt: "使用 $plugin-extension-skill 完成当前插件扩展需求。"

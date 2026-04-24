@@ -1,0 +1,12 @@
+{
+  "name": "basic-list-page",
+  "displayName": "基础列表页",
+  "owners": ["ui-team", "fe-arch-team"],
+  "tags": ["list", "crud", "table"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["dialog-skill", "api-skill", "message-skill"]
+}

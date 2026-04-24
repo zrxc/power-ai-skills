@@ -1,0 +1,47 @@
+{
+  "$schema": "./schemas/team-defaults.schema.json",
+  "schemaVersion": 2,
+  "presetSelections": [
+    {
+      "name": "enterprise-standard",
+      "displayName": "企业标准组合",
+      "status": "stable",
+      "description": "默认启用 Codex、Trae、Cursor 与 Claude Code，覆盖终端代理和编辑器代理。",
+      "tags": ["default", "enterprise"],
+      "recommendedScenarios": ["新项目首次接入", "企业标准工作流"],
+      "profiles": ["openai"],
+      "tools": ["trae", "cursor", "claude-code"],
+      "excludeTools": []
+    },
+    {
+      "name": "editor-collaboration",
+      "displayName": "编辑器协作组合",
+      "status": "stable",
+      "description": "面向编辑器优先的团队，保留 Cursor、Cline、Windsurf，并补充 Codex 作为终端兜底。",
+      "tags": ["editor", "collaboration"],
+      "recommendedScenarios": ["IDE 内协作开发", "多编辑器共存"],
+      "profiles": ["editor"],
+      "tools": ["codex"],
+      "excludeTools": []
+    },
+    {
+      "name": "terminal-evaluation",
+      "displayName": "终端评估组合",
+      "status": "beta",
+      "description": "用于终端代理集中评估，覆盖 Codex、Claude Code、Gemini CLI 与 Aider。",
+      "tags": ["terminal", "evaluation"],
+      "recommendedScenarios": ["新工具评估", "终端代理对比"],
+      "profiles": ["terminal"],
+      "tools": [],
+      "excludeTools": []
+    }
+  ],
+  "defaultSelection": {
+    "preset": "enterprise-standard"
+  },
+  "description": "企业前端团队默认以企业标准组合接入，兼顾终端代理、编辑器代理和历史工具兼容。",
+  "guidance": {
+    "whenToUse": "新项目首次接入，且还没有历史工具入口或 selected-tools.json 时使用。",
+    "overrideRule": "业务项目如需不同工具集合，优先通过 init --preset / --tool / --profile 或 add-tool / remove-tool 固化到 selected-tools.json。"
+  }
+}

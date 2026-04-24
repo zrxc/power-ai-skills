@@ -1,0 +1,4 @@
+interface:
+  display_name: "高级搜索生成"
+  short_description: "生成复杂查询列表页的高级搜索区域"
+  default_prompt: "使用 $advanced-search-skill 为当前页面生成高级搜索方案。"

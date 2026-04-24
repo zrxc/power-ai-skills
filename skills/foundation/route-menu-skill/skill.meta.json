@@ -1,0 +1,12 @@
+{
+  "name": "route-menu-skill",
+  "displayName": "路由菜单规划",
+  "owners": ["fe-arch-team", "platform-team"],
+  "tags": ["router", "menu", "module"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["project-structure-skill", "permission-page"]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "表单设计器"
+  short_description: "生成可配置表单设计器与渲染流程"
+  default_prompt: "使用 $form-designer-skill 生成当前功能的表单设计器方案。"

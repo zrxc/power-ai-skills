@@ -1,0 +1,12 @@
+{
+  "name": "dialog-skill",
+  "displayName": "弹窗流程生成",
+  "owners": ["ui-team"],
+  "tags": ["dialog", "modal", "form"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["message-skill"]
+}

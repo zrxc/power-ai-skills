@@ -1,0 +1,62 @@
+{
+  "name": "tree-user-crud",
+  "displayName": "部门树 + 用户 CRUD",
+  "version": 1,
+  "intents": [
+    "树列表",
+    "左树右表",
+    "左侧部门右侧用户",
+    "点击部门显示用户",
+    "部门用户管理"
+  ],
+  "primarySkill": "tree-list-page",
+  "secondarySkills": [
+    "dialog-skill",
+    "api-skill",
+    "message-skill",
+    "form-skill"
+  ],
+  "componentStack": {
+    "page": "CommonLayoutContainer",
+    "tree": "CommonLayoutContainer",
+    "table": "pc-table-warp",
+    "dialog": "pc-dialog"
+  },
+  "aliasNotes": [
+    "当前企业 tree-list 规则以 CommonLayoutContainer 作为首选页面骨架名称。",
+    "在真实落地中，CommonLayoutContainer 默认承载左侧部门树，不要先手工补一棵 pc-tree。",
+    "如果消费项目源码中真实导出名是 PcLayoutMainContainer / pc-layout-main-container，只能在确认没有 CommonLayoutContainer 导出时按别名落地。"
+  ],
+  "dataContracts": {
+    "treeNodeRequiredFields": ["code", "label", "children"],
+    "listQueryRequiredFields": ["departmentId", "pageNum", "pageSize"],
+    "listDisplayFields": ["name", "gender", "phone", "age"]
+  },
+  "interactionContracts": [
+    "通过 CommonLayoutContainer 的 node-click 记录当前部门主键",
+    "切换树节点后把 pageNum 重置为 1",
+    "切换树节点后刷新右侧用户列表",
+    "新增、编辑、删除成功后刷新当前节点下的列表",
+    "未选中合法部门节点时阻止新增或查询"
+  ],
+  "prohibitedPatterns": [
+    "el-tree",
+    "el-table",
+    "pc-layout-page-common",
+    "custom split layout",
+    "默认手工拼 pc-tree + pc-layout-main-container"
+  ],
+  "validationAssertions": [
+    "页面骨架必须优先使用 CommonLayoutContainer 或其登记别名",
+    "右侧列表必须使用 pc-table-warp",
+    "左侧部门树优先使用 CommonLayoutContainer 内置树能力",
+    "只有在内置树明确不满足需求时，才允许改用企业树组件",
+    "命中该配方时不要回退到原生 Element Plus 树表组件"
+  ],
+  "commentRequirements": [
+    "生成代码默认使用中文注释",
+    "中文注释要说明节点切换、分页重置、列表刷新和弹窗提交后的联动关系",
+    "如果消费项目实际导入的是 PcLayoutMainContainer，要补注释说明它和 CommonLayoutContainer 的映射关系",
+    "不要补充低信息量注释，只说明复杂状态和关键分支"
+  ]
+}

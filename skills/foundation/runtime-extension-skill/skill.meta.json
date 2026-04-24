@@ -1,0 +1,12 @@
+{
+  "name": "runtime-extension-skill",
+  "displayName": "Runtime 扩展",
+  "owners": ["fe-arch-team", "platform-team"],
+  "tags": ["runtime", "router", "store", "hooks"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["power-foundation-app", "utils-extension-skill", "style-theme-skill"]
+}

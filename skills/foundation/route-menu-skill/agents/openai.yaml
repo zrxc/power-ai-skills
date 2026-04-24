@@ -1,0 +1,4 @@
+interface:
+  display_name: "路由菜单规划"
+  short_description: "统一企业前端路由注册和菜单接入规则"
+  default_prompt: "使用 $route-menu-skill 为当前功能规划路由和菜单接入。"

@@ -1,0 +1,12 @@
+{
+  "name": "advanced-search-skill",
+  "displayName": "高级搜索生成",
+  "owners": ["ui-team"],
+  "tags": ["search", "advanced-search", "filter"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["message-skill"]
+}

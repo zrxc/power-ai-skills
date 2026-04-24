@@ -1,0 +1,12 @@
+{
+  "name": "your-skill-name",
+  "displayName": "技能展示名",
+  "owners": ["team-name"],
+  "tags": ["tag1", "tag2"],
+  "status": "beta",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": []
+}

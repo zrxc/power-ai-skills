@@ -1,0 +1,12 @@
+{
+  "name": "upload-import-export",
+  "displayName": "上传导入导出",
+  "owners": ["ui-team", "fe-arch-team"],
+  "tags": ["upload", "import", "export", "download"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["api-skill", "message-skill"]
+}

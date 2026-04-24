@@ -1,0 +1,4 @@
+interface:
+  display_name: "全局状态接入"
+  short_description: "统一企业全局 store 与运行时共享状态接入"
+  default_prompt: "使用 $global-store-skill 规划当前功能的全局状态接入方式。"

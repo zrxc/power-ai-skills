@@ -1,0 +1,4 @@
+interface:
+  display_name: "Runtime 扩展"
+  short_description: "扩展 runtime-vue3 的 router、store、hooks 和全局运行时能力。"
+  default_prompt: "使用 $runtime-extension-skill 完成当前 runtime 扩展需求。"

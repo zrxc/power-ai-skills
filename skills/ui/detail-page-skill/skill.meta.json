@@ -1,0 +1,12 @@
+{
+  "name": "detail-page-skill",
+  "displayName": "详情页生成",
+  "owners": ["ui-team", "fe-arch-team"],
+  "tags": ["detail", "read-only", "page"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": ["api-skill"]
+}

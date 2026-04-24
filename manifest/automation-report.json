@@ -1,0 +1,28 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "repoPath": "D:\\webCode\\Myd\\power-ai-skills",
+  "changedFilesPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\changed-files.txt",
+  "impactReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\impact-report.json",
+  "riskReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-risk-report.json",
+  "riskMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-risk-report.md",
+  "impactTaskPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260424-153354.md",
+  "consumerVerification": {
+    "skipped": true,
+    "reason": "显式传入 --skip-consumer"
+  },
+  "consumerCompatibilityMatrixPath": "",
+  "consumerCompatibilityMatrixMarkdownPath": "",
+  "summary": {
+    "changedFileCount": 11,
+    "affectedDomainCount": 1,
+    "affectedSkillCount": 3,
+    "recommendedReleaseLevel": "minor",
+    "impactRecommendedReleaseLevel": "minor",
+    "overallRiskLevel": "medium",
+    "riskCategoryCount": 1,
+    "consumerMatrixScenarioCount": 0,
+    "consumerMatrixPassedCount": 0,
+    "consumerMatrixFailedCount": 0
+  }
+}

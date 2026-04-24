@@ -1,0 +1,4 @@
+interface:
+  display_name: "Utils 扩展"
+  short_description: "扩展 utils 包中的公共工具函数与共享 helper。"
+  default_prompt: "使用 $utils-extension-skill 完成当前 utils 扩展需求。"

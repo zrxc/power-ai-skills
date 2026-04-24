@@ -1,0 +1,134 @@
+{
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "baseline": {
+    "framework": {
+      "vue": "3.4.x",
+      "typescript": "4.7.x",
+      "vite": "4.x",
+      "pinia": "2.1.7",
+      "vueRouter": "4.2.5"
+    },
+    "powerPackages": {
+      "@power/runtime-vue3": "6.5.0",
+      "@power/p-components": "6.5.0",
+      "@power/style": "6.5.0",
+      "@power/utils": "6.5.0"
+    },
+    "corePatterns": [
+      "PcContainer",
+      "CommonLayoutContainer",
+      "pc-table-warp",
+      "pc-dialog",
+      "pc-form-designer",
+      "pc-form-render"
+    ]
+  },
+  "changedFiles": [
+    "src/evolution/index.mjs",
+    "src/evolution/evolution-proposal-manager.mjs",
+    "src/evolution/evolution-proposal-storage.mjs",
+    "src/conversation-miner/index.mjs",
+    "src/conversation-miner/conversation-patterns.mjs",
+    "src/conversation-miner/conversation-decisions.mjs",
+    "src/team-policy/profile-decision.mjs",
+    "src/team-policy/helpers.mjs",
+    "src/governance-summary/collectors.mjs",
+    "docs/command-manual.md",
+    "docs/upgrade-roadmap.md"
+  ],
+  "affectedDomainCount": 1,
+  "affectedDomains": [
+    "utils"
+  ],
+  "affectedSkillCount": 3,
+  "recommendedReleaseLevel": "minor",
+  "impactedSkills": [
+    {
+      "name": "power-foundation-app",
+      "displayName": "Power 基础框架",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "skillPath": "foundation/power-foundation-app",
+      "reasons": [
+        "命中规则 utils：src/evolution/evolution-proposal-storage.mjs"
+      ],
+      "domains": [
+        "utils"
+      ],
+      "reviewTargets": [
+        "检查 utils 的输入输出契约和兼容处理说明",
+        "检查 references 中是否仍依赖旧工具方法签名",
+        "检查 skill.meta.json compatibility.utils"
+      ],
+      "releaseHints": [
+        "minor"
+      ],
+      "recommendedReleaseLevel": "minor"
+    },
+    {
+      "name": "runtime-extension-skill",
+      "displayName": "Runtime 扩展",
+      "owners": [
+        "fe-arch-team",
+        "platform-team"
+      ],
+      "skillPath": "foundation/runtime-extension-skill",
+      "reasons": [
+        "命中规则 utils：src/evolution/evolution-proposal-storage.mjs"
+      ],
+      "domains": [
+        "utils"
+      ],
+      "reviewTargets": [
+        "检查 utils 的输入输出契约和兼容处理说明",
+        "检查 references 中是否仍依赖旧工具方法签名",
+        "检查 skill.meta.json compatibility.utils"
+      ],
+      "releaseHints": [
+        "minor"
+      ],
+      "recommendedReleaseLevel": "minor"
+    },
+    {
+      "name": "utils-extension-skill",
+      "displayName": "Utils 扩展",
+      "owners": [
+        "platform-team",
+        "fe-arch-team"
+      ],
+      "skillPath": "foundation/utils-extension-skill",
+      "reasons": [
+        "命中规则 utils：src/evolution/evolution-proposal-storage.mjs"
+      ],
+      "domains": [
+        "utils"
+      ],
+      "reviewTargets": [
+        "检查 utils 的输入输出契约和兼容处理说明",
+        "检查 references 中是否仍依赖旧工具方法签名",
+        "检查 skill.meta.json compatibility.utils"
+      ],
+      "releaseHints": [
+        "minor"
+      ],
+      "recommendedReleaseLevel": "minor"
+    }
+  ],
+  "ownerSummary": [
+    {
+      "owner": "fe-arch-team",
+      "affectedSkillCount": 3
+    },
+    {
+      "owner": "platform-team",
+      "affectedSkillCount": 3
+    }
+  ],
+  "followUps": [
+    "更新 baseline/current.json 中的 @power/utils 版本",
+    "更新 docs/compatibility-matrix.md 的 utils 兼容矩阵"
+  ]
+}

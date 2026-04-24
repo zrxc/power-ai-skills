@@ -1,0 +1,111 @@
+{
+  "$schema": "./schemas/team-policy.schema.json",
+  "schemaVersion": 1,
+  "description": "团队级策略中心，统一约束允许启用的工具、默认基线、必备 skills、wrapper rollout 阶段与发布门禁要求。",
+  "allowedTools": [
+    "agents-md",
+    "codex",
+    "trae",
+    "cursor",
+    "claude-code",
+    "cline",
+    "windsurf",
+    "gemini-cli",
+    "aider",
+    "github-copilot",
+    "vscode-agent"
+  ],
+  "defaultTools": [
+    "agents-md",
+    "codex",
+    "trae",
+    "cursor",
+    "claude-code"
+  ],
+  "requiredSkills": [
+    "foundation/power-component-library",
+    "orchestration/entry-skill",
+    "workflow/approval-workflow-skill"
+  ],
+  "captureSafetyPolicy": {
+    "enabled": true,
+    "admission": {
+      "reviewIntentKeywords": [
+        "migration plan",
+        "rollout plan"
+      ],
+      "blockedGeneratedFilePatterns": [
+        ".env",
+        ".pem",
+        ".pfx",
+        ".key",
+        "secrets/",
+        "credentials/"
+      ],
+      "reviewGeneratedFilePatterns": [
+        "migrations/",
+        "deploy/",
+        "scripts/release",
+        "ops/"
+      ]
+    },
+    "retention": {
+      "autoArchiveDays": 90,
+      "autoPruneDays": 0
+    }
+  },
+  "wrapperPolicies": {
+    "rolloutStages": {
+      "agents-md": "general",
+      "codex": "general",
+      "trae": "general",
+      "cursor": "general",
+      "claude-code": "general",
+      "cline": "general",
+      "windsurf": "general",
+      "gemini-cli": "general",
+      "aider": "general",
+      "github-copilot": "compatible-only",
+      "vscode-agent": "pilot"
+    }
+  },
+  "projectProfiles": [
+    {
+      "name": "enterprise-vue",
+      "displayName": "Enterprise Vue",
+      "defaultPreset": "enterprise-standard",
+      "allowedTools": ["codex", "trae", "cursor", "claude-code", "github-copilot"],
+      "requiredSkills": [
+        "foundation/power-component-library",
+        "orchestration/entry-skill",
+        "workflow/approval-workflow-skill"
+      ]
+    },
+    {
+      "name": "terminal-governance",
+      "displayName": "Terminal Governance",
+      "defaultPreset": "terminal-evaluation",
+      "allowedTools": ["codex", "claude-code", "gemini-cli", "aider"],
+      "requiredSkills": [
+        "orchestration/entry-skill",
+        "workflow/approval-workflow-skill"
+      ]
+    }
+  ],
+  "releasePolicies": {
+    "requiredReports": [
+      "impact-report",
+      "upgrade-risk-report",
+      "consumer-compatibility-matrix",
+      "release-gate-report",
+      "upgrade-advice-package"
+    ],
+    "requiredChecks": [
+      "release-consistency",
+      "consumer-matrix",
+      "release-gates"
+    ],
+    "enforceConsumerMatrix": true,
+    "enforceReleaseGates": true
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "审批流页面生成"
+  short_description: "生成企业审批流页面和审批操作方案"
+  default_prompt: "使用 $approval-workflow-skill 生成当前业务的审批流页面。"

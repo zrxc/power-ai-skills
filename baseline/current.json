@@ -1,0 +1,23 @@
+{
+  "framework": {
+    "vue": "3.4.x",
+    "typescript": "4.7.x",
+    "vite": "4.x",
+    "pinia": "2.1.7",
+    "vueRouter": "4.2.5"
+  },
+  "powerPackages": {
+    "@power/runtime-vue3": "6.5.0",
+    "@power/p-components": "6.5.0",
+    "@power/style": "6.5.0",
+    "@power/utils": "6.5.0"
+  },
+  "corePatterns": [
+    "PcContainer",
+    "CommonLayoutContainer",
+    "pc-table-warp",
+    "pc-dialog",
+    "pc-form-designer",
+    "pc-form-render"
+  ]
+}

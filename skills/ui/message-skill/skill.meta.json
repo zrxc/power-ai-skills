@@ -1,0 +1,12 @@
+{
+  "name": "message-skill",
+  "displayName": "消息反馈处理",
+  "owners": ["ui-team"],
+  "tags": ["message", "feedback", "confirm"],
+  "status": "stable",
+  "compatibility": {
+    "runtimeVue3": "^6.5.0",
+    "pComponents": "^6.5.0"
+  },
+  "dependsOn": []
+}
