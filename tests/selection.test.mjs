@@ -25,6 +25,14 @@ function createSelectionTestContext(t, argv) {
   return { context, projectRoot, cliArgs, selectionService };
 }
 
+function assertResolveProjectRootUsesCwd(t, argv) {
+  const context = createRuntimeContext(import.meta.url);
+  const cwd = createTempProject(t);
+  const cliArgs = parseCliArgs(argv);
+  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
+  assert.equal(projectRoot, cwd);
+}
+
 test("expandToolSelection adds tool dependencies", (t) => {
   const { selectionService } = createSelectionTestContext(t, ["node", "power-ai-skills", "sync"]);
   assert.deepEqual(selectionService.expandToolSelection(["cursor"]), ["agents-md", "cursor"]);
@@ -126,418 +134,219 @@ test("parsePositionalSelection recognizes tool profile and preset tokens", (t) =
   assert.deepEqual(parsed.selectedPresets, ["enterprise-standard"]);
 });
 
-test("resolveProjectRoot keeps cwd for promote-project-local-skill positional skill name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "promote-project-local-skill", "basic-list-page-project"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
+const resolveProjectRootCwdCases = [
+  {
+    title: "resolveProjectRoot keeps cwd for promote-project-local-skill positional skill name",
+    argv: ["node", "power-ai-skills", "promote-project-local-skill", "basic-list-page-project"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for review-project-pattern positional pattern id",
+    argv: ["node", "power-ai-skills", "review-project-pattern", "pattern_tree_list_page", "--decision", "skip"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-project-skill positional pattern id",
+    argv: ["node", "power-ai-skills", "generate-project-skill", "pattern_tree_list_page"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for evaluate-session-capture",
+    argv: ["node", "power-ai-skills", "evaluate-session-capture", "--input", "session-summary.json"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for submit-auto-capture",
+    argv: ["node", "power-ai-skills", "submit-auto-capture", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for queue-auto-capture-response",
+    argv: ["node", "power-ai-skills", "queue-auto-capture-response", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for prepare-session-capture",
+    argv: ["node", "power-ai-skills", "prepare-session-capture", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for confirm-session-capture",
+    argv: ["node", "power-ai-skills", "confirm-session-capture", "--request", "capture_001"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for consume-auto-capture-inbox",
+    argv: ["node", "power-ai-skills", "consume-auto-capture-inbox", "--max-items", "1"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for consume-auto-capture-response-inbox",
+    argv: ["node", "power-ai-skills", "consume-auto-capture-response-inbox", "--max-items", "1"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for watch-auto-capture-inbox",
+    argv: ["node", "power-ai-skills", "watch-auto-capture-inbox", "--once"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for check-auto-capture-runtime",
+    argv: ["node", "power-ai-skills", "check-auto-capture-runtime", "--json"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for codex-capture-session",
+    argv: ["node", "power-ai-skills", "codex-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for trae-capture-session",
+    argv: ["node", "power-ai-skills", "trae-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for cursor-capture-session",
+    argv: ["node", "power-ai-skills", "cursor-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for claude-code-capture-session",
+    argv: ["node", "power-ai-skills", "claude-code-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for windsurf-capture-session",
+    argv: ["node", "power-ai-skills", "windsurf-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for gemini-cli-capture-session",
+    argv: ["node", "power-ai-skills", "gemini-cli-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for github-copilot-capture-session",
+    argv: ["node", "power-ai-skills", "github-copilot-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for cline-capture-session",
+    argv: ["node", "power-ai-skills", "cline-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for aider-capture-session",
+    argv: ["node", "power-ai-skills", "aider-capture-session", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for tool-capture-session",
+    argv: ["node", "power-ai-skills", "tool-capture-session", "--tool", "cursor", "--from-file", "assistant-response.txt"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for scaffold-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "scaffold-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for review-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "review-wrapper-promotion", "my-new-tool", "--status", "accepted"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for list-wrapper-promotions",
+    argv: ["node", "power-ai-skills", "list-wrapper-promotions"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-wrapper-promotion-timeline positional tool name",
+    argv: ["node", "power-ai-skills", "show-wrapper-promotion-timeline", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-wrapper-promotion-audit",
+    argv: ["node", "power-ai-skills", "generate-wrapper-promotion-audit"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-wrapper-registry-governance",
+    argv: ["node", "power-ai-skills", "generate-wrapper-registry-governance"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-upgrade-summary",
+    argv: ["node", "power-ai-skills", "generate-upgrade-summary"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-governance-summary",
+    argv: ["node", "power-ai-skills", "generate-governance-summary"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for list-evolution-drafts",
+    argv: ["node", "power-ai-skills", "list-evolution-drafts", "--type", "shared-skill-draft"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-evolution-draft positional draft id",
+    argv: ["node", "power-ai-skills", "show-evolution-draft", "shared-skill-draft::shared-skill-promotion::manual-seeded"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-governance-history",
+    argv: ["node", "power-ai-skills", "show-governance-history", "--type", "promotion"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for generate-conversation-miner-strategy",
+    argv: ["node", "power-ai-skills", "generate-conversation-miner-strategy", "--type", "enterprise-vue"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for check-project-baseline",
+    argv: ["node", "power-ai-skills", "check-project-baseline"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-team-policy",
+    argv: ["node", "power-ai-skills", "show-team-policy"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for validate-team-policy",
+    argv: ["node", "power-ai-skills", "validate-team-policy"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for check-team-policy-drift",
+    argv: ["node", "power-ai-skills", "check-team-policy-drift"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-project-profile-decision",
+    argv: ["node", "power-ai-skills", "show-project-profile-decision"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for review-project-profile",
+    argv: ["node", "power-ai-skills", "review-project-profile", "--defer"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for check-governance-review-deadlines",
+    argv: ["node", "power-ai-skills", "check-governance-review-deadlines"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for show-promotion-trace",
+    argv: ["node", "power-ai-skills", "show-promotion-trace", "--skill", "detail-page-project"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for merge-conversation-pattern",
+    argv: ["node", "power-ai-skills", "merge-conversation-pattern", "--source", "pattern_a", "--target", "pattern_b"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for archive-conversation-pattern",
+    argv: ["node", "power-ai-skills", "archive-conversation-pattern", "--pattern", "pattern_a"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for restore-conversation-pattern",
+    argv: ["node", "power-ai-skills", "restore-conversation-pattern", "--pattern", "pattern_a"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for review-conversation-pattern",
+    argv: ["node", "power-ai-skills", "review-conversation-pattern", "--pattern", "pattern_a", "--accept"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for materialize-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "materialize-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for apply-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "apply-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for finalize-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "finalize-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for register-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "register-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for archive-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "archive-wrapper-promotion", "my-new-tool"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for restore-wrapper-promotion positional tool name",
+    argv: ["node", "power-ai-skills", "restore-wrapper-promotion", "my-new-tool"]
+  }
+];
 
-test("resolveProjectRoot keeps cwd for review-project-pattern positional pattern id", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "review-project-pattern", "pattern_tree_list_page", "--decision", "skip"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-project-skill positional pattern id", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-project-skill", "pattern_tree_list_page"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for evaluate-session-capture", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "evaluate-session-capture", "--input", "session-summary.json"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for submit-auto-capture", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "submit-auto-capture", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for queue-auto-capture-response", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "queue-auto-capture-response", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for prepare-session-capture", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "prepare-session-capture", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for confirm-session-capture", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "confirm-session-capture", "--request", "capture_001"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for consume-auto-capture-inbox", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "consume-auto-capture-inbox", "--max-items", "1"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for consume-auto-capture-response-inbox", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "consume-auto-capture-response-inbox", "--max-items", "1"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for watch-auto-capture-inbox", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "watch-auto-capture-inbox", "--once"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for check-auto-capture-runtime", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "check-auto-capture-runtime", "--json"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for codex-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "codex-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for trae-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "trae-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for cursor-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "cursor-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for claude-code-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "claude-code-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for windsurf-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "windsurf-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for gemini-cli-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "gemini-cli-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for github-copilot-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "github-copilot-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for cline-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "cline-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for aider-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "aider-capture-session", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for tool-capture-session", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "tool-capture-session", "--tool", "cursor", "--from-file", "assistant-response.txt"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for scaffold-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "scaffold-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for review-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "review-wrapper-promotion", "my-new-tool", "--status", "accepted"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for list-wrapper-promotions", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "list-wrapper-promotions"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-wrapper-promotion-timeline positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-wrapper-promotion-timeline", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-wrapper-promotion-audit", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-wrapper-promotion-audit"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-wrapper-registry-governance", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-wrapper-registry-governance"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-upgrade-summary", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-upgrade-summary"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-governance-summary", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-governance-summary"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for list-evolution-drafts", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "list-evolution-drafts", "--type", "shared-skill-draft"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-evolution-draft positional draft id", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-evolution-draft", "shared-skill-draft::shared-skill-promotion::manual-seeded"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-governance-history", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-governance-history", "--type", "promotion"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for generate-conversation-miner-strategy", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "generate-conversation-miner-strategy", "--type", "enterprise-vue"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for check-project-baseline", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "check-project-baseline"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-team-policy", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-team-policy"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for validate-team-policy", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "validate-team-policy"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for check-team-policy-drift", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "check-team-policy-drift"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-project-profile-decision", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-project-profile-decision"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for review-project-profile", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "review-project-profile", "--defer"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for check-governance-review-deadlines", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "check-governance-review-deadlines"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for show-promotion-trace", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "show-promotion-trace", "--skill", "detail-page-project"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for merge-conversation-pattern", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "merge-conversation-pattern", "--source", "pattern_a", "--target", "pattern_b"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for archive-conversation-pattern", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "archive-conversation-pattern", "--pattern", "pattern_a"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for restore-conversation-pattern", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "restore-conversation-pattern", "--pattern", "pattern_a"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for review-conversation-pattern", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "review-conversation-pattern", "--pattern", "pattern_a", "--accept"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for materialize-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "materialize-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for apply-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "apply-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for finalize-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "finalize-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for register-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "register-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for archive-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "archive-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
-
-test("resolveProjectRoot keeps cwd for restore-wrapper-promotion positional tool name", (t) => {
-  const context = createRuntimeContext(import.meta.url);
-  const cwd = createTempProject(t);
-  const cliArgs = parseCliArgs(["node", "power-ai-skills", "restore-wrapper-promotion", "my-new-tool"]);
-  const projectRoot = resolveProjectRoot({ context, cliArgs, cwd });
-  assert.equal(projectRoot, cwd);
-});
+for (const testCase of resolveProjectRootCwdCases) {
+  test(testCase.title, (t) => {
+    assertResolveProjectRootUsesCwd(t, testCase.argv);
+  });
+}

@@ -52,6 +52,7 @@
 - 当前拆分先保持 `scan-engine` 与现有调用面的 contract 不变，优先验证“规则层目录化”已经成立，再决定是否继续处理 `vue-analysis`。
 - `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"` 已通过，可作为本阶段第一轮规则层拆分的回归基线。
 - `docs/project-structure-assessment.md` 与 `docs/maintenance-guide.md` 已补充规则层落点说明，明确 detector、SFC signal、scan orchestration、analysis projection 与 project-local lifecycle 的边界分工。
+- `tests/selection.test.mjs` 中成批 `resolveProjectRoot keeps cwd ...` 用例已收敛为表驱动结构，后续新增命令解析覆盖时不再需要继续复制整段测试样板。
 
 ## 完成标准
 
