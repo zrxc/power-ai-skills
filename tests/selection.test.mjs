@@ -264,6 +264,10 @@ const resolveProjectRootCwdCases = [
     argv: ["node", "power-ai-skills", "show-evolution-draft", "shared-skill-draft::shared-skill-promotion::manual-seeded"]
   },
   {
+    title: "resolveProjectRoot keeps cwd for plan-shared-skill-promotions",
+    argv: ["node", "power-ai-skills", "plan-shared-skill-promotions", "--skill", "dialog-form-shared"]
+  },
+  {
     title: "resolveProjectRoot keeps cwd for show-governance-history",
     argv: ["node", "power-ai-skills", "show-governance-history", "--type", "promotion"]
   },

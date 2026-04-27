@@ -51,6 +51,10 @@
   - `src/project-scan/index.mjs` 只保留 project-scan service composition，不再继续回填 review 或 pipeline 细节
   - 新增 artifact / report / history 不要回塞 detector 或 `scan-engine`
   - 新增 project-local lifecycle 行为不要回塞 scan 聚合入口
+  - 新增 `project-local -> manual` 自动晋升资格判定、阻断原因或 dry-run 计划输出优先放 `src/project-scan/project-local-promotion-planner.mjs`
+  - `src/project-scan/project-local-lifecycle-service.mjs` 只保留 `list / plan / promote` 这类 lifecycle facade，不再继续回填资格规则细节
+  - 新增 `shared-skill-draft -> skills/` 正式目录晋升资格判定、group 映射、覆盖规则或 dry-run 计划输出优先放 `src/evolution/shared-skill-promotion-planner.mjs`
+  - shared skill planner 第一版只允许输出 `eligible / blocked`、目标 `skills/<group>/<skill-name>` 建议和人工确认命令，不直接写入仓库 `skills/`
 
 ## 修改 skill 后要做什么
 

@@ -15,6 +15,7 @@ import {
   formatDiffProjectScanMessage,
   formatGenerateProjectLocalSkillsMessage,
   formatListProjectLocalSkillsMessage,
+  formatPlanProjectLocalPromotionsMessage,
   formatPromoteProjectLocalSkillMessage,
   formatRemoveToolMessage,
   formatReviewProjectPatternMessage,
@@ -192,6 +193,14 @@ export function createSyncCommands({
    * 提升本地技能命令 - 将项目本地技能提升为全局技能
    * 需要指定技能名称，支持 --force 强制提升
    */
+  function planProjectLocalPromotionsCommand() {
+    const result = projectScanService.planProjectLocalPromotions({
+      skillName: getPromoteSkillName()
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanProjectLocalPromotionsMessage({ projectRoot, result }));
+  }
+
   function promoteProjectLocalSkillCommand() {
     const skillName = getPromoteSkillName();
     const result = projectScanService.promoteProjectLocalSkill({
@@ -282,6 +291,7 @@ export function createSyncCommands({
     diffProjectScanCommand,
     generateProjectLocalSkillsCommand,
     listProjectLocalSkillsCommand,
+    planProjectLocalPromotionsCommand,
     promoteProjectLocalSkillCommand,
     reviewProjectPatternCommand,
     addToolCommand,

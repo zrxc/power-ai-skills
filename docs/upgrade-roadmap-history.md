@@ -1685,3 +1685,93 @@ pnpm release:prepare
 结论：
 
 - `P5-16` 已按原阶段定义收口；下一阶段如继续推进，应转向当前路线图明确排除的新增能力立项，而不是继续在同一条结构收口主线上做无目的拆分。
+
+## 1.4.7 / P6-1 自动晋升与自动注册规划第一版
+
+阶段目标：
+
+- 在 `P5-16` 已完成 `project-scan`、artifact projection、report renderer 与 release/check 边界收口的基础上，正式规划四类高风险自动化扩边：`project-local` 自动晋升到 `manual`、`shared skill` 自动正式晋升、wrapper 自动注册、release 自动发版。
+- 先把四条自动化链路的前置状态、治理闸口、触发条件、dry-run / manual-confirm 边界和推荐推进顺序写清楚，避免一开始就把“自动草案晋升”“正式注册”“真实发布”混成一条不可控流水线。
+- 保持现有 `project-local` 草案生成、evolution proposal / draft handoff、wrapper promotion lifecycle、release checks 与 package/release 边界稳定，不在这一阶段直接抹掉人工复核边界。
+- 保持“先立策略与闸口、再开自动动作”的节奏，不在这一阶段直接追求四条链路全部正式自动执行。
+
+已完成：
+
+- 已明确四类动作的统一任务分层，固定了：
+  - 当前人工边界
+  - 目标自动化边界
+  - 触发条件
+  - 阻断条件
+  - 回退路径
+- 已明确推荐推进顺序与依赖关系：
+  1. `project-local -> manual`
+  2. `shared skill` 自动正式晋升
+  3. wrapper 自动注册
+  4. release 自动发版
+- 已明确首批只进入“策略判定、dry-run / plan 输出、人工确认接口”的最小范围，不直接进入真实注册或真实发布。
+- 已完成 `project-local -> manual` 第一版低风险实现：
+  - 新增 `src/project-scan/project-local-promotion-planner.mjs`
+  - `src/project-scan/project-local-lifecycle-service.mjs` 已接入 `planProjectLocalPromotions(...)`
+  - 新增 CLI 入口 `plan-project-local-promotions [--skill <skill-name>] [--json]`
+  - 资格判定来源已固定为 `project-local` 草案 `skill.meta.json` 中的 `reviewDecision / frequency / reuseScore / purityScore / confidence`，并检查是否已存在同名 `manual` skill
+  - 人工确认落点保持为 `npx power-ai-skills promote-project-local-skill <skill-name>`
+- `docs/upgrade-roadmap.md`、`docs/command-manual.md`、`docs/maintenance-guide.md` 已同步收口这轮规划和第一版 planner 落点。
+
+阶段收口判断：
+
+- 四类自动化方向已经不再停留在“以后自动化”的模糊描述，而是形成了统一的治理边界表达。
+- 低风险到高风险的推进顺序已经明确，后续进入实现时不再需要重新讨论“先做哪条、为什么”。
+- `project-local -> manual` 已从单纯规划推进到可执行 dry-run 能力，为后续 `shared skill` / wrapper / release 三条链路提供了模板。
+- 当前已收口的 `project-scan`、evolution proposal / draft、wrapper promotion lifecycle、release checks 与 package/release 边界在规划阶段保持稳定，没有为了规划提前打破人工边界。
+
+结论：
+
+- `P6-1` 已按原阶段定义收口；下一阶段应进入 `shared skill` 自动正式晋升 dry-run 第一版，而不是继续停留在统一规划层。
+
+## 1.4.7 / P6-2 shared skill 自动正式晋升 dry-run 第一版
+
+阶段目标：
+
+- 在 `P6-1` 已完成四类高风险自动化统一分层规划、并已落地 `project-local -> manual` dry-run planner 的基础上，开始第二条链路：`shared skill` 自动正式晋升。
+- 先补“资格判定 + dry-run / plan 输出 + 人工确认落点”，保持正式 shared skill catalog 写入仍然人工执行，不直接绕过治理闸口。
+- 明确 `shared-skill-draft` 到仓库真实 `skills/` 目录的目标落点表达，避免后续一上来就把草案 promotion 和正式资产写入揉成一条黑盒动作。
+- 保持现有 evolution proposal / draft handoff、`list-evolution-drafts` / `show-evolution-draft`、doctor / governance summary / release gates 的治理语义稳定，不在这一阶段直接开启 shared skill 正式写入。
+
+已完成：
+
+- 已新增 `src/evolution/shared-skill-promotion-planner.mjs`，把 `shared-skill-draft -> skills/` 正式目录的 dry-run 资格判定从 evolution proposal manager 中拆出，单独承接：
+  - proposal 状态来源
+  - draft `skill.meta.json` 元数据来源
+  - handoff owner / status / next action 来源
+  - `manual-checklist.md` 存在性校验
+  - shared catalog 目标目录与冲突判断
+- 已新增 CLI 入口 `plan-shared-skill-promotions [--skill <skill-name>] [--draft <draft-id>] [--proposal <proposal-id>] [--json]`，用于输出：
+  - `eligible / blocked`
+  - 阻断原因
+  - 建议目标目录 `skills/<group>/<skill-name>`
+  - 人工确认脚手架命令 `node ./scripts/scaffold-skill.mjs <skill-name> <group>`
+  - 校验命令 `pnpm ci:check`
+- 已固定 shared skill 正式目录映射规则：
+  - `skillName` 优先取 draft `skill.meta.json.name`，其次回退到 proposal evidence 中的 `recommendedSkillName`
+  - `group` 优先取 draft / proposal 显式 metadata
+  - 如 catalog 中已存在唯一同名 shared skill，则复用现有 group
+  - 如仍无显式 group，则按 skillName / sceneType / source pattern 做保守推断
+  - 如同名 skill 已存在于正式 catalog，第一版默认阻断覆盖；只有显式允许覆盖时才进入候选
+- 已保持人工边界稳定：planner 只做 dry-run / plan，不直接写入仓库 `skills/`。
+- `docs/command-manual.md`、`docs/maintenance-guide.md`、`docs/upgrade-roadmap.md` 已同步收口 shared skill promotion planner 的职责边界和人工确认边界。
+- 已补充自动化测试，覆盖：
+  - eligible shared skill draft
+  - catalog 已存在同名 shared skill 的阻断
+  - 无法确定 target group 的阻断
+  - 新命令的 `project root` 解析策略
+
+阶段收口判断：
+
+- `shared skill` 自动正式晋升已经不再停留在模糊设想，而是具备清晰的资格判定来源和 dry-run contract。
+- shared skill draft、正式 `skills/` 目录和人工确认边界的职责已经被写清楚，不会再把 draft handoff 误当成正式 catalog 注册。
+- `project-local -> manual` 与 `shared skill -> skills/` 两条自动晋升链路现在都具备最小 dry-run 模板，可为后续 wrapper / release 自动化继续复用。
+- 当前已收口的 evolution proposal / draft、governance summary、doctor、release gates 与 package/release 边界在本阶段保持稳定，没有为了 planner 提前打破人工边界。
+
+结论：
+
+- `P6-2` 已按原阶段定义收口；下一阶段应进入 wrapper 自动注册的 dry-run 规划 / 实现阶段，而不是继续回到 shared skill 资格判定讨论。

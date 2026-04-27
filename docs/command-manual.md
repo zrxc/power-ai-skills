@@ -18,7 +18,7 @@
 - 项目初始化与同步
   `init`、`sync`、`list-tools`、`show-defaults`、`add-tool`、`remove-tool`
 - 项目扫描与 project-local
-  `scan-project`、`diff-project-scan`、`generate-project-local-skills`、`promote-project-local-skill`
+  `scan-project`、`diff-project-scan`、`generate-project-local-skills`、`list-project-local-skills`、`plan-project-local-promotions`、`promote-project-local-skill`
 - 团队治理与项目画像
   `show-team-policy`、`validate-team-policy`、`check-team-policy-drift`、`review-project-profile`、`check-governance-review-deadlines`
 - 会话治理与 promotion
@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（78）
+### project 命令（80）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -67,6 +67,7 @@
 | `diff-project-scan` | `diffProjectScanCommand` | `first-positional-or-cwd` |
 | `generate-project-local-skills` | `generateProjectLocalSkillsCommand` | `first-positional-or-cwd` |
 | `list-project-local-skills` | `listProjectLocalSkillsCommand` | `first-positional-or-cwd` |
+| `plan-project-local-promotions` | `planProjectLocalPromotionsCommand` | `first-positional-or-cwd` |
 | `promote-project-local-skill` | `promoteProjectLocalSkillCommand` | `cwd` |
 | `review-project-pattern` | `reviewProjectPatternCommand` | `cwd` |
 | `queue-auto-capture-response` | `queueAutoCaptureResponseCommand` | `cwd` |
@@ -109,6 +110,7 @@
 | `list-evolution-proposals` | `listEvolutionProposalsCommand` | `cwd` |
 | `list-evolution-drafts` | `listEvolutionDraftsCommand` | `cwd` |
 | `show-evolution-draft` | `showEvolutionDraftCommand` | `cwd` |
+| `plan-shared-skill-promotions` | `planSharedSkillPromotionsCommand` | `cwd` |
 | `review-evolution-proposal` | `reviewEvolutionProposalCommand` | `cwd` |
 | `apply-evolution-proposal` | `applyEvolutionProposalCommand` | `cwd` |
 | `run-evolution-cycle` | `runEvolutionCycleCommand` | `cwd` |
@@ -276,6 +278,7 @@ npx power-ai-skills diff-project-scan
 npx power-ai-skills generate-project-local-skills
 npx power-ai-skills generate-project-local-skills --regenerate-project-local
 npx power-ai-skills list-project-local-skills
+npx power-ai-skills plan-project-local-promotions --json
 npx power-ai-skills promote-project-local-skill basic-list-page-project
 ```
 
@@ -287,6 +290,7 @@ npx power-ai-skills promote-project-local-skill basic-list-page-project
 - `generate-project-local-skills` 只会为达到频次、置信度、纯度分和复用分门槛的模式生成草案。
 - `1.4.4` 起，`generate-project-local-skills` 默认会按当前扫描结果做增量同步：只重写真正变化的草案，保留未变化的草案，并移除已不再命中的旧草案目录。
 - `list-project-local-skills` 会同时列出 `project-local/auto-generated` 与 `project-local/manual`。
+- `plan-project-local-promotions` 会先做 dry-run 资格判定，输出 `eligible / blocked`、阻断原因与建议执行的 `promote-project-local-skill` 命令，不会直接落盘。
 - `promote-project-local-skill` 会把指定草案从 `auto-generated` 晋升到 `manual`，并把 `skill.meta.json` 标记为人工维护版本。
 
 说明：
@@ -1265,6 +1269,8 @@ npx power-ai-skills apply-evolution-proposal --from-status accepted --type proje
   - `npx power-ai-skills list-evolution-drafts --type shared-skill-draft --limit 5 --json`
   - `npx power-ai-skills show-evolution-draft --proposal <proposal-id> --json`
   - `npx power-ai-skills show-evolution-draft <draft-id> --json`
+  - `npx power-ai-skills plan-shared-skill-promotions --json`
+  - `npx power-ai-skills plan-shared-skill-promotions --skill <skill-name> --json`
 - `list-evolution-drafts` 当前会统一返回：
   - `draftId`
   - `artifactType`
@@ -1276,6 +1282,12 @@ npx power-ai-skills apply-evolution-proposal --from-status accepted --type proje
   - `handoffStatus` / `ownerHint` / `checklistPath` / `nextAction` / `nextReviewAt`
   - `metadata`
 - `show-evolution-draft` 适合在团队已经从 `doctor`、`release-gates` 或摘要里拿到 proposal id / draft id 后，快速定位具体 draft root 和下一步动作
+- `plan-shared-skill-promotions` 会基于已 `applied` 的 `shared-skill-draft` 做正式 catalog 晋升 dry-run：
+  - 资格判定来源会同时读取 proposal 状态、draft `skill.meta.json`、handoff owner / status、`manual-checklist.md` 与 `nextAction`
+  - 目标目录始终按仓库真实 `skills/<group>/<skill-name>` 计算，不会把 consumer 侧 `.power-ai/shared/evolution-drafts/` 当成正式 catalog
+  - `group` 优先取 draft/proposal 显式 metadata，其次复用现有同名 shared skill 所在 group，再回退到基于 skillName / sceneType 的保守推断
+  - 如已有同名 shared skill，第一版默认阻断覆盖；只有显式允许覆盖时才可继续进入候选
+  - 第一版只输出 `eligible / blocked`、阻断原因、建议目标目录和人工确认命令，不直接写入 `skills/`
 - 当前 apply 动作仍然是受控治理动作，不会自动改 shared skill 正式注册、wrapper registry、team policy 主配置或 release 产物
 
 ## 1.4.7 Evolution proposal aging

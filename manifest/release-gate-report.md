@@ -1,7 +1,7 @@
 # Release Gate Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-27T08:00:12.572Z`
+- generatedAt: `2026-04-27T08:44:41.075Z`
 - overall status: `pass`
 - passed gates: 10
 - warning gates: 0

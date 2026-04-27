@@ -23,6 +23,8 @@ import {
 } from "./policy.mjs";
 import { createEvolutionCandidateManager } from "./evolution-candidate-manager.mjs";
 import { createEvolutionProposalManager } from "./evolution-proposal-manager.mjs";
+import { planSharedSkillPromotions } from "./shared-skill-promotion-planner.mjs";
+import { collectEvolutionDraftEntries } from "./proposals.mjs";
 import {
   resolveCandidateConfidence,
   buildPatternCandidates,
@@ -242,6 +244,33 @@ export function createEvolutionServiceCore({
     stableStringify
   });
 
+  function planSharedSkillPromotionsFromDrafts({
+    draftId = "",
+    proposalId = "",
+    skillName = "",
+    criteria = {}
+  } = {}) {
+    const { proposals } = proposalManager.loadEvolutionProposals();
+    const normalizedProposals = Array.isArray(proposals?.proposals) ? proposals.proposals : [];
+    const draftEntries = collectEvolutionDraftEntries({
+      proposals: normalizedProposals,
+      artifactType: "shared-skill-draft"
+    });
+    const proposalsById = new Map(normalizedProposals.map((item) => [item.proposalId, item]));
+
+    return planSharedSkillPromotions({
+      packageRoot: context.packageRoot,
+      projectRoot,
+      skillsRoot: context.skillsRoot,
+      draftEntries,
+      proposalsById,
+      draftId,
+      proposalId,
+      skillName,
+      criteria
+    });
+  }
+
   // ========== 统一 API 导出 ==========
   
   return {
@@ -267,6 +296,7 @@ export function createEvolutionServiceCore({
     listEvolutionProposals: proposalManager.listEvolutionProposals,
     listEvolutionDrafts: proposalManager.listEvolutionDrafts,
     showEvolutionDraft: proposalManager.showEvolutionDraft,
+    planSharedSkillPromotions: planSharedSkillPromotionsFromDrafts,
     reviewEvolutionProposal: proposalManager.reviewEvolutionProposal,
     applyEvolutionProposal: proposalManager.applyEvolutionProposal,
     

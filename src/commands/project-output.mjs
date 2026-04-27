@@ -51,6 +51,13 @@ export function formatPromoteProjectLocalSkillMessage(result) {
   return `Promoted project-local skill: ${result.skillName}, target: ${result.targetRoot}.`;
 }
 
+export function formatPlanProjectLocalPromotionsMessage({ projectRoot, result }) {
+  const eligibleNames = result.candidates.filter((item) => item.status === "eligible").map((item) => item.skillName).join(", ") || "none";
+  const blockedNames = result.candidates.filter((item) => item.status === "blocked").map((item) => item.skillName).join(", ") || "none";
+  const requestedSuffix = result.requestedSkillName ? `, requested: ${result.requestedSkillName}` : "";
+  return `Project-local promotion plan: ${projectRoot}${requestedSuffix}, eligible: ${result.summary.eligibleCount} [${eligibleNames}], blocked: ${result.summary.blockedCount} [${blockedNames}]. Confirm an eligible draft with \`${result.manualConfirmation.commandTemplate}\`.`;
+}
+
 export function formatReviewProjectPatternMessage(result) {
   return result.cleared
     ? `Cleared project pattern feedback: ${result.patternType}, feedback: ${result.patternFeedbackPath}.`
@@ -201,6 +208,15 @@ export function formatListEvolutionDraftsMessage(result) {
 
 export function formatShowEvolutionDraftMessage(result) {
   return `Loaded evolution draft: ${result.draft.draftId}, type: ${result.draft.artifactType}, proposal: ${result.proposalId}, next actions: ${result.draft.followUpActionCount}.`;
+}
+
+export function formatPlanSharedSkillPromotionsMessage(result) {
+  const eligibleNames = result.candidates.filter((item) => item.status === "eligible").map((item) => item.skillName).join(", ") || "none";
+  const blockedNames = result.candidates.filter((item) => item.status === "blocked").map((item) => item.skillName || item.draftId).join(", ") || "none";
+  const requestedDraftSuffix = result.requestedDraftId ? `, draft: ${result.requestedDraftId}` : "";
+  const requestedProposalSuffix = result.requestedProposalId ? `, proposal: ${result.requestedProposalId}` : "";
+  const requestedSkillSuffix = result.requestedSkillName ? `, skill: ${result.requestedSkillName}` : "";
+  return `Shared skill promotion plan: ${result.packageRoot}${requestedDraftSuffix}${requestedProposalSuffix}${requestedSkillSuffix}, eligible: ${result.summary.eligibleCount} [${eligibleNames}], blocked: ${result.summary.blockedCount} [${blockedNames}]. Manual catalog writes remain required; scaffold with \`${result.manualConfirmation.commandTemplate}\` and validate with \`${result.manualConfirmation.validationCommand}\`.`;
 }
 
 export function formatReviewEvolutionProposalMessage(result) {

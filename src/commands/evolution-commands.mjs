@@ -18,6 +18,7 @@ import {
   formatListEvolutionProposalsMessage,
   formatListEvolutionDraftsMessage,
   formatShowEvolutionDraftMessage,
+  formatPlanSharedSkillPromotionsMessage,
   formatReviewEvolutionProposalMessage,
   formatApplyEvolutionProposalMessage,
   formatRunEvolutionCycleMessage
@@ -183,6 +184,16 @@ export function createEvolutionCommands({
     console.log(formatShowEvolutionDraftMessage(result));
   }
 
+  function planSharedSkillPromotionsCommand() {
+    const result = evolutionService.planSharedSkillPromotions({
+      draftId: getSingleOption("--draft"),
+      proposalId: getSingleOption("--proposal"),
+      skillName: getSingleOptionOrPositional("--skill")
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanSharedSkillPromotionsMessage(result));
+  }
+
   /**
    * 审查进化提案命令
    * 支持 accept/reject/archive/review 操作
@@ -251,6 +262,7 @@ export function createEvolutionCommands({
     listEvolutionProposalsCommand,
     listEvolutionDraftsCommand,
     showEvolutionDraftCommand,
+    planSharedSkillPromotionsCommand,
     reviewEvolutionProposalCommand,
     applyEvolutionProposalCommand,
     runEvolutionCycleCommand

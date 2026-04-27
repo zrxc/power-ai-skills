@@ -1,7 +1,7 @@
 # Consumer Compatibility Matrix
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-27T08:00:12.353Z`
+- generatedAt: `2026-04-27T08:44:40.929Z`
 - total scenarios: 1
 - passed scenarios: 1
 - failed scenarios: 0

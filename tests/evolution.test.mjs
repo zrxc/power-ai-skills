@@ -577,3 +577,264 @@ test("apply-evolution-actions refreshes materialized project-local draft when so
   assert.equal(skillAfter === skillBefore, false);
   assert.equal(skillAfter.includes("toolbar adds batch-import action"), true);
 });
+
+test("plan-shared-skill-promotions returns eligible and blocked draft plans without writing skills catalog", (t) => {
+  const projectRoot = createTempConsumerProject(t);
+
+  assert.equal(runCli(projectRoot, "init", [
+    "--tool", "codex",
+    "--project-profile", "terminal-governance",
+    "--no-project-scan"
+  ]).status, 0);
+
+  const proposalsPath = path.join(projectRoot, ".power-ai", "governance", "evolution-proposals.json");
+  const seededLedger = {
+    schemaVersion: 1,
+    updatedAt: "",
+    proposals: []
+  };
+  seededLedger.proposals.push({
+    proposalId: "shared-skill-promotion::eligible-dialog",
+    proposalType: "shared-skill-promotion-proposal",
+    sourceCandidateIds: ["shared-skill::eligible-dialog"],
+    evidence: {
+      sourcePatternIds: ["pattern_dialog_form"],
+      sourceConversationIds: ["conv_1"],
+      details: {
+        candidateType: "shared-skill-candidate",
+        recommendedSkillName: "dialog-form-shared",
+        displayName: "Dialog Form Shared"
+      }
+    },
+    riskLevel: "high",
+    generatedAt: "2026-04-20T10:00:00+08:00",
+    status: "applied",
+    statusUpdatedAt: "2026-04-21T10:00:00+08:00",
+    statusUpdatedBy: "test",
+    recommendedAction: "Promote after manual validation.",
+    proposalRoot: path.join(projectRoot, ".power-ai", "proposals", "evolution", "shared-skill-eligible-dialog"),
+    applicationArtifacts: {
+      artifactType: "shared-skill-draft",
+      draftRoot: ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared",
+      files: [
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/README.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/SKILL.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/skill.meta.json",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/manual-checklist.md"
+      ],
+      nextActions: [
+        "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/SKILL.md",
+        "Promote this draft into the shared-skill workflow manually after validation."
+      ],
+      skillName: "dialog-form-shared",
+      displayName: "Dialog Form Shared",
+      handoff: {
+        status: "pending-human-follow-up",
+        ownerHint: "shared-skill-maintainers",
+        nextReviewAt: "",
+        nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/SKILL.md",
+        checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/manual-checklist.md",
+        boundary: [
+          "Do not auto-promote this draft into the shared-skill catalog from evolution apply.",
+          "Keep release and publication decisions manual."
+        ]
+      }
+    }
+  });
+  seededLedger.proposals.push({
+    proposalId: "shared-skill-promotion::blocked-existing",
+    proposalType: "shared-skill-promotion-proposal",
+    sourceCandidateIds: ["shared-skill::blocked-existing"],
+    evidence: {
+      sourcePatternIds: ["pattern_dialog_form"],
+      sourceConversationIds: ["conv_2"],
+      details: {
+        candidateType: "shared-skill-candidate",
+        recommendedSkillName: "dialog-skill",
+        displayName: "Dialog Skill"
+      }
+    },
+    riskLevel: "high",
+    generatedAt: "2026-04-20T10:10:00+08:00",
+    status: "applied",
+    statusUpdatedAt: "2026-04-21T10:10:00+08:00",
+    statusUpdatedBy: "test",
+    recommendedAction: "Check shared catalog collision.",
+    proposalRoot: path.join(projectRoot, ".power-ai", "proposals", "evolution", "shared-skill-blocked-existing"),
+    applicationArtifacts: {
+      artifactType: "shared-skill-draft",
+      draftRoot: ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill",
+      files: [
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/README.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/SKILL.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/skill.meta.json",
+        ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/manual-checklist.md"
+      ],
+      nextActions: [
+        "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-skill/SKILL.md"
+      ],
+      skillName: "dialog-skill",
+      displayName: "Dialog Skill",
+      handoff: {
+        status: "pending-human-follow-up",
+        ownerHint: "shared-skill-maintainers",
+        nextReviewAt: "",
+        nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-skill/SKILL.md",
+        checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/manual-checklist.md",
+        boundary: [
+          "Do not auto-promote this draft into the shared-skill catalog from evolution apply."
+        ]
+      }
+    }
+  });
+  seededLedger.proposals.push({
+    proposalId: "shared-skill-promotion::blocked-no-group",
+    proposalType: "shared-skill-promotion-proposal",
+    sourceCandidateIds: ["shared-skill::blocked-no-group"],
+    evidence: {
+      sourcePatternIds: ["pattern_unknown_case"],
+      sourceConversationIds: ["conv_3"],
+      details: {
+        candidateType: "shared-skill-candidate",
+        recommendedSkillName: "ambiguous-shared-helper",
+        displayName: "Ambiguous Shared Helper",
+        sceneType: "unknown-scene"
+      }
+    },
+    riskLevel: "high",
+    generatedAt: "2026-04-20T10:20:00+08:00",
+    status: "applied",
+    statusUpdatedAt: "2026-04-21T10:20:00+08:00",
+    statusUpdatedBy: "test",
+    recommendedAction: "Resolve the target group before promotion.",
+    proposalRoot: path.join(projectRoot, ".power-ai", "proposals", "evolution", "shared-skill-blocked-no-group"),
+    applicationArtifacts: {
+      artifactType: "shared-skill-draft",
+      draftRoot: ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper",
+      files: [
+        ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/README.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/SKILL.md",
+        ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/skill.meta.json",
+        ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/manual-checklist.md"
+      ],
+      nextActions: [
+        "Review .power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/SKILL.md"
+      ],
+      skillName: "ambiguous-shared-helper",
+      displayName: "Ambiguous Shared Helper",
+      handoff: {
+        status: "pending-human-follow-up",
+        ownerHint: "shared-skill-maintainers",
+        nextReviewAt: "",
+        nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/SKILL.md",
+        checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/manual-checklist.md",
+        boundary: [
+          "Do not auto-promote this draft into the shared-skill catalog from evolution apply."
+        ]
+      }
+    }
+  });
+  writeJson(proposalsPath, seededLedger);
+
+  const eligibleDraftRoot = path.join(projectRoot, ".power-ai", "shared", "evolution-drafts", "shared-skills", "dialog-form-shared");
+  fs.mkdirSync(path.join(eligibleDraftRoot, "references"), { recursive: true });
+  fs.writeFileSync(path.join(eligibleDraftRoot, "README.md"), "# Dialog Form Shared\n", "utf8");
+  fs.writeFileSync(path.join(eligibleDraftRoot, "SKILL.md"), "# Dialog Form Shared\n", "utf8");
+  fs.writeFileSync(path.join(eligibleDraftRoot, "manual-checklist.md"), "# Checklist\n", "utf8");
+  writeJson(path.join(eligibleDraftRoot, "skill.meta.json"), {
+    name: "dialog-form-shared",
+    displayName: "Dialog Form Shared",
+    status: "draft",
+    artifactType: "shared-skill-draft",
+    targetGroup: "ui",
+    handoff: {
+      status: "pending-human-follow-up",
+      ownerHint: "shared-skill-maintainers",
+      nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/SKILL.md",
+      checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/dialog-form-shared/manual-checklist.md"
+    }
+  });
+
+  const existingDraftRoot = path.join(projectRoot, ".power-ai", "shared", "evolution-drafts", "shared-skills", "dialog-skill");
+  fs.mkdirSync(path.join(existingDraftRoot, "references"), { recursive: true });
+  fs.writeFileSync(path.join(existingDraftRoot, "README.md"), "# Dialog Skill\n", "utf8");
+  fs.writeFileSync(path.join(existingDraftRoot, "SKILL.md"), "# Dialog Skill\n", "utf8");
+  fs.writeFileSync(path.join(existingDraftRoot, "manual-checklist.md"), "# Checklist\n", "utf8");
+  writeJson(path.join(existingDraftRoot, "skill.meta.json"), {
+    name: "dialog-skill",
+    displayName: "Dialog Skill",
+    status: "draft",
+    artifactType: "shared-skill-draft",
+    handoff: {
+      status: "pending-human-follow-up",
+      ownerHint: "shared-skill-maintainers",
+      nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/dialog-skill/SKILL.md",
+      checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/dialog-skill/manual-checklist.md"
+    }
+  });
+
+  const blockedNoGroupRoot = path.join(projectRoot, ".power-ai", "shared", "evolution-drafts", "shared-skills", "ambiguous-shared-helper");
+  fs.mkdirSync(path.join(blockedNoGroupRoot, "references"), { recursive: true });
+  fs.writeFileSync(path.join(blockedNoGroupRoot, "README.md"), "# Ambiguous Shared Helper\n", "utf8");
+  fs.writeFileSync(path.join(blockedNoGroupRoot, "SKILL.md"), "# Ambiguous Shared Helper\n", "utf8");
+  fs.writeFileSync(path.join(blockedNoGroupRoot, "manual-checklist.md"), "# Checklist\n", "utf8");
+  writeJson(path.join(blockedNoGroupRoot, "skill.meta.json"), {
+    name: "ambiguous-shared-helper",
+    displayName: "Ambiguous Shared Helper",
+    status: "draft",
+    artifactType: "shared-skill-draft",
+    handoff: {
+      status: "pending-human-follow-up",
+      ownerHint: "shared-skill-maintainers",
+      nextAction: "Review .power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/SKILL.md",
+      checklistPath: ".power-ai/shared/evolution-drafts/shared-skills/ambiguous-shared-helper/manual-checklist.md"
+    }
+  });
+
+  const planResult = runCli(projectRoot, "plan-shared-skill-promotions", ["--json"]);
+  assert.equal(planResult.status, 0, planResult.stderr);
+  const payload = JSON.parse(planResult.stdout);
+
+  assert.equal(payload.summary.sharedDraftCount, 3);
+  assert.equal(payload.summary.evaluatedDraftCount, 3);
+  assert.equal(payload.summary.eligibleCount, 1);
+  assert.equal(payload.summary.blockedCount, 2);
+  assert.equal(payload.manualConfirmation.commandTemplate, "node ./scripts/scaffold-skill.mjs <skill-name> <group>");
+  assert.equal(payload.manualConfirmation.validationCommand, "pnpm ci:check");
+
+  const eligibleCandidate = payload.candidates.find((item) => item.skillName === "dialog-form-shared");
+  assert.ok(eligibleCandidate);
+  assert.equal(eligibleCandidate.status, "eligible");
+  assert.equal(eligibleCandidate.targetGroup, "ui");
+  assert.equal(eligibleCandidate.targetGroupSource, "explicit-metadata");
+  assert.equal(eligibleCandidate.targetCatalogPath, "skills/ui/dialog-form-shared");
+  assert.equal(eligibleCandidate.targetExists, false);
+  assert.equal(eligibleCandidate.blockers.length, 0);
+  assert.equal(eligibleCandidate.manualConfirmation.scaffoldCommand, "node ./scripts/scaffold-skill.mjs dialog-form-shared ui");
+
+  const existingCandidate = payload.candidates.find((item) => item.skillName === "dialog-skill");
+  assert.ok(existingCandidate);
+  assert.equal(existingCandidate.status, "blocked");
+  assert.equal(existingCandidate.targetGroup, "ui");
+  assert.equal(existingCandidate.targetGroupSource, "existing-catalog-skill");
+  assert.equal(existingCandidate.targetExists, true);
+  assert.equal(
+    existingCandidate.blockers.some((item) => item.code === "shared-skill-already-exists"),
+    true
+  );
+
+  const blockedNoGroupCandidate = payload.candidates.find((item) => item.skillName === "ambiguous-shared-helper");
+  assert.ok(blockedNoGroupCandidate);
+  assert.equal(blockedNoGroupCandidate.status, "blocked");
+  assert.equal(blockedNoGroupCandidate.targetGroup, "");
+  assert.equal(
+    blockedNoGroupCandidate.blockers.some((item) => item.code === "target-group-undetermined"),
+    true
+  );
+
+  const singleResult = runCli(projectRoot, "plan-shared-skill-promotions", ["--skill", "dialog-form-shared", "--json"]);
+  assert.equal(singleResult.status, 0, singleResult.stderr);
+  const singlePayload = JSON.parse(singleResult.stdout);
+  assert.equal(singlePayload.summary.evaluatedDraftCount, 1);
+  assert.equal(singlePayload.candidates[0].skillName, "dialog-form-shared");
+});
