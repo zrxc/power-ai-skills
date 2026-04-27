@@ -6,7 +6,7 @@
   "impactReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-report.json",
   "riskReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.json",
   "riskMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.md",
-  "impactTaskPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260427-155242.md",
+  "impactTaskPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260427-160353.md",
   "consumerVerification": {
     "skipped": true,
     "reason": "显式传入 --skip-consumer"

@@ -1650,3 +1650,38 @@ pnpm release:prepare
 结论：
 
 - `P5-15` 已按原阶段定义收口；下一阶段应继续处理 `analysis-artifact-store` 的 artifact projection 与写盘热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-16 Artifact Projection 与写盘边界第十版
+
+阶段目标：
+
+- 在 `P5-15` 已完成 report renderer 子层拆分的基础上，继续处理 `analysis-artifact-store` 这块仍偏集中的 artifact projection 与写盘热点。
+- 优先把“新增 artifact payload、write contract 或 report output path 就容易继续堆大文件”的位置再拆清楚。
+- 同时保持已收口的 `component-graph`、`pattern-aggregation`、`scan-result`、`report-renderers`、`scan-engine`、`index.mjs`、`vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/analysis-artifact-store.mjs` 已退回兼容导出层，artifact loader、json artifact write projection 与 report write persistence 分拆到了 `src/project-scan/analysis-artifact-store/` 下的独立模块。
+- `src/project-scan/analysis-artifact-store/artifact-loader.mjs` 已承接 artifact 存在性校验、load contract 与 pattern feedback fallback；后续新增 load / read 规则不再默认回堆到兼容入口。
+- `src/project-scan/analysis-artifact-store/artifact-json-writer.mjs` 已承接 analysis json artifact projection 与持久化字段写盘；后续新增 artifact payload 字段有了明确落点。
+- `src/project-scan/analysis-artifact-store/artifact-report-writer.mjs` 已承接 markdown report 输出与写盘 persistence；后续新增 report output path 或 write 规则不再继续混在 loader / json projection 逻辑里。
+- `docs/maintenance-guide.md` 已补充 artifact loader、json writer、report writer 与兼容导出层的职责边界。
+- `tests/project-scan.test.mjs` 已新增针对 `loadAnalysisArtifacts(...)` 与 `writeProjectAnalysisArtifacts(...)` 的直接 facade 断言，覆盖 load / json projection / report write 三类 contract。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "analysis artifact store facade|report renderer facade|scan-project writes analysis artifacts|scan result facade|pattern aggregation facade|component graph facade"`
+  - `pnpm check:docs`
+  - `pnpm check:package`
+  - `pnpm release:check`
+
+阶段收口判断：
+
+- `analysis-artifact-store` 的后续新增能力已有更明确的落点，不再优先回堆到单一 artifact projection / write 热点文件。
+- 项目级 artifact payload 或 write projection 至少又收敛了一处，避免结构评估已收口但写盘侧仍保留明显集中热点。
+- 已收口的 `component-graph`、`pattern-aggregation`、`scan-result`、`report-renderers`、`scan-engine`、`index.mjs`、`vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，不出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-16` 已按原阶段定义收口；下一阶段如继续推进，应转向当前路线图明确排除的新增能力立项，而不是继续在同一条结构收口主线上做无目的拆分。
