@@ -188,5 +188,6 @@
 - 本轮没有删除已跟踪的 release artifacts、技术方案文档或历史归档目录。
 - 已完成的“清理”主要包括两类：
   - 边界收紧：运行时不再依赖 `scripts/`，npm 包不再携带维护脚本、baseline、通知载荷和其他 release 中间产物。
-  - 安全回收：`clean-runtime-artifacts` 会删除 `manifest/` 中按规则生成的无价值运行时产物，并回收 `.power-ai/` 下的空目录，例如空的 `context/`、`conversations/`、`auto-capture/failed/`、`proposals/wrapper-promotions/` 等。
+  - 安全回收：`clean-runtime-artifacts` 会删除 `manifest/` 中按规则生成的无价值运行时产物，并按白名单回收 `.power-ai/` 下已确认安全的空目录，例如空的 `context/`、`conversations/`、`auto-capture/failed/`、`proposals/wrapper-promotions/` 等。
+- `.power-ai/skills`、`.power-ai/shared`、`.power-ai/adapters`、`.power-ai/governance` 等基础结构目录即使暂时为空，也不在自动回收范围内，避免影响后续同步和治理落点。
 - `.power-ai/` 下仍有内容的运行时目录不在自动删除范围内，避免误删现场数据。

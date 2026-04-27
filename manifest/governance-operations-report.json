@@ -1,7 +1,7 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "generatedAt": "2026-04-27T05:40:30.362Z",
+  "generatedAt": "2026-04-27T05:47:07.636Z",
   "summary": {
     "releaseGateStatus": "pass",
     "releaseGateWarnings": 0,
@@ -70,7 +70,7 @@
     {
       "id": "upgrade-automation",
       "type": "automation",
-      "generatedAt": "2026-04-27T05:40:30.311Z",
+      "generatedAt": "2026-04-27T05:47:07.585Z",
       "summary": "Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release.",
       "details": {
         "changedFileCount": 11,
@@ -82,17 +82,17 @@
     {
       "id": "version-record",
       "type": "version-record",
-      "generatedAt": "2026-04-27T05:40:30.311Z",
+      "generatedAt": "2026-04-27T05:47:07.585Z",
       "summary": "Version record last updated for @power/power-ai-skills@1.4.7.",
       "details": {
         "version": "1.4.7",
-        "recordedAt": "2026-04-27T05:40:30.311Z"
+        "recordedAt": "2026-04-27T05:47:07.585Z"
       }
     },
     {
       "id": "upgrade-advice",
       "type": "upgrade-advice",
-      "generatedAt": "2026-04-27T05:40:30.309Z",
+      "generatedAt": "2026-04-27T05:47:07.583Z",
       "summary": "Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s).",
       "details": {
         "consumerCommandCount": 9,
@@ -104,7 +104,7 @@
     {
       "id": "promotion-trace",
       "type": "promotion-trace",
-      "generatedAt": "2026-04-27T05:40:30.256Z",
+      "generatedAt": "2026-04-27T05:47:07.533Z",
       "summary": "Promotion trace matched 1 relation(s) from 2 tracked relation(s).",
       "details": {
         "matchedRelations": 1,

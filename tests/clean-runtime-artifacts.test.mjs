@@ -21,6 +21,8 @@ test("clean-runtime-artifacts removes ignored manifest payloads and prunes empty
   fs.mkdirSync(path.join(runtimeRoot, "context"), { recursive: true });
   fs.mkdirSync(path.join(runtimeRoot, "auto-capture", "failed"), { recursive: true });
   fs.mkdirSync(path.join(runtimeRoot, "notifications"), { recursive: true });
+  fs.mkdirSync(path.join(runtimeRoot, "skills"), { recursive: true });
+  fs.mkdirSync(path.join(runtimeRoot, "shared"), { recursive: true });
 
   fs.writeFileSync(path.join(manifestRoot, "notifications", ".npmignore"), "", "utf8");
   fs.writeFileSync(path.join(manifestRoot, "impact-tasks", ".npmignore"), "", "utf8");
@@ -65,4 +67,6 @@ test("clean-runtime-artifacts removes ignored manifest payloads and prunes empty
   assert.equal(fs.existsSync(path.join(runtimeRoot, "auto-capture", "failed")), false);
   assert.equal(fs.existsSync(path.join(runtimeRoot, "auto-capture")), false);
   assert.equal(fs.existsSync(path.join(runtimeRoot, "notifications")), true);
+  assert.equal(fs.existsSync(path.join(runtimeRoot, "skills")), true);
+  assert.equal(fs.existsSync(path.join(runtimeRoot, "shared")), true);
 });

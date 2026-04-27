@@ -14,7 +14,7 @@
 - 运行时文件读写工具已迁移到 `src/shared/fs.mjs`；`scripts/shared.mjs` 现在只做仓库维护侧复用，不再作为运行时依赖入口。
 - npm 发包边界已收缩为运行时资产、最小使用文档和 `skills-manifest`，发布流程产物与维护脚本继续保留在仓库内，但不再进入 npm 包。
 - 发布边界校验现在分成“路径名单 + 运行时 smoke”两层：`pnpm check:package` 负责名单约束，`tests/package-boundary-smoke.test.mjs` 负责真实 tarball 解包后的运行时入口 smoke。
-- `pnpm clean:runtime` 现在除了清理 `manifest/` 下的忽略产物，还会回收 `.power-ai/` 下的空运行时目录；有内容的运行时目录仍会保留。
+- `pnpm clean:runtime` 现在除了清理 `manifest/` 下的忽略产物，还会按白名单回收 `.power-ai/` 下已确认安全的空运行时目录；像 `skills/`、`shared/`、`adapters/`、`governance/` 这类基础结构目录即使暂时为空，也不会被主动删除。
 - `docs/command-manual.md` 里的“注册表命令清单”片段由 `pnpm docs:command-manual` 自动生成，并在 `pnpm check:docs` 中校验，新增命令后不要只改文档正文而忽略这段清单。
 - 本轮结构评估与后续建议见 `docs/project-structure-assessment.md`。
 - `project-scan` 规则层默认按“detector / SFC signal / scan orchestration / analysis projection / project-local lifecycle”分层扩展：
@@ -77,6 +77,27 @@ pnpm release:prepare
 - 项目差异化规则放 `.power-ai/skills/project-local`
 - 不在项目里复制企业公共 skill
 - `sync` 默认保留 `project-local`
+
+## 运行时目录保留策略
+
+- 默认长期保留的基础结构：
+  - `.power-ai/skills`
+  - `.power-ai/shared`
+  - `.power-ai/adapters`
+  - `.power-ai/governance`
+- 这些目录即使暂时为空，也不由 `pnpm clean:runtime` 主动删除，避免影响后续 `sync`、治理账本或工具入口的稳定落点。
+- 可安全回收的空目录只限于当前已确认的临时/派生产物区域：
+  - `.power-ai/analysis`
+  - `.power-ai/context`
+  - `.power-ai/reports`
+  - `.power-ai/patterns`
+  - `.power-ai/conversations`
+  - `.power-ai/conversations-archive`
+  - `.power-ai/proposals`
+  - `.power-ai/proposals/wrapper-promotions`
+  - `.power-ai/proposals/wrapper-promotions-archive`
+  - `.power-ai/auto-capture` 及其空子目录，例如 `inbox`、`processed`、`failed`、`response-inbox`、`response-processed`、`response-failed`
+- 如果某个目录里仍有真实内容，`pnpm clean:runtime` 不会递归清空它，只会在目录本身为空时回收。
 
 ## 推荐命令
 

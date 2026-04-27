@@ -42,9 +42,9 @@
 
 - [x] 至少把 `pattern-detectors` 或 `vue-analysis` 其中一个热点拆到更稳定的目录化规则边界，减少继续堆大文件的惯性。
 - [x] 为规则层后续扩展补一份明确落点说明，约束新增检测规则、SFC 分析能力和聚合逻辑应落在哪一层。
-- [ ] 收敛至少一类大型重复测试样例，优先处理命令解析类或边界 smoke 类测试，让新增覆盖不再主要依赖复制粘贴。
-- [ ] 明确 `.power-ai/` 运行时目录保留策略，并把必要的清理边界、例外项和维护说明同步到文档与校验链路。
-- [ ] 补齐本阶段新增变更对应的自动化测试与校验命令。
+- [x] 收敛至少一类大型重复测试样例，优先处理命令解析类或边界 smoke 类测试，让新增覆盖不再主要依赖复制粘贴。
+- [x] 明确 `.power-ai/` 运行时目录保留策略，并把必要的清理边界、例外项和维护说明同步到文档与校验链路。
+- [x] 补齐本阶段新增变更对应的自动化测试与校验命令。
 
 当前进展：
 
@@ -54,6 +54,13 @@
 - `docs/project-structure-assessment.md` 与 `docs/maintenance-guide.md` 已补充规则层落点说明，明确 detector、SFC signal、scan orchestration、analysis projection 与 project-local lifecycle 的边界分工。
 - `tests/selection.test.mjs` 中成批 `resolveProjectRoot keeps cwd ...` 用例已收敛为表驱动结构，后续新增命令解析覆盖时不再需要继续复制整段测试样板。
 - `tests/run-release-check.test.mjs` 中 release 产物快照的 JSON / Markdown 搭建已抽成复用 helper，release 边界测试的样板量进一步下降。
+- `clean-runtime-artifacts` 已切换为“白名单式空目录回收”：只回收 `analysis`、`context`、`reports`、`patterns`、`conversations`、`proposals`、`auto-capture` 等已确认安全的空目录，`skills`、`shared`、`adapters`、`governance` 等基础结构目录即使为空也继续保留。
+- 本阶段关键回归基线已补齐并通过：
+  - `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"`
+  - `pnpm test -- --test-name-pattern "resolveProjectRoot|parsePositionalSelection|expandToolSelection|resolveSelection|detectProjectProfileRecommendation"`
+  - `pnpm test -- --test-name-pattern "run-release-check|release consumer inputs|check-release-gates|check-release-consistency"`
+  - `pnpm test -- --test-name-pattern "clean-runtime-artifacts|clean runtime"`
+  - `pnpm check:docs`
 
 ## 完成标准
 

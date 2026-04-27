@@ -50,25 +50,40 @@ function removeFileIfExists(filePath) {
   return true;
 }
 
-function pruneEmptyDirectories(rootDir) {
+const removableEmptyRuntimeDirectories = [
+  "analysis",
+  "auto-capture",
+  "auto-capture/failed",
+  "auto-capture/inbox",
+  "auto-capture/processed",
+  "auto-capture/response-failed",
+  "auto-capture/response-inbox",
+  "auto-capture/response-processed",
+  "context",
+  "conversations",
+  "conversations-archive",
+  "patterns",
+  "proposals",
+  "proposals/wrapper-promotions",
+  "proposals/wrapper-promotions-archive",
+  "reports"
+].sort((left, right) => right.split(/[\\/]/).length - left.split(/[\\/]/).length || left.localeCompare(right, "en"));
+
+function pruneWhitelistedEmptyDirectories(rootDir) {
   if (!fs.existsSync(rootDir)) return [];
 
   const removed = [];
 
-  function walk(currentDir) {
-    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      walk(path.join(currentDir, entry.name));
-    }
+  for (const relativeDir of removableEmptyRuntimeDirectories) {
+    const targetDir = path.join(rootDir, ...relativeDir.split("/"));
+    if (!fs.existsSync(targetDir)) continue;
+    if (!fs.statSync(targetDir).isDirectory()) continue;
+    if (fs.readdirSync(targetDir).length > 0) continue;
 
-    if (currentDir === rootDir) return;
-    if (fs.readdirSync(currentDir).length > 0) return;
-
-    fs.rmdirSync(currentDir);
-    removed.push(currentDir);
+    fs.rmdirSync(targetDir);
+    removed.push(targetDir);
   }
 
-  walk(rootDir);
   return removed.sort((left, right) => left.localeCompare(right, "en"));
 }
 
@@ -82,7 +97,7 @@ function buildSummary({ manifestRoot, runtimeRoot }) {
   const removedImpactTasks = removeMatchingFiles(impactTasksDir, /^impact-task-/);
   const removedArchivedNotificationPayloads = removeMatchingFiles(archiveNotificationsDir, /^upgrade-payload-/);
   const removedChangedFiles = removeFileIfExists(changedFilesPath) ? [changedFilesPath] : [];
-  const removedEmptyRuntimeDirectories = pruneEmptyDirectories(runtimeRoot);
+  const removedEmptyRuntimeDirectories = pruneWhitelistedEmptyDirectories(runtimeRoot);
 
   return {
     ok: true,
