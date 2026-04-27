@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { readJson, safeTrim } from "../../scripts/shared.mjs";
+import { readJson, safeTrim } from "../shared/fs.mjs";
 
 export function shouldCollectReleaseChecks({ context, projectRoot }) {
-  return projectRoot === context.packageRoot || Boolean(process.env.POWER_AI_RELEASE_MANIFEST_DIR);
+  return projectRoot === context.packageRoot;
 }
 
 export function collectReleaseArtifactChecks({ context, releaseManifestDir, createCheck }) {

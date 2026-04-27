@@ -1,11 +1,11 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "generatedAt": "2026-04-22T10:20:37.908Z",
+  "generatedAt": "2026-04-27T04:26:23.070Z",
   "overallStatus": "pass",
   "summary": {
-    "totalGates": 7,
-    "passedGates": 7,
+    "totalGates": 10,
+    "passedGates": 10,
     "warningGates": 0,
     "failedGates": 0,
     "blockingIssues": 0,
@@ -22,6 +22,13 @@
     "scenariosWithOverdueGovernanceReviews": 0,
     "pendingConversationReviews": 0,
     "scenariosWithPendingConversationReviews": 0,
+    "warningLevelConversationRecords": 0,
+    "scenariosWithWarningLevelConversationRecords": 0,
+    "reviewLevelConversationRecords": 0,
+    "captureLevelConversationRecords": 0,
+    "recordsWithAdmissionMetadata": 0,
+    "recordsWithGovernanceMetadata": 0,
+    "scenariosWithReviewLevelConversationRecords": 0,
     "pendingWrapperProposals": 0,
     "scenariosWithPendingWrapperProposals": 0,
     "pendingEvolutionProposalReviews": 0,
@@ -32,7 +39,20 @@
     "staleEvolutionProposalReviews": 0,
     "scenariosWithStaleEvolutionProposalReviews": 0,
     "staleAcceptedEvolutionProposals": 0,
-    "scenariosWithStaleAcceptedEvolutionProposals": 0
+    "scenariosWithStaleAcceptedEvolutionProposals": 0,
+    "appliedEvolutionProposalFollowUps": 0,
+    "scenariosWithAppliedEvolutionProposalFollowUps": 0,
+    "appliedEvolutionProposalFollowUpActionCount": 0,
+    "appliedWrapperPromotionDrafts": 0,
+    "appliedSharedSkillDrafts": 0,
+    "appliedReleaseImpactDrafts": 0,
+    "autoCaptureWarningScenarios": 0,
+    "autoCaptureAttentionScenarios": 0,
+    "autoCaptureCaptureBacklog": 0,
+    "autoCaptureResponseBacklog": 0,
+    "autoCaptureFailedRequests": 0,
+    "scenariosWithAutoCaptureBacklog": 0,
+    "scenariosWithAutoCaptureFailures": 0
   },
   "gates": [
     {
@@ -114,10 +134,52 @@
         "available": true,
         "pendingConversationReviews": 0,
         "scenariosWithPendingConversationReviews": 0,
+        "warningLevelConversationRecords": 0,
+        "scenariosWithWarningLevelConversationRecords": 0,
+        "reviewLevelConversationRecords": 0,
+        "captureLevelConversationRecords": 0,
+        "recordsWithAdmissionMetadata": 0,
+        "recordsWithGovernanceMetadata": 0,
+        "scenariosWithReviewLevelConversationRecords": 0,
         "pendingWrapperProposals": 0,
         "scenariosWithPendingWrapperProposals": 0
       },
       "remediation": "Review pending conversation-pattern decisions and wrapper follow-ups so conversation-derived changes are intentionally promoted or archived."
+    },
+    {
+      "id": "conversation-capture-warning-governance",
+      "title": "warning-level conversation captures are acknowledged",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "warningLevelConversationRecords": 0,
+        "scenariosWithWarningLevelConversationRecords": 0,
+        "reviewLevelConversationRecords": 0,
+        "captureLevelConversationRecords": 0,
+        "recordsWithAdmissionMetadata": 0,
+        "recordsWithGovernanceMetadata": 0
+      },
+      "remediation": "Acknowledge consumer conversation records marked with `captureSafetyGovernanceLevel=warning` before low-signal captures are treated as strong self-evolution evidence."
+    },
+    {
+      "id": "conversation-capture-admission-governance",
+      "title": "review-level conversation captures are triaged",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "warningLevelConversationRecords": 0,
+        "scenariosWithWarningLevelConversationRecords": 0,
+        "reviewLevelConversationRecords": 0,
+        "captureLevelConversationRecords": 0,
+        "recordsWithAdmissionMetadata": 0,
+        "recordsWithGovernanceMetadata": 0,
+        "scenariosWithReviewLevelConversationRecords": 0
+      },
+      "remediation": "Review consumer conversation records marked with `captureAdmissionLevel=review` before trusting them as self-evolution evidence."
     },
     {
       "id": "evolution-proposal-governance",
@@ -135,9 +197,33 @@
         "staleEvolutionProposalReviews": 0,
         "scenariosWithStaleEvolutionProposalReviews": 0,
         "staleAcceptedEvolutionProposals": 0,
-        "scenariosWithStaleAcceptedEvolutionProposals": 0
+        "scenariosWithStaleAcceptedEvolutionProposals": 0,
+        "appliedEvolutionProposalFollowUps": 0,
+        "scenariosWithAppliedEvolutionProposalFollowUps": 0,
+        "appliedEvolutionProposalFollowUpActionCount": 0,
+        "appliedWrapperPromotionDrafts": 0,
+        "appliedSharedSkillDrafts": 0,
+        "appliedReleaseImpactDrafts": 0
       },
-      "remediation": "Review or apply accepted evolution proposals so high-risk self-evolution changes do not stay in limbo, especially for items that have exceeded proposal governance SLA."
+      "remediation": "Review, apply, or continue the follow-up actions of evolution proposals so high-risk self-evolution changes and their downstream draft artifacts do not stay in limbo."
+    },
+    {
+      "id": "auto-capture-runtime-governance",
+      "title": "auto-capture runtime backlog is healthy",
+      "status": "pass",
+      "ok": true,
+      "blocking": false,
+      "details": {
+        "available": true,
+        "autoCaptureWarningScenarios": 0,
+        "autoCaptureAttentionScenarios": 0,
+        "autoCaptureCaptureBacklog": 0,
+        "autoCaptureResponseBacklog": 0,
+        "autoCaptureFailedRequests": 0,
+        "scenariosWithAutoCaptureBacklog": 0,
+        "scenariosWithAutoCaptureFailures": 0
+      },
+      "remediation": "Run `npx power-ai-skills check-auto-capture-runtime --json` in affected consumer workspaces and clear failed queues or backlog before relying on self-evolution intake."
     }
   ],
   "consistency": {
@@ -180,6 +266,13 @@
     "scenariosWithOverdueGovernanceReviews": 0,
     "pendingConversationReviews": 0,
     "scenariosWithPendingConversationReviews": 0,
+    "warningLevelConversationRecords": 0,
+    "scenariosWithWarningLevelConversationRecords": 0,
+    "reviewLevelConversationRecords": 0,
+    "captureLevelConversationRecords": 0,
+    "recordsWithAdmissionMetadata": 0,
+    "recordsWithGovernanceMetadata": 0,
+    "scenariosWithReviewLevelConversationRecords": 0,
     "pendingWrapperProposals": 0,
     "scenariosWithPendingWrapperProposals": 0,
     "pendingEvolutionProposalReviews": 0,
@@ -190,7 +283,20 @@
     "staleEvolutionProposalReviews": 0,
     "scenariosWithStaleEvolutionProposalReviews": 0,
     "staleAcceptedEvolutionProposals": 0,
-    "scenariosWithStaleAcceptedEvolutionProposals": 0
+    "scenariosWithStaleAcceptedEvolutionProposals": 0,
+    "appliedEvolutionProposalFollowUps": 0,
+    "scenariosWithAppliedEvolutionProposalFollowUps": 0,
+    "appliedEvolutionProposalFollowUpActionCount": 0,
+    "appliedWrapperPromotionDrafts": 0,
+    "appliedSharedSkillDrafts": 0,
+    "appliedReleaseImpactDrafts": 0,
+    "autoCaptureWarningScenarios": 0,
+    "autoCaptureAttentionScenarios": 0,
+    "autoCaptureCaptureBacklog": 0,
+    "autoCaptureResponseBacklog": 0,
+    "autoCaptureFailedRequests": 0,
+    "scenariosWithAutoCaptureBacklog": 0,
+    "scenariosWithAutoCaptureFailures": 0
   },
   "teamPolicy": {
     "ok": true,

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, writeJson } from "../shared/fs.mjs";
 
 const supportedHistoryTypes = new Set(["profile-decision", "conversation-decision", "promotion"]);
 

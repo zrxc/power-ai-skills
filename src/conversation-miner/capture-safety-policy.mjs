@@ -1,5 +1,5 @@
 ﻿import fs from "node:fs";
-import { readJson, writeJson } from "../../scripts/shared.mjs";
+import { readJson, writeJson } from "../shared/fs.mjs";
 
 export const defaultCaptureSafetyPolicy = {
   schemaVersion: 1,

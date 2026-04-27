@@ -6,7 +6,7 @@
 // 导入必要的模块
 import fs from "node:fs";
 import path from "node:path";
-import { copyDir, ensureDir } from "../../scripts/shared.mjs";
+import { copyDir, ensureDir } from "../shared/fs.mjs";
 
 /**
  * 创建工作区入口点辅助工具

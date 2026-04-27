@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { writeJson } from "../../scripts/shared.mjs";
+import { writeJson } from "../shared/fs.mjs";
 
 const supportedReviewDecisions = new Set(["generate", "review", "skip"]);
 

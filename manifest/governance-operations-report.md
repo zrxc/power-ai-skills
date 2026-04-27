@@ -1,7 +1,7 @@
 # Governance Operations Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-24T07:37:55.798Z`
+- generatedAt: `2026-04-27T04:28:31.659Z`
 - release gate status: `pass`
 - release gate warnings: 0
 - blocking issues: 0
@@ -51,21 +51,21 @@
 
 ## Recent Activities
 
-- [automation] Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release. (`2026-04-24T07:37:55.730Z`)
-- [version-record] Version record last updated for @power/power-ai-skills@1.4.7. (`2026-04-24T07:37:55.730Z`)
-- [upgrade-advice] Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s). (`2026-04-24T07:37:55.727Z`)
-- [promotion-trace] Promotion trace matched 1 relation(s) from 2 tracked relation(s). (`2026-04-24T07:37:55.662Z`)
-- [release-gates] Release gates finished with status pass (0 blocking, 0 warning). (`2026-04-22T10:20:37.908Z`)
-- [consumer-compatibility] Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s). (`2026-04-22T10:20:37.414Z`)
+- [automation] Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release. (`2026-04-27T04:28:31.603Z`)
+- [version-record] Version record last updated for @power/power-ai-skills@1.4.7. (`2026-04-27T04:28:31.603Z`)
+- [upgrade-advice] Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s). (`2026-04-27T04:28:31.599Z`)
+- [promotion-trace] Promotion trace matched 1 relation(s) from 2 tracked relation(s). (`2026-04-27T04:28:31.539Z`)
+- [release-gates] Release gates finished with status pass (0 blocking, 0 warning). (`2026-04-27T04:26:23.070Z`)
+- [consumer-compatibility] Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s). (`2026-04-27T04:26:22.903Z`)
 
 ## Artifacts
 
-- automationReportPath: `D:\webCode\Myd\power-ai-skills\manifest\automation-report.json`
-- releaseGateReportPath: `D:\webCode\Myd\power-ai-skills\manifest\release-gate-report.json`
-- upgradeAdvicePackagePath: `D:\webCode\Myd\power-ai-skills\manifest\upgrade-advice-package.json`
-- consumerCompatibilityMatrixPath: `D:\webCode\Myd\power-ai-skills\manifest\consumer-compatibility-matrix.json`
-- promotionTraceReportPath: `D:\webCode\Myd\power-ai-skills\manifest\promotion-trace-report.json`
-- versionRecordPath: `D:\webCode\Myd\power-ai-skills\manifest\version-record.json`
+- automationReportPath: `D:\webCode\个人\power-ai-skills\manifest\automation-report.json`
+- releaseGateReportPath: `D:\webCode\个人\power-ai-skills\manifest\release-gate-report.json`
+- upgradeAdvicePackagePath: `D:\webCode\个人\power-ai-skills\manifest\upgrade-advice-package.json`
+- consumerCompatibilityMatrixPath: `D:\webCode\个人\power-ai-skills\manifest\consumer-compatibility-matrix.json`
+- promotionTraceReportPath: `D:\webCode\个人\power-ai-skills\manifest\promotion-trace-report.json`
+- versionRecordPath: `D:\webCode\个人\power-ai-skills\manifest\version-record.json`
 
 ## Recommended Actions
 

@@ -1,7 +1,7 @@
 # Consumer Compatibility Matrix
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-22T10:20:37.414Z`
+- generatedAt: `2026-04-27T04:26:22.903Z`
 - total scenarios: 1
 - passed scenarios: 1
 - failed scenarios: 0
@@ -19,6 +19,13 @@
 - rejected project profile decisions: 0
 - pending conversation reviews: 0
 - scenarios with pending conversation reviews: 0
+- warning-level conversation records: 0
+- scenarios with warning-level conversation records: 0
+- review-level conversation records: 0
+- capture-level conversation records: 0
+- records with admission metadata: 0
+- records with governance metadata: 0
+- scenarios with review-level conversation records: 0
 - pending wrapper proposals: 0
 - scenarios with pending wrapper proposals: 0
 - overdue governance reviews: 0
@@ -33,6 +40,19 @@
 - scenarios with stale evolution proposal reviews: 0
 - stale accepted evolution proposals: 0
 - scenarios with stale accepted evolution proposals: 0
+- applied evolution proposal follow-ups: 0
+- scenarios with applied evolution proposal follow-ups: 0
+- applied evolution proposal next actions: 0
+- applied wrapper drafts: 0
+- applied shared-skill drafts: 0
+- applied release-impact drafts: 0
+- auto-capture warning scenarios: 0
+- auto-capture attention scenarios: 0
+- auto-capture capture backlog: 0
+- auto-capture response backlog: 0
+- auto-capture failed requests: 0
+- scenarios with auto-capture backlog: 0
+- scenarios with auto-capture failures: 0
 
 ## Scenario Results
 
@@ -51,12 +71,27 @@
 - overdue governance reviews: 0
 - due today governance reviews: 0
 - pending conversation reviews: 0
+- warning-level conversation records: 0
+- review-level conversation records: 0
+- capture-level conversation records: 0
+- records with admission metadata: 0
+- records with governance metadata: 0
 - pending wrapper proposals: 0
+- auto-capture status: `ok`
+- auto-capture activity: `idle`
+- auto-capture capture backlog: 0
+- auto-capture response backlog: 0
+- auto-capture failed requests: 0
 - evolution proposal reviews: 0
 - accepted evolution proposals: 0
 - high-risk evolution proposals: 0
 - stale evolution proposal reviews: 0
 - stale accepted evolution proposals: 0
+- applied evolution proposal follow-ups: 0
+- applied evolution proposal next actions: 0
+- applied wrapper drafts: 0
+- applied shared-skill drafts: 0
+- applied release-impact drafts: 0
 - failed commands: none
 - missing artifacts: none
 

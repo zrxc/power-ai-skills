@@ -1,12 +1,12 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "repoPath": "D:\\webCode\\Myd\\power-ai-skills",
-  "changedFilesPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\changed-files.txt",
-  "impactReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\impact-report.json",
-  "riskReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-risk-report.json",
-  "riskMarkdownPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-risk-report.md",
-  "impactTaskPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260424-153755.md",
+  "repoPath": "D:\\webCode\\个人\\power-ai-skills",
+  "changedFilesPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\changed-files.txt",
+  "impactReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-report.json",
+  "riskReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.json",
+  "riskMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.md",
+  "impactTaskPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-tasks\\impact-task-20260427-122831.md",
   "consumerVerification": {
     "skipped": true,
     "reason": "显式传入 --skip-consumer"

@@ -1,9 +1,9 @@
 # Release Gate Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-22T10:20:37.908Z`
+- generatedAt: `2026-04-27T04:26:23.070Z`
 - overall status: `pass`
-- passed gates: 7
+- passed gates: 10
 - warning gates: 0
 - failed gates: 0
 
@@ -15,7 +15,10 @@
 - `consumer-compatibility`: pass
 - `project-profile-decision-governance`: pass
 - `conversation-review-governance`: pass
+- `conversation-capture-warning-governance`: pass
+- `conversation-capture-admission-governance`: pass
 - `evolution-proposal-governance`: pass
+- `auto-capture-runtime-governance`: pass
 
 ## Wrapper Governance
 
@@ -40,6 +43,13 @@
 - scenarios with overdue governance reviews: 0
 - pending conversation reviews: 0
 - scenarios with pending conversation reviews: 0
+- warning-level conversation records: 0
+- scenarios with warning-level conversation records: 0
+- review-level conversation records: 0
+- capture-level conversation records: 0
+- records with admission metadata: 0
+- records with governance metadata: 0
+- scenarios with review-level conversation records: 0
 - pending wrapper proposals: 0
 - scenarios with pending wrapper proposals: 0
 - pending evolution proposal reviews: 0
@@ -51,6 +61,19 @@
 - scenarios with stale evolution proposal reviews: 0
 - stale accepted evolution proposals: 0
 - scenarios with stale accepted evolution proposals: 0
+- applied evolution proposal follow-ups: 0
+- scenarios with applied evolution proposal follow-ups: 0
+- applied evolution proposal next actions: 0
+- applied wrapper drafts: 0
+- applied shared-skill drafts: 0
+- applied release-impact drafts: 0
+- auto-capture warning scenarios: 0
+- auto-capture attention scenarios: 0
+- auto-capture capture backlog: 0
+- auto-capture response backlog: 0
+- auto-capture failed requests: 0
+- scenarios with auto-capture backlog: 0
+- scenarios with auto-capture failures: 0
 
 ## Team Policy
 

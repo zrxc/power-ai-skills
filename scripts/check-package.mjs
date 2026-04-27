@@ -25,44 +25,23 @@ function fail(message) {
 const requiredWorkspaceFiles = [
   "src",
   "skills",
-  "templates",
-  "scripts",
+  "templates/project",
   "bin",
-  "baseline",
   "config",
   "README.md",
-  "CHANGELOG.md",
-  "CODEOWNERS"
+  "CHANGELOG.md"
 ];
 
 const requiredDocsPackageFiles = [
-  "docs/architecture-0.9.0.md",
-  "docs/ci-integration.md",
   "docs/command-manual.md",
-  "docs/compatibility-matrix.md",
-  "docs/component-knowledge-plan.md",
-  "docs/component-upgrade-flow.md",
-  "docs/deployment-ops/deployment-guide-frontend-ai-skills.md",
   "docs/doctor-error-codes.md",
   "docs/governance.md",
-  "docs/maintenance-guide.md",
-  "docs/release-process.md",
-  "docs/skill-expansion-guide.md",
   "docs/tool-adapters.md",
-  "docs/troubleshooting-consumer.md",
-  "docs/upstream-pipeline-integration.md",
-  "docs/versioning-policy.md"
+  "docs/troubleshooting-consumer.md"
 ];
 
 const requiredManifestPackageFiles = [
-  "manifest/skills-manifest.json",
-  "manifest/version-record.json",
-  `manifest/release-notes-${packageJson.version}.md`,
-  "manifest/impact-report.json",
-  "manifest/automation-report.json",
-  "manifest/changed-files.txt",
-  "manifest/notifications",
-  "manifest/impact-tasks"
+  "manifest/skills-manifest.json"
 ];
 
 const requiredPackageFiles = [
@@ -70,6 +49,9 @@ const requiredPackageFiles = [
   ...requiredDocsPackageFiles,
   ...requiredManifestPackageFiles
 ];
+
+const allowedDocsPackageFiles = new Set(requiredDocsPackageFiles);
+const allowedManifestPackageFiles = new Set(requiredManifestPackageFiles);
 
 /**
  * 这里列的是仓库对外承诺的核心脚本命令。
@@ -178,7 +160,7 @@ function pathExistsInWorkspace(targetPath) {
 }
 
 const packedFiles = getPackedFiles();
-if (packedFiles) {
+  if (packedFiles) {
   for (const file of requiredPackageFiles) {
     if (!pathExistsInPackedFiles(file, packedFiles)) {
       fail(`npm pack 产物缺少发布项：${file}`);
@@ -199,9 +181,47 @@ if (packedFiles) {
     fail(`npm pack 产物不应包含 manifest/archive：${archivedManifestFiles.join(", ")}`);
   }
 
+  const extraManifestFiles = packedPaths.filter((packedPath) => {
+    return packedPath.startsWith("manifest/")
+      && !allowedManifestPackageFiles.has(packedPath);
+  });
+  if (extraManifestFiles.length > 0) {
+    fail(`npm pack 产物不应包含非运行时 manifest 文件：${extraManifestFiles.join(", ")}`);
+  }
+
   const technicalSolutionDocs = packedPaths.filter((packedPath) => packedPath.startsWith("docs/technical-solutions/"));
   if (technicalSolutionDocs.length > 0) {
     fail(`npm pack 产物不应包含历史技术方案设计稿：${technicalSolutionDocs.join(", ")}`);
+  }
+
+  const extraDocsFiles = packedPaths.filter((packedPath) => {
+    return packedPath.startsWith("docs/")
+      && !allowedDocsPackageFiles.has(packedPath);
+  });
+  if (extraDocsFiles.length > 0) {
+    fail(`npm pack 产物不应包含仓库维护侧文档：${extraDocsFiles.join(", ")}`);
+  }
+
+  const packagedScripts = packedPaths.filter((packedPath) => packedPath.startsWith("scripts/"));
+  if (packagedScripts.length > 0) {
+    fail(`npm pack 产物不应包含维护脚本目录：${packagedScripts.join(", ")}`);
+  }
+
+  const packagedBaselineFiles = packedPaths.filter((packedPath) => packedPath.startsWith("baseline/"));
+  if (packagedBaselineFiles.length > 0) {
+    fail(`npm pack 产物不应包含仅供仓库维护使用的 baseline 产物：${packagedBaselineFiles.join(", ")}`);
+  }
+
+  const packagedTemplateFiles = packedPaths.filter((packedPath) => {
+    return packedPath.startsWith("templates/")
+      && !packedPath.startsWith("templates/project/");
+  });
+  if (packagedTemplateFiles.length > 0) {
+    fail(`npm pack 产物不应包含非运行时模板：${packagedTemplateFiles.join(", ")}`);
+  }
+
+  if (packedPaths.includes("CODEOWNERS")) {
+    fail("npm pack 产物不应包含 CODEOWNERS");
   }
 
   if (fs.existsSync(versionRecordPath)) {
@@ -213,9 +233,8 @@ if (packedFiles) {
       notificationMarkdownName ? `manifest/notifications/${notificationMarkdownName}` : ""
     ].filter(Boolean));
     const packedNotificationPaths = packedPaths.filter((packedPath) => packedPath.startsWith("manifest/notifications/"));
-    const staleNotificationPaths = packedNotificationPaths.filter((packedPath) => !expectedNotificationPaths.has(packedPath));
-    if (staleNotificationPaths.length > 0) {
-      fail(`npm pack 产物不应包含非当前通知载荷：${staleNotificationPaths.join(", ")}`);
+    if (packedNotificationPaths.length > 0) {
+      fail(`npm pack 产物不应包含通知载荷：${packedNotificationPaths.join(", ")}`);
     }
 
     const notificationPayloadPath = versionRecord.artifacts?.notificationJsonPath || "";
@@ -224,9 +243,8 @@ if (packedFiles) {
       const impactTaskName = path.basename(notificationPayload.links?.impactTaskPath || "");
       const expectedImpactTaskPath = impactTaskName ? `manifest/impact-tasks/${impactTaskName}` : "";
       const packedImpactTaskPaths = packedPaths.filter((packedPath) => packedPath.startsWith("manifest/impact-tasks/"));
-      const staleImpactTaskPaths = packedImpactTaskPaths.filter((packedPath) => packedPath !== expectedImpactTaskPath);
-      if (staleImpactTaskPaths.length > 0) {
-        fail(`npm pack 产物不应包含非当前 impact task：${staleImpactTaskPaths.join(", ")}`);
+      if (packedImpactTaskPaths.length > 0) {
+        fail(`npm pack 产物不应包含 impact task：${packedImpactTaskPaths.join(", ")}`);
       }
     }
   }

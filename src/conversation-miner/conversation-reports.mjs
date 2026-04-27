@@ -9,7 +9,7 @@
  * 依赖外部服务：strategy-templates.mjs, pattern-governance.mjs, decision-ledger.mjs
  */
 import fs from "node:fs";
-import { ensureDir, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, writeJson } from "../shared/fs.mjs";
 import { buildConversationMinerStrategyMarkdown, buildConversationMinerStrategyPayload } from "./strategy-templates.mjs";
 import { buildConversationPatternGovernanceMarkdown } from "./pattern-governance.mjs";
 import { buildConversationDecisionLedgerMarkdown } from "./decision-ledger.mjs";

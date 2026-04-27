@@ -8,6 +8,7 @@ import {
   buildReleaseGateReport,
   collectWrapperRegistryGovernance
 } from "../src/release-gates/index.mjs";
+import { loadConsumerReleaseInputs } from "../src/release-gates/consumer-release-inputs.mjs";
 import { validateTeamPolicyConfig } from "../src/team-policy/index.mjs";
 import { ensureDir, readJson, safeTrim, writeJson } from "./shared.mjs";
 
@@ -43,6 +44,7 @@ function parseArgs(argv) {
     projectRoot: path.resolve(getValue("--project-root", root)),
     outputPath: path.resolve(getValue("--output", defaultOutputPath)),
     markdownPath: path.resolve(getValue("--markdown", defaultMarkdownPath)),
+    consumerMatrixPath: path.resolve(getValue("--consumer-matrix", defaultMatrixPath)),
     requireConsumerMatrix: requireConsumerMatrixFlag || Boolean(context.teamPolicy.releasePolicies?.enforceConsumerMatrix),
     staleDays: Number.isFinite(staleDaysValue) && staleDaysValue >= 0 ? staleDaysValue : 14
   };
@@ -121,7 +123,10 @@ function updateVersionRecord(report, outputPath, markdownPath) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const matrix = fs.existsSync(defaultMatrixPath) ? readJson(defaultMatrixPath) : null;
+const consumerReleaseInputs = loadConsumerReleaseInputs({
+  matrixPath: args.consumerMatrixPath,
+  requireConsumerMatrix: args.requireConsumerMatrix
+});
 const consistency = runConsistencyCheck({ requireConsumerMatrix: args.requireConsumerMatrix });
 const wrapperGovernance = collectWrapperRegistryGovernance({
   projectRoot: args.projectRoot,
@@ -137,7 +142,7 @@ const report = buildReleaseGateReport({
   generatedAt: new Date().toISOString(),
   consistency,
   wrapperGovernance,
-  compatibilityMatrix: matrix,
+  consumerReleaseInputs,
   teamPolicyValidation,
   teamPolicyReleasePolicies: context.teamPolicy.releasePolicies || null,
   requireConsumerMatrix: args.requireConsumerMatrix

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { readJson } from "../../scripts/shared.mjs";
+import { readJson } from "../shared/fs.mjs";
 import { extractSessionSummaryBlock } from "./protocol.mjs";
 
 export function toUniqueSortedList(values) {

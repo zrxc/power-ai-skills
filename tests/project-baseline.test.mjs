@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyDir } from "../src/shared/fs.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(root, "bin", "power-ai-skills.mjs");
@@ -13,7 +14,7 @@ const fixtureRoot = path.join(root, "tests", "fixtures", "consumer-basic");
 function createTempConsumerProject(t) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-baseline-"));
   const projectRoot = path.join(tempRoot, "consumer-basic");
-  fs.cpSync(fixtureRoot, projectRoot, { recursive: true });
+  copyDir(fixtureRoot, projectRoot);
   t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
   return projectRoot;
 }

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, writeJson } from "../shared/fs.mjs";
 import { supportedCaptureWrappers } from "./wrappers.mjs";
 
 function toPowerAiRelative(projectRoot, targetPath) {

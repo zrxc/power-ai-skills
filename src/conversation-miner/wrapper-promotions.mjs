@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, readJson, removeDirIfExists, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, readJson, removeDirIfExists, writeJson } from "../shared/fs.mjs";
 import { supportedCaptureWrappers } from "./wrappers.mjs";
 import { sanitizeWrapperToolName, buildWrapperPromotionReadme, buildWrapperPromotionTimeline } from "./wrapper-promotion-support.mjs";
 import { createWrapperAuditService } from "./wrapper-audit.mjs";

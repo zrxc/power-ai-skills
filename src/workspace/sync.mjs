@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { copyDir, ensureDir, removeDirIfExists, writeJson } from "../../scripts/shared.mjs";
+import { copyDir, ensureDir, removeDirIfExists, writeJson } from "../shared/fs.mjs";
 
 export function createWorkspaceSyncHelpers({
   context,

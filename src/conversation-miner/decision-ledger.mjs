@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { readJson, writeJson } from "../../scripts/shared.mjs";
+import { readJson, writeJson } from "../shared/fs.mjs";
 
 const decisionStates = new Set(["detected", "review", "accepted", "rejected", "promoted", "archived"]);
 const decisionTargets = new Set(["project-local-skill", "team-rule", "wrapper-proposal", "docs", "ignored", ""]);

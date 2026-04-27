@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { readJson, writeJson } from "../../scripts/shared.mjs";
+import { readJson, writeJson } from "../shared/fs.mjs";
 import {
   createCoverageSnapshot,
   createPendingCaptureId,

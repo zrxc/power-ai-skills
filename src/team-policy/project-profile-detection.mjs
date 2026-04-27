@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { readJson } from "../../scripts/shared.mjs";
+import { readJson } from "../shared/fs.mjs";
 
 function readProjectPackageJson(projectRoot) {
   const packageJsonPath = path.join(projectRoot, "package.json");

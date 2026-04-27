@@ -10,7 +10,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { findSkillDirectories, readJson } from "../../scripts/shared.mjs";
+import { findSkillDirectories, readJson } from "../shared/fs.mjs";
 import {
   readJsonIfExists,
   stableStringify,

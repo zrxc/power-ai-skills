@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { readJson } from "../../scripts/shared.mjs";
+import { readJson } from "../shared/fs.mjs";
 import { buildWrapperRegistryGovernancePayload } from "../conversation-miner/wrapper-registry-governance.mjs";
 import { supportedCaptureWrappers } from "../conversation-miner/wrappers.mjs";
+import { createConsumerReleaseInputs } from "./consumer-release-inputs.mjs";
 
 function isValidDate(value) {
   return Number.isFinite(Date.parse(value || ""));
@@ -99,6 +100,7 @@ export function buildReleaseGateReport({
   consistency,
   wrapperGovernance,
   compatibilityMatrix,
+  consumerReleaseInputs = null,
   teamPolicyValidation = null,
   teamPolicyReleasePolicies = null,
   requireConsumerMatrix = false
@@ -109,49 +111,54 @@ export function buildReleaseGateReport({
     stalledProposalCount: wrapperGovernance?.summary?.stalledProposalCount || 0
   };
   const wrapperGateOk = Object.values(wrapperBlockers).every((count) => count === 0);
-  const matrixSummary = compatibilityMatrix?.summary || null;
-  const matrixAvailable = Boolean(matrixSummary);
-  const consumerFailedScenarios = matrixSummary?.failedScenarios || 0;
-  const unresolvedProjectProfileDecisions = matrixSummary?.unresolvedProjectProfileDecisions || 0;
-  const deferredProjectProfileDecisions = matrixSummary?.deferredProjectProfileDecisions || 0;
-  const rejectedProjectProfileDecisions = matrixSummary?.rejectedProjectProfileDecisions || 0;
-  const pendingConversationReviews = matrixSummary?.pendingConversationReviews || 0;
-  const scenariosWithPendingConversationReviews = matrixSummary?.scenariosWithPendingConversationReviews || 0;
-  const warningLevelConversationRecords = matrixSummary?.warningLevelConversationRecords || 0;
-  const scenariosWithWarningLevelConversationRecords = matrixSummary?.scenariosWithWarningLevelConversationRecords || 0;
-  const reviewLevelConversationRecords = matrixSummary?.reviewLevelConversationRecords || 0;
-  const captureLevelConversationRecords = matrixSummary?.captureLevelConversationRecords || 0;
-  const recordsWithAdmissionMetadata = matrixSummary?.recordsWithAdmissionMetadata || 0;
-  const recordsWithGovernanceMetadata = matrixSummary?.recordsWithGovernanceMetadata || 0;
-  const scenariosWithReviewLevelConversationRecords = matrixSummary?.scenariosWithReviewLevelConversationRecords || 0;
-  const pendingWrapperProposals = matrixSummary?.pendingWrapperProposals || 0;
-  const scenariosWithPendingWrapperProposals = matrixSummary?.scenariosWithPendingWrapperProposals || 0;
-  const overdueGovernanceReviews = matrixSummary?.overdueGovernanceReviews || 0;
-  const dueTodayGovernanceReviews = matrixSummary?.dueTodayGovernanceReviews || 0;
-  const scenariosWithOverdueGovernanceReviews = matrixSummary?.scenariosWithOverdueGovernanceReviews || 0;
-  const pendingEvolutionProposalReviews = matrixSummary?.pendingEvolutionProposalReviews || 0;
-  const scenariosWithPendingEvolutionProposalReviews = matrixSummary?.scenariosWithPendingEvolutionProposalReviews || 0;
-  const acceptedEvolutionProposals = matrixSummary?.acceptedEvolutionProposals || 0;
-  const scenariosWithAcceptedEvolutionProposals = matrixSummary?.scenariosWithAcceptedEvolutionProposals || 0;
-  const highRiskEvolutionProposals = matrixSummary?.highRiskEvolutionProposals || 0;
-  const staleEvolutionProposalReviews = matrixSummary?.staleEvolutionProposalReviews || 0;
-  const scenariosWithStaleEvolutionProposalReviews = matrixSummary?.scenariosWithStaleEvolutionProposalReviews || 0;
-  const staleAcceptedEvolutionProposals = matrixSummary?.staleAcceptedEvolutionProposals || 0;
-  const scenariosWithStaleAcceptedEvolutionProposals = matrixSummary?.scenariosWithStaleAcceptedEvolutionProposals || 0;
-  const appliedEvolutionProposalFollowUps = matrixSummary?.appliedEvolutionProposalFollowUps || 0;
-  const scenariosWithAppliedEvolutionProposalFollowUps = matrixSummary?.scenariosWithAppliedEvolutionProposalFollowUps || 0;
-  const appliedEvolutionProposalFollowUpActionCount = matrixSummary?.appliedEvolutionProposalFollowUpActionCount || 0;
-  const appliedWrapperPromotionDrafts = matrixSummary?.appliedWrapperPromotionDrafts || 0;
-  const appliedSharedSkillDrafts = matrixSummary?.appliedSharedSkillDrafts || 0;
-  const appliedReleaseImpactDrafts = matrixSummary?.appliedReleaseImpactDrafts || 0;
-  const autoCaptureWarningScenarios = matrixSummary?.autoCaptureWarningScenarios || 0;
-  const autoCaptureAttentionScenarios = matrixSummary?.autoCaptureAttentionScenarios || 0;
-  const autoCaptureCaptureBacklog = matrixSummary?.autoCaptureCaptureBacklog || 0;
-  const autoCaptureResponseBacklog = matrixSummary?.autoCaptureResponseBacklog || 0;
-  const autoCaptureFailedRequests = matrixSummary?.autoCaptureFailedRequests || 0;
-  const scenariosWithAutoCaptureBacklog = matrixSummary?.scenariosWithAutoCaptureBacklog || 0;
-  const scenariosWithAutoCaptureFailures = matrixSummary?.scenariosWithAutoCaptureFailures || 0;
   const effectiveRequireConsumerMatrix = teamPolicyReleasePolicies?.enforceConsumerMatrix ?? requireConsumerMatrix;
+  const resolvedConsumerReleaseInputs = consumerReleaseInputs || createConsumerReleaseInputs({
+    matrix: compatibilityMatrix,
+    requireConsumerMatrix: effectiveRequireConsumerMatrix
+  });
+  const matrixAvailable = resolvedConsumerReleaseInputs.available;
+  const consumerFailedScenarios = resolvedConsumerReleaseInputs.compatibility.failedScenarioCount;
+  const {
+    unresolvedProjectProfileDecisions,
+    deferredProjectProfileDecisions,
+    rejectedProjectProfileDecisions,
+    pendingConversationReviews,
+    scenariosWithPendingConversationReviews,
+    warningLevelConversationRecords,
+    scenariosWithWarningLevelConversationRecords,
+    reviewLevelConversationRecords,
+    captureLevelConversationRecords,
+    recordsWithAdmissionMetadata,
+    recordsWithGovernanceMetadata,
+    scenariosWithReviewLevelConversationRecords,
+    pendingWrapperProposals,
+    scenariosWithPendingWrapperProposals,
+    overdueGovernanceReviews,
+    dueTodayGovernanceReviews,
+    scenariosWithOverdueGovernanceReviews,
+    pendingEvolutionProposalReviews,
+    scenariosWithPendingEvolutionProposalReviews,
+    acceptedEvolutionProposals,
+    scenariosWithAcceptedEvolutionProposals,
+    highRiskEvolutionProposals,
+    staleEvolutionProposalReviews,
+    scenariosWithStaleEvolutionProposalReviews,
+    staleAcceptedEvolutionProposals,
+    scenariosWithStaleAcceptedEvolutionProposals,
+    appliedEvolutionProposalFollowUps,
+    scenariosWithAppliedEvolutionProposalFollowUps,
+    appliedEvolutionProposalFollowUpActionCount,
+    appliedWrapperPromotionDrafts,
+    appliedSharedSkillDrafts,
+    appliedReleaseImpactDrafts,
+    autoCaptureWarningScenarios,
+    autoCaptureAttentionScenarios,
+    autoCaptureCaptureBacklog,
+    autoCaptureResponseBacklog,
+    autoCaptureFailedRequests,
+    scenariosWithAutoCaptureBacklog,
+    scenariosWithAutoCaptureFailures
+  } = resolvedConsumerReleaseInputs.governance;
   const effectiveConsumerGateOk = effectiveRequireConsumerMatrix
     ? matrixAvailable && consumerFailedScenarios === 0
     : (!matrixAvailable || consumerFailedScenarios === 0);
@@ -203,8 +210,8 @@ export function buildReleaseGateReport({
       details: {
         required: effectiveRequireConsumerMatrix,
         available: matrixAvailable,
-        scenarioCount: matrixSummary?.totalScenarios || 0,
-        passedScenarios: matrixSummary?.passedScenarios || 0,
+        scenarioCount: resolvedConsumerReleaseInputs.compatibility.scenarioCount,
+        passedScenarios: resolvedConsumerReleaseInputs.compatibility.passedScenarioCount,
         failedScenarios: consumerFailedScenarios
       },
       remediation: effectiveRequireConsumerMatrix
@@ -352,7 +359,7 @@ export function buildReleaseGateReport({
       ? ["Check consumer auto-capture runtime health and drain failed/backlogged queues so release governance is not working with stale intake."]
       : []),
     ...(!matrixAvailable && effectiveRequireConsumerMatrix
-      ? ["Run `node ./scripts/verify-consumer.mjs --fixture basic --matrix-json manifest/consumer-compatibility-matrix.json --matrix-markdown manifest/consumer-compatibility-matrix.md` before release gating."]
+      ? ["Run `pnpm release:consumer-inputs` before release gating."]
       : [])
   ];
 
@@ -425,8 +432,8 @@ export function buildReleaseGateReport({
       ? {
           required: effectiveRequireConsumerMatrix,
           available: true,
-          scenarioCount: matrixSummary.totalScenarios || 0,
-          passedScenarioCount: matrixSummary.passedScenarios || 0,
+          scenarioCount: resolvedConsumerReleaseInputs.compatibility.scenarioCount,
+          passedScenarioCount: resolvedConsumerReleaseInputs.compatibility.passedScenarioCount,
           failedScenarioCount: consumerFailedScenarios
         }
       : {

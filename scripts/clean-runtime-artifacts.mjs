@@ -1,79 +1,148 @@
-/**
- * 清理运行时产物脚本
- * 
- * 功能：清理 manifest 目录中按 .gitignore 应被忽略的运行时产物
- * 这些文件由脚本动态生成，不需要持久化在仓库中
- */
-
 import fs from "node:fs";
 import path from "node:path";
 
-const manifestRoot = path.resolve("manifest");
+function parseArgs(argv) {
+  const options = {
+    manifestRoot: path.resolve("manifest"),
+    runtimeRoot: path.resolve(".power-ai"),
+    json: false
+  };
 
-function cleanDir(dirPath, pattern) {
-  if (!fs.existsSync(dirPath)) return 0;
-  
-  const files = fs.readdirSync(dirPath);
-  let count = 0;
-  
-  files.forEach((file) => {
-    if (pattern.test(file)) {
-      const filePath = path.join(dirPath, file);
-      fs.rmSync(filePath, { force: true });
-      console.log(`  ✓ 删除: ${path.relative(manifestRoot, filePath)}`);
-      count++;
+  for (let index = 0; index < argv.length; index++) {
+    const token = argv[index];
+    if (token === "--manifest-root") {
+      options.manifestRoot = path.resolve(argv[index + 1] || "manifest");
+      index++;
+      continue;
     }
-  });
-  
-  return count;
-}
 
-function main() {
-  console.log("🧹 开始清理运行时产物...\n");
-  
-  let total = 0;
-  
-  // 清理 notifications 中的历史文件（保留 .npmignore）
-  const notificationsDir = path.join(manifestRoot, "notifications");
-  total += cleanDir(notificationsDir, /^upgrade-payload-/);
-  
-  // 清理 impact-tasks 中的历史文件（保留 .npmignore）
-  const impactTasksDir = path.join(manifestRoot, "impact-tasks");
-  total += cleanDir(impactTasksDir, /^impact-task-/);
-  
-  // 清理 changed-files.txt
-  const changedFiles = path.join(manifestRoot, "changed-files.txt");
-  if (fs.existsSync(changedFiles)) {
-    fs.rmSync(changedFiles, { force: true });
-    console.log("  ✓ 删除: changed-files.txt");
-    total++;
+    if (token === "--runtime-root") {
+      options.runtimeRoot = path.resolve(argv[index + 1] || ".power-ai");
+      index++;
+      continue;
+    }
+
+    if (token === "--json") {
+      options.json = true;
+    }
   }
-  
-  // 清理 archive 中的历史通知（已归档的旧文件）
-  const archiveNotificationsDir = path.join(manifestRoot, "archive/notifications");
-  total += cleanDir(archiveNotificationsDir, /^upgrade-payload-/);
-  
-  console.log(`\n✅ 清理完成！共删除 ${total} 个文件\n`);
-  
-  // 输出清理后的目录结构
-  console.log("📁 清理后 manifest 目录结构：");
-  printDirectoryStructure(manifestRoot, 0);
+
+  return options;
 }
 
-function printDirectoryStructure(dir, indent) {
-  if (!fs.existsSync(dir)) return;
-  
-  const indentStr = "  ".repeat(indent);
-  const items = fs.readdirSync(dir, { withFileTypes: true });
-  
-  items.forEach((item) => {
-    if (item.isDirectory()) {
-      console.log(`${indentStr}📂 ${item.name}/`);
-      printDirectoryStructure(path.join(dir, item.name), indent + 1);
-    } else {
-      console.log(`${indentStr}📄 ${item.name}`);
+function removeMatchingFiles(dirPath, pattern) {
+  if (!fs.existsSync(dirPath)) return [];
+
+  const removed = [];
+  for (const fileName of fs.readdirSync(dirPath)) {
+    if (!pattern.test(fileName)) continue;
+    const filePath = path.join(dirPath, fileName);
+    fs.rmSync(filePath, { force: true });
+    removed.push(filePath);
+  }
+
+  return removed;
+}
+
+function removeFileIfExists(filePath) {
+  if (!fs.existsSync(filePath)) return false;
+  fs.rmSync(filePath, { force: true });
+  return true;
+}
+
+function pruneEmptyDirectories(rootDir) {
+  if (!fs.existsSync(rootDir)) return [];
+
+  const removed = [];
+
+  function walk(currentDir) {
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      walk(path.join(currentDir, entry.name));
     }
-  });
+
+    if (currentDir === rootDir) return;
+    if (fs.readdirSync(currentDir).length > 0) return;
+
+    fs.rmdirSync(currentDir);
+    removed.push(currentDir);
+  }
+
+  walk(rootDir);
+  return removed.sort((left, right) => left.localeCompare(right, "en"));
 }
 
-main();
+function buildSummary({ manifestRoot, runtimeRoot }) {
+  const notificationsDir = path.join(manifestRoot, "notifications");
+  const impactTasksDir = path.join(manifestRoot, "impact-tasks");
+  const archiveNotificationsDir = path.join(manifestRoot, "archive", "notifications");
+  const changedFilesPath = path.join(manifestRoot, "changed-files.txt");
+
+  const removedNotificationPayloads = removeMatchingFiles(notificationsDir, /^upgrade-payload-/);
+  const removedImpactTasks = removeMatchingFiles(impactTasksDir, /^impact-task-/);
+  const removedArchivedNotificationPayloads = removeMatchingFiles(archiveNotificationsDir, /^upgrade-payload-/);
+  const removedChangedFiles = removeFileIfExists(changedFilesPath) ? [changedFilesPath] : [];
+  const removedEmptyRuntimeDirectories = pruneEmptyDirectories(runtimeRoot);
+
+  return {
+    ok: true,
+    manifestRoot,
+    runtimeRoot,
+    removed: {
+      notifications: removedNotificationPayloads,
+      impactTasks: removedImpactTasks,
+      changedFiles: removedChangedFiles,
+      archivedNotifications: removedArchivedNotificationPayloads,
+      emptyRuntimeDirectories: removedEmptyRuntimeDirectories
+    },
+    totals: {
+      notifications: removedNotificationPayloads.length,
+      impactTasks: removedImpactTasks.length,
+      changedFiles: removedChangedFiles.length,
+      archivedNotifications: removedArchivedNotificationPayloads.length,
+      emptyRuntimeDirectories: removedEmptyRuntimeDirectories.length,
+      total:
+        removedNotificationPayloads.length +
+        removedImpactTasks.length +
+        removedChangedFiles.length +
+        removedArchivedNotificationPayloads.length +
+        removedEmptyRuntimeDirectories.length
+    }
+  };
+}
+
+function formatPath(baseDir, targetPath) {
+  return path.relative(baseDir, targetPath) || ".";
+}
+
+function printHumanSummary(summary) {
+  console.log("Cleaning runtime artifacts...");
+  console.log(`manifest root: ${summary.manifestRoot}`);
+  console.log(`runtime root: ${summary.runtimeRoot}`);
+
+  const sections = [
+    ["notifications", summary.removed.notifications, summary.manifestRoot],
+    ["impact tasks", summary.removed.impactTasks, summary.manifestRoot],
+    ["changed files", summary.removed.changedFiles, summary.manifestRoot],
+    ["archived notifications", summary.removed.archivedNotifications, summary.manifestRoot],
+    ["empty runtime directories", summary.removed.emptyRuntimeDirectories, summary.runtimeRoot]
+  ];
+
+  for (const [label, entries, baseDir] of sections) {
+    console.log(`- ${label}: ${entries.length}`);
+    for (const entry of entries) {
+      console.log(`  removed ${formatPath(baseDir, entry)}`);
+    }
+  }
+
+  console.log(`Total removed: ${summary.totals.total}`);
+}
+
+const options = parseArgs(process.argv.slice(2));
+const summary = buildSummary(options);
+
+if (options.json) {
+  console.log(JSON.stringify(summary, null, 2));
+} else {
+  printHumanSummary(summary);
+}

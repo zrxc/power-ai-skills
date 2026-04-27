@@ -9,7 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { readJson } from "../../scripts/shared.mjs";
+import { readJson } from "../shared/fs.mjs";
 import { sanitizeWrapperToolName } from "./wrapper-promotion-support.mjs";
 
 /**

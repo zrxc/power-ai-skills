@@ -1,4 +1,4 @@
-# 维护指南
+﻿# 维护指南
 
 ## 日常维护原则
 
@@ -6,6 +6,17 @@
 - 项目私有补充只放 `.power-ai/skills/project-local`
 - 工具入口目录和文件都由 CLI 自动生成，不手改
 - skill 默认中文，生成代码时默认补充详细中文注释
+
+## 当前结构收口
+
+- 命令注册单一源已经收敛到 `src/commands/registry.mjs`，不要再在命令分发和 `project root` 解析里各自维护命令长表。
+- CLI 启动和服务装配已迁移到 `src/cli/index.mjs`，`bin/` 入口只保留执行壳层。
+- 运行时文件读写工具已迁移到 `src/shared/fs.mjs`；`scripts/shared.mjs` 现在只做仓库维护侧复用，不再作为运行时依赖入口。
+- npm 发包边界已收缩为运行时资产、最小使用文档和 `skills-manifest`，发布流程产物与维护脚本继续保留在仓库内，但不再进入 npm 包。
+- 发布边界校验现在分成“路径名单 + 运行时 smoke”两层：`pnpm check:package` 负责名单约束，`tests/package-boundary-smoke.test.mjs` 负责真实 tarball 解包后的运行时入口 smoke。
+- `pnpm clean:runtime` 现在除了清理 `manifest/` 下的忽略产物，还会回收 `.power-ai/` 下的空运行时目录；有内容的运行时目录仍会保留。
+- `docs/command-manual.md` 里的“注册表命令清单”片段由 `pnpm docs:command-manual` 自动生成，并在 `pnpm check:docs` 中校验，新增命令后不要只改文档正文而忽略这段清单。
+- 本轮结构评估与后续建议见 `docs/project-structure-assessment.md`。
 
 ## 修改 skill 后要做什么
 
@@ -22,13 +33,25 @@
 - `manifest/version-record.json` 是当前版本发布产物的正式记录文件，后续校验和排障都以它为准。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
 - 如只想单独归档旧通知，可执行 `pnpm clean:release-artifacts`。
+- 如需同时清理 `manifest/` 忽略产物和 `.power-ai/` 空目录，可执行 `pnpm clean:runtime`。
+- 如果改动了 `package.json > files`、`bin/`、`src/cli/`、`src/context.mjs`、`config/`、`templates/project/` 或 release 边界相关忽略规则，除了 `pnpm check:package`，还要补跑：
+
+```bash
+node --test ./tests/package-boundary-smoke.test.mjs
+```
+
+这组测试会直接验证真实 tarball 解包后的运行时入口还能启动，并对内置 consumer fixture 跑一轮最小 `init` / `doctor` smoke。
+- 如果发布边界变化是有意的，要同步更新 `tests/package-boundary-smoke.test.mjs` 中的包含项/排除项断言，保证“发布口径”有明确的自动化表达。
 
 推荐顺序：
 
 ```bash
 npx power-ai-skills doctor
+pnpm clean:runtime
 pnpm refresh:release-artifacts
+node --test ./tests/package-boundary-smoke.test.mjs
 pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-automation-report --require-notification-payload
+pnpm release:consumer-inputs
 pnpm release:prepare
 ```
 
@@ -54,7 +77,10 @@ pnpm release:prepare
 
 ```bash
 pnpm ci:check
+pnpm docs:command-manual
+pnpm clean:runtime
 pnpm refresh:release-artifacts
+node --test ./tests/package-boundary-smoke.test.mjs
 pnpm clean:release-artifacts
 pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-automation-report --require-notification-payload
 pnpm release:prepare

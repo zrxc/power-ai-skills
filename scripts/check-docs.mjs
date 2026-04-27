@@ -1,12 +1,4 @@
-/**
- * 文档治理校验脚本
- * 目标：
- * 1. 确保关键文档和模板存在；
- * 2. 防止仓库在升级后仍残留旧包名；
- * 3. 保证入口规则、兼容矩阵、CI 接入说明和上游流水线说明不会丢失。
- */
-
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -88,7 +80,7 @@ function fail(message) {
 for (const relativePath of requiredDocs) {
   const absolutePath = path.join(root, relativePath);
   if (!fs.existsSync(absolutePath)) {
-    fail(`缺少关键文档：${relativePath}`);
+    fail(`missing required doc or config: ${relativePath}`);
   }
 }
 
@@ -97,7 +89,7 @@ for (const relativePath of filesToScan) {
   const content = fs.readFileSync(absolutePath, "utf8");
 
   if (content.includes("@power/frontend-ai-skills")) {
-    fail(`${relativePath} 仍然包含旧包名 @power/frontend-ai-skills`);
+    fail(`${relativePath} still references legacy package name @power/frontend-ai-skills`);
   }
 }
 
@@ -120,26 +112,34 @@ for (const docName of [
 ]) {
   const shortName = docName.replace("docs/", "");
   if (!readme.includes(docName) && !readme.includes(shortName)) {
-    fail(`README.md 未提及 ${docName}`);
+    fail(`README.md is missing reference to ${docName}`);
   }
 }
 
-const toolAdaptersCheck = spawnSync(process.execPath, ["./scripts/generate-tool-adapters-doc.mjs", "--check"], {
-  cwd: root,
-  encoding: "utf8"
-});
+const generatedDocChecks = [
+  {
+    command: ["./scripts/generate-tool-adapters-doc.mjs", "--check"],
+    fallback: "tool-adapters doc check failed"
+  },
+  {
+    command: ["./scripts/generate-command-registry-doc.mjs", "--check"],
+    fallback: "command-manual registry check failed"
+  },
+  {
+    command: ["./scripts/generate-readme.mjs", "--check"],
+    fallback: "README doc check failed"
+  }
+];
 
-if (toolAdaptersCheck.status !== 0) {
-  fail(summarizeSpawnFailure(toolAdaptersCheck, "tool-adapters 文档校验失败"));
-}
+for (const check of generatedDocChecks) {
+  const result = spawnSync(process.execPath, check.command, {
+    cwd: root,
+    encoding: "utf8"
+  });
 
-const readmeCheck = spawnSync(process.execPath, ["./scripts/generate-readme.mjs", "--check"], {
-  cwd: root,
-  encoding: "utf8"
-});
-
-if (readmeCheck.status !== 0) {
-  fail(summarizeSpawnFailure(readmeCheck, "README 文档校验失败"));
+  if (result.status !== 0) {
+    fail(summarizeSpawnFailure(result, check.fallback));
+  }
 }
 
 if (process.exitCode) {

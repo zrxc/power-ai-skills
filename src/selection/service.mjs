@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
-import { readJson } from "../../scripts/shared.mjs";
+import { readJson } from "../shared/fs.mjs";
 import { detectRecommendedTeamProjectProfile } from "../team-policy/project-profile-detection.mjs";
 import { parsePositionalSelection } from "./cli.mjs";
 import {

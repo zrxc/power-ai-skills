@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyDir } from "../src/shared/fs.mjs";
 import os from "node:os";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -452,7 +453,7 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
 test("check-release-consistency validates current release, automation, and notification artifacts", { concurrency: false }, (t) => {
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-consistency-current-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   t.after(() => fs.rmSync(tempManifestRoot, { recursive: true, force: true }));
 
@@ -554,7 +555,7 @@ test("clean-release-artifacts archives stale notifications and keeps the latest 
 test("check-release-consistency validates consumer compatibility matrix when required", { concurrency: false }, (t) => {
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-matrix-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   const matrixJsonPath = path.join(tempManifestDir, "consumer-compatibility-matrix.json");
   const matrixMarkdownPath = path.join(tempManifestDir, "consumer-compatibility-matrix.md");

@@ -5,15 +5,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyDir } from "../src/shared/fs.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const verifyScriptPath = path.join(root, "scripts", "verify-consumer.mjs");
+const releaseConsumerInputsScriptPath = path.join(root, "scripts", "release-consumer-inputs.mjs");
 const fixtureRoot = path.join(root, "tests", "fixtures", "consumer-basic");
 
 function createTempConsumerProject(t) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-verify-test-"));
   const projectRoot = path.join(tempRoot, "consumer-basic");
-  fs.cpSync(fixtureRoot, projectRoot, { recursive: true });
+  copyDir(fixtureRoot, projectRoot);
   fs.rmSync(path.join(projectRoot, ".power-ai"), { recursive: true, force: true });
   t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
   return projectRoot;
@@ -107,6 +109,69 @@ test("verify-consumer writes compatibility matrix artifacts when output paths ar
   assert.equal(matrixJson.dimensions.initStrategy, "explicit-tools");
   assert.equal(matrixMarkdown.includes("# Consumer Compatibility Matrix"), true);
   assert.equal(matrixMarkdown.includes("fixture:basic"), true);
+});
+
+test("release consumer inputs uses the built-in fixture and writes matrix artifacts", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-consumer-inputs-"));
+  const matrixJsonPath = path.join(tempRoot, "consumer-compatibility-matrix.json");
+  const matrixMarkdownPath = path.join(tempRoot, "consumer-compatibility-matrix.md");
+  t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      releaseConsumerInputsScriptPath,
+      "--tool", "codex",
+      "--matrix-json", matrixJsonPath,
+      "--matrix-markdown", matrixMarkdownPath
+    ],
+    {
+      cwd: root,
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(result.stdout);
+  assert.equal(payload.overallOk, true);
+  assert.deepEqual(payload.fixtures, ["basic"]);
+  assert.equal(payload.matrixJsonPath, matrixJsonPath);
+  assert.equal(payload.matrixMarkdownPath, matrixMarkdownPath);
+  assert.equal(fs.existsSync(matrixJsonPath), true);
+  assert.equal(fs.existsSync(matrixMarkdownPath), true);
+});
+
+test("release consumer inputs respects POWER_AI_RELEASE_MANIFEST_DIR defaults", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-consumer-inputs-env-"));
+  const manifestRoot = path.join(tempRoot, "manifest");
+  const matrixJsonPath = path.join(manifestRoot, "consumer-compatibility-matrix.json");
+  const matrixMarkdownPath = path.join(manifestRoot, "consumer-compatibility-matrix.md");
+  copyDir(path.join(root, "manifest"), manifestRoot);
+  t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      releaseConsumerInputsScriptPath,
+      "--tool", "codex"
+    ],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        POWER_AI_RELEASE_MANIFEST_DIR: manifestRoot
+      }
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(result.stdout);
+  assert.equal(payload.overallOk, true);
+  assert.equal(payload.matrixJsonPath, matrixJsonPath);
+  assert.equal(payload.matrixMarkdownPath, matrixMarkdownPath);
+  assert.equal(fs.existsSync(matrixJsonPath), true);
+  assert.equal(fs.existsSync(matrixMarkdownPath), true);
 });
 
 test("verify-consumer surfaces doctor and artifact failure codes for an unhealthy project", (t) => {

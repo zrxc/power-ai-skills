@@ -1,4 +1,4 @@
-# 发布流程
+﻿# 发布流程
 
 ## 当前版本
 
@@ -63,31 +63,50 @@ pnpm check:release-consistency -- --require-release-notes --require-impact-repor
 pnpm clean:release-artifacts
 ```
 
-14. 生成发布说明：
+14. 如需顺手清理 `manifest/` 忽略产物与 `.power-ai/` 空运行时目录，执行：
+
+```bash
+pnpm clean:runtime
+```
+
+15. 生成发布说明：
 
 ```bash
 pnpm release:notes
 ```
 
-15. 执行本地打包验证：
+16. 执行本地打包验证：
 
 ```bash
 pnpm pack:local
 ```
 
-16. 正式发布前，执行完整预发检查：
+如需只验证“真实 tarball 的发布边界 + 运行时入口”这一层 smoke，可单独执行：
+
+```bash
+node --test ./tests/package-boundary-smoke.test.mjs
+```
+
+这组 smoke 会直接：
+- 执行真实 `npm pack`
+- 解包 tarball 并校验运行时必须资产仍在包内
+- 校验维护脚本、baseline、通知载荷和维护侧文档未被误收进 tarball
+- 从解包产物直接启动 `bin/power-ai-skills.mjs`
+- 对内置 consumer fixture 跑一轮最小 `show-defaults` / `init` / `doctor` 验证
+
+17. 正式发布前，执行完整预发检查：
 
 ```bash
 pnpm release:prepare
 ```
 
-17. 如需验证消费侧链路，执行：
+18. 如需验证消费侧链路，执行：
 
 ```bash
 node ./scripts/verify-consumer.mjs <project-path>
 ```
 
-18. 发布到私有 npm：
+19. 发布到私有 npm：
 
 ```bash
 pnpm publish --registry http://192.168.140.17:8081/nexus/repository/npm-private/
@@ -98,28 +117,35 @@ pnpm publish --registry http://192.168.140.17:8081/nexus/repository/npm-private/
 ```bash
 pnpm refresh:release-artifacts
 pnpm ci:check
-pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-risk-report --require-automation-report --require-notification-payload
-node ./scripts/verify-consumer.mjs --fixture basic --matrix-json manifest/consumer-compatibility-matrix.json --matrix-markdown manifest/consumer-compatibility-matrix.md
-pnpm check:release-gates -- --require-consumer-matrix
+node ./scripts/check-release-consistency.mjs --require-release-notes --require-impact-report --require-risk-report --require-automation-report --require-notification-payload
+node ./scripts/release-consumer-inputs.mjs --fixture basic --matrix-json manifest/consumer-compatibility-matrix.json --matrix-markdown manifest/consumer-compatibility-matrix.md
+node ./scripts/check-release-gates.mjs --require-consumer-matrix
 pnpm upgrade:advice -- --automation-report manifest/automation-report.json
 pnpm governance:operations -- --automation-report manifest/automation-report.json
 pnpm upgrade:payload -- --automation-report manifest/automation-report.json
-pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-risk-report --require-consumer-matrix --require-release-gate --require-governance-operations --require-upgrade-advice --require-automation-report --require-notification-payload
+node ./scripts/check-release-consistency.mjs --require-release-notes --require-impact-report --require-risk-report --require-consumer-matrix --require-release-gate --require-governance-operations --require-upgrade-advice --require-automation-report --require-notification-payload
 ```
 
 说明：
+- `release:validate` 现在只负责仓库维护态校验，也就是 `pnpm ci:check`。
 - 第一段一致性校验用于确认刷新后的 release notes、impact、risk、automation 和 notification 基线。
-- `verify-consumer` 会在验证消费侧链路的同时产出当前 consumer compatibility matrix。
-- `check:release-gates` 会把 artifact consistency、team policy、consumer compatibility 和治理 warning gate 收敛成统一门禁报告。
+- `release:consumer-inputs` 会在维护态入口里统一刷新当前 consumer compatibility matrix；底层仍然调用 `verify-consumer`，但 fixture、matrix 路径和 manifest 目录不再散落在 release 脚本串里。
+- `release:check` 会继续串起 consumer release inputs、release gates 和最终一致性校验，把 artifact consistency、team policy、consumer compatibility 和治理 warning gate 收敛成统一收口。
 - `upgrade:advice`、`governance:operations`、`upgrade:payload` 会补齐治理摘要、升级建议和当前通知载荷。
 - 最后一段一致性校验用于确认 consumer matrix、release gate、governance operations 和 notification 已全部对齐当前版本。
+- `pnpm test` 当前已包含 `tests/package-boundary-smoke.test.mjs`，因此 `release:prepare` 里的 `pnpm ci:check` 不只验证路径名单，也会验证真实 tarball 的运行时 smoke。
 
 ## 当前收包口径
 
-- npm 包只会携带当前版本的 `manifest/notifications/upgrade-payload-*.json/.md`
-- npm 包只会携带当前版本对应的 `manifest/impact-tasks/impact-task-*.md`
-- `manifest/archive/` 和历史技术方案设计稿 `docs/technical-solutions/` 不会进入 npm 包
+- npm 包只保留运行时必须资产：`src/`、`skills/`、`templates/project/`、`bin/`、`config/`、`manifest/skills-manifest.json`
+- npm 包只保留最小消费文档：`docs/command-manual.md`、`docs/tool-adapters.md`、`docs/doctor-error-codes.md`、`docs/troubleshooting-consumer.md`、`docs/governance.md`
+- 仓库维护脚本 `scripts/`、发布基线 `baseline/`、release artifacts、通知载荷、impact task、`manifest/archive/` 和维护侧文档不再进入 npm 包
+- 历史技术方案设计稿 `docs/technical-solutions/` 继续只保留在源码仓库
+- 发布边界校验现在分两层：
+  - `pnpm check:package` 负责校验 `files`、`scripts`、`npm pack --dry-run --json` 路径名单和不应进入 tarball 的目录
+  - `tests/package-boundary-smoke.test.mjs` 负责校验真实 tarball 解包后的关键运行时入口和最小 consumer smoke
 - 如果仓库里手动清掉了 `manifest/archive/`，后续执行 `pnpm refresh:release-artifacts` 或 `pnpm clean:release-artifacts` 时会在需要时自动重建
+- 如果需要顺手回收 `manifest/` 忽略产物和 `.power-ai/` 下的空运行时目录，可以执行 `pnpm clean:runtime`
 
 ## 业务项目消费
 

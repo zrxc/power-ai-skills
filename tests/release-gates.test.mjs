@@ -5,10 +5,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyDir } from "../src/shared/fs.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const consistencyScriptPath = path.join(root, "scripts", "check-release-consistency.mjs");
 const releaseGatesScriptPath = path.join(root, "scripts", "check-release-gates.mjs");
+const runReleaseCheckScriptPath = path.join(root, "scripts", "run-release-check.mjs");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 
 function runNodeScript(scriptPath, args = [], options = {}) {
@@ -328,7 +330,7 @@ test("check-release-gates writes a passing report for a clean manifest snapshot"
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-gates-pass-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
   const tempProjectRoot = path.join(tempManifestRoot, "project");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   fs.mkdirSync(path.join(tempProjectRoot, ".power-ai", "proposals"), { recursive: true });
 
@@ -368,7 +370,7 @@ test("check-release-gates blocks release when wrapper promotions are still pendi
     "wrapper-promotions",
     "my-pending-tool"
   );
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   fs.mkdirSync(promotionRoot, { recursive: true });
   fs.writeFileSync(
@@ -408,7 +410,7 @@ test("check-release-gates surfaces governance drift as warnings without blocking
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-gates-warn-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
   const tempProjectRoot = path.join(tempManifestRoot, "project");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   fs.mkdirSync(path.join(tempProjectRoot, ".power-ai", "proposals"), { recursive: true });
 
@@ -469,7 +471,7 @@ test("check-release-gates warns when applied evolution proposal drafts still hav
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-gates-applied-followup-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
   const tempProjectRoot = path.join(tempManifestRoot, "project");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   fs.mkdirSync(path.join(tempProjectRoot, ".power-ai", "proposals"), { recursive: true });
 
@@ -521,7 +523,7 @@ test("check-release-consistency validates release gate report when required", { 
   const tempManifestRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-release-gate-consistency-"));
   const tempManifestDir = path.join(tempManifestRoot, "manifest");
   const tempProjectRoot = path.join(tempManifestRoot, "project");
-  fs.cpSync(path.join(root, "manifest"), tempManifestDir, { recursive: true });
+  copyDir(path.join(root, "manifest"), tempManifestDir);
   normalizeManifestSnapshot(tempManifestDir);
   fs.mkdirSync(path.join(tempProjectRoot, ".power-ai", "proposals"), { recursive: true });
 

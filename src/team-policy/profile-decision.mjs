@@ -4,7 +4,7 @@
  * 负责：项目配置决策的加载、持久化、同步和审核
  */
 
-import { writeJson } from "../../scripts/shared.mjs";
+import { writeJson } from "../shared/fs.mjs";
 import { readJsonIfExists } from "./validation.mjs";
 import {
   normalizeStringArray,

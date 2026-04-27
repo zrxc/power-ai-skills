@@ -26,6 +26,121 @@
 - 发布治理
   `impact:check`、`upgrade:risk`、`upgrade:advice`、`check:release-gates`、`governance:operations`、`upgrade:payload`
 
+## 命令注册约定
+
+- 统一命令注册源位于 `src/commands/registry.mjs`。
+- 命令分发、`project root` 解析策略都从这份注册表读取，新增或调整命令时不再分别维护多份长列表。
+- 当前 `project root` 只保留三种解析策略：
+  - `init-target-or-cwd`：`init`、`add-tool`、`remove-tool` 这类命令允许把单个路径型位置参数视作目标项目目录。
+  - `cwd`：会话治理、wrapper promotion、治理查询等命令始终以当前工作目录为项目根。
+  - `first-positional-or-cwd`：其余命令默认使用第一个位置参数，否则退回当前工作目录。
+- CLI 启动入口已收敛到 `src/cli/index.mjs`，`bin/power-ai-skills.mjs` 只保留可执行壳层，不再继续堆叠服务装配细节。
+
+<!-- GENERATED:COMMAND_REGISTRY:START -->
+## 注册表命令清单
+
+> 此片段由 `node ./scripts/generate-command-registry-doc.mjs` 自动生成，请不要手工修改。
+> 它用于保证命令手册和 `src/commands/registry.mjs` 保持一致；下面的章节仍负责参数说明和典型示例。
+
+### project root strategy 对照
+
+- `cwd`：始终以当前工作目录作为 project root。
+- `first-positional-or-cwd`：优先使用第一个位置参数，否则退回当前工作目录。
+- `init-target-or-cwd`：优先使用 `init` / `add-tool` / `remove-tool` 的目标目录参数，否则退回当前工作目录。
+
+### info 命令（4）
+
+| Command | Handler | Project Root Strategy |
+| --- | --- | --- |
+| `list-tools` | `listToolsCommand` | `first-positional-or-cwd` |
+| `version` | `versionCommand` | `first-positional-or-cwd` |
+| `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
+| `doctor` | `doctorCommand` | `first-positional-or-cwd` |
+
+### project 命令（78）
+
+| Command | Handler | Project Root Strategy |
+| --- | --- | --- |
+| `sync` | `syncCommand` | `first-positional-or-cwd` |
+| `init` | `initCommand` | `init-target-or-cwd` |
+| `scan-project` | `scanProjectCommand` | `first-positional-or-cwd` |
+| `diff-project-scan` | `diffProjectScanCommand` | `first-positional-or-cwd` |
+| `generate-project-local-skills` | `generateProjectLocalSkillsCommand` | `first-positional-or-cwd` |
+| `list-project-local-skills` | `listProjectLocalSkillsCommand` | `first-positional-or-cwd` |
+| `promote-project-local-skill` | `promoteProjectLocalSkillCommand` | `cwd` |
+| `review-project-pattern` | `reviewProjectPatternCommand` | `cwd` |
+| `queue-auto-capture-response` | `queueAutoCaptureResponseCommand` | `cwd` |
+| `submit-auto-capture` | `submitAutoCaptureCommand` | `cwd` |
+| `evaluate-session-capture` | `evaluateSessionCaptureCommand` | `cwd` |
+| `prepare-session-capture` | `prepareSessionCaptureCommand` | `cwd` |
+| `confirm-session-capture` | `confirmSessionCaptureCommand` | `cwd` |
+| `consume-auto-capture-response-inbox` | `consumeAutoCaptureResponseInboxCommand` | `cwd` |
+| `consume-auto-capture-inbox` | `consumeAutoCaptureInboxCommand` | `cwd` |
+| `watch-auto-capture-inbox` | `watchAutoCaptureInboxCommand` | `cwd` |
+| `codex-capture-session` | `codexCaptureSessionCommand` | `cwd` |
+| `trae-capture-session` | `traeCaptureSessionCommand` | `cwd` |
+| `cursor-capture-session` | `cursorCaptureSessionCommand` | `cwd` |
+| `claude-code-capture-session` | `claudeCodeCaptureSessionCommand` | `cwd` |
+| `windsurf-capture-session` | `windsurfCaptureSessionCommand` | `cwd` |
+| `gemini-cli-capture-session` | `geminiCliCaptureSessionCommand` | `cwd` |
+| `github-copilot-capture-session` | `githubCopilotCaptureSessionCommand` | `cwd` |
+| `cline-capture-session` | `clineCaptureSessionCommand` | `cwd` |
+| `aider-capture-session` | `aiderCaptureSessionCommand` | `cwd` |
+| `tool-capture-session` | `toolCaptureSessionCommand` | `cwd` |
+| `capture-session` | `captureSessionCommand` | `cwd` |
+| `analyze-patterns` | `analyzePatternsCommand` | `cwd` |
+| `review-conversation-pattern` | `reviewConversationPatternCommand` | `cwd` |
+| `merge-conversation-pattern` | `mergeConversationPatternCommand` | `cwd` |
+| `archive-conversation-pattern` | `archiveConversationPatternCommand` | `cwd` |
+| `restore-conversation-pattern` | `restoreConversationPatternCommand` | `cwd` |
+| `generate-project-skill` | `generateProjectSkillCommand` | `cwd` |
+| `scaffold-wrapper-promotion` | `scaffoldWrapperPromotionCommand` | `cwd` |
+| `list-wrapper-promotions` | `listWrapperPromotionsCommand` | `cwd` |
+| `show-wrapper-promotion-timeline` | `showWrapperPromotionTimelineCommand` | `cwd` |
+| `generate-wrapper-promotion-audit` | `generateWrapperPromotionAuditCommand` | `cwd` |
+| `generate-wrapper-registry-governance` | `generateWrapperRegistryGovernanceCommand` | `cwd` |
+| `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
+| `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
+| `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
+| `validate-evolution-policy` | `validateEvolutionPolicyCommand` | `cwd` |
+| `generate-evolution-candidates` | `generateEvolutionCandidatesCommand` | `cwd` |
+| `apply-evolution-actions` | `applyEvolutionActionsCommand` | `cwd` |
+| `generate-evolution-proposals` | `generateEvolutionProposalsCommand` | `cwd` |
+| `list-evolution-proposals` | `listEvolutionProposalsCommand` | `cwd` |
+| `list-evolution-drafts` | `listEvolutionDraftsCommand` | `cwd` |
+| `show-evolution-draft` | `showEvolutionDraftCommand` | `cwd` |
+| `review-evolution-proposal` | `reviewEvolutionProposalCommand` | `cwd` |
+| `apply-evolution-proposal` | `applyEvolutionProposalCommand` | `cwd` |
+| `run-evolution-cycle` | `runEvolutionCycleCommand` | `cwd` |
+| `show-governance-history` | `showGovernanceHistoryCommand` | `cwd` |
+| `generate-conversation-miner-strategy` | `generateConversationMinerStrategyCommand` | `cwd` |
+| `check-auto-capture-runtime` | `checkAutoCaptureRuntimeCommand` | `cwd` |
+| `show-auto-capture-bridge-contract` | `showAutoCaptureBridgeContractCommand` | `cwd` |
+| `show-capture-safety-policy` | `showCaptureSafetyPolicyCommand` | `cwd` |
+| `validate-capture-safety-policy` | `validateCaptureSafetyPolicyCommand` | `cwd` |
+| `check-capture-retention` | `checkCaptureRetentionCommand` | `cwd` |
+| `apply-capture-retention` | `applyCaptureRetentionCommand` | `cwd` |
+| `check-project-baseline` | `checkProjectBaselineCommand` | `cwd` |
+| `show-team-policy` | `showTeamPolicyCommand` | `cwd` |
+| `validate-team-policy` | `validateTeamPolicyCommand` | `cwd` |
+| `check-team-policy-drift` | `checkTeamPolicyDriftCommand` | `cwd` |
+| `check-governance-review-deadlines` | `checkGovernanceReviewDeadlinesCommand` | `cwd` |
+| `show-project-profile-decision` | `showProjectProfileDecisionCommand` | `cwd` |
+| `review-project-profile` | `reviewProjectProfileCommand` | `cwd` |
+| `show-project-governance-context` | `showProjectGovernanceContextCommand` | `cwd` |
+| `show-promotion-trace` | `showPromotionTraceCommand` | `cwd` |
+| `review-wrapper-promotion` | `reviewWrapperPromotionCommand` | `cwd` |
+| `materialize-wrapper-promotion` | `materializeWrapperPromotionCommand` | `cwd` |
+| `apply-wrapper-promotion` | `applyWrapperPromotionCommand` | `cwd` |
+| `finalize-wrapper-promotion` | `finalizeWrapperPromotionCommand` | `cwd` |
+| `register-wrapper-promotion` | `registerWrapperPromotionCommand` | `cwd` |
+| `archive-wrapper-promotion` | `archiveWrapperPromotionCommand` | `cwd` |
+| `restore-wrapper-promotion` | `restoreWrapperPromotionCommand` | `cwd` |
+| `add-tool` | `addToolCommand` | `init-target-or-cwd` |
+| `remove-tool` | `removeToolCommand` | `init-target-or-cwd` |
+| `clean-reports` | `cleanReportsCommand` | `first-positional-or-cwd` |
+<!-- GENERATED:COMMAND_REGISTRY:END -->
+
 ## 仓库命令
 
 进入仓库：

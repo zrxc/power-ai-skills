@@ -1301,3 +1301,111 @@ pnpm release:prepare
 结论：
 
 - `P5-5` 已按原阶段定义收口；下一阶段应转向运营趋势视图，把现有摘要视图推进成跨周期趋势对比，而不是继续在当前文件里堆叠已完成阶段
+
+## 1.4.7 / P5-6 项目评估与结构优化第一版
+
+阶段目标：
+
+- 先把“继续做功能”的前提建立在“结构可维护、发布可控、校验稳定”上。
+- 优先收敛命令注册重复维护、CLI 入口热点膨胀、运行时与维护脚本边界混杂、npm 发布面偏宽，以及已确认安全的低价值运行时产物。
+
+已完成：
+
+- 新增 `src/commands/registry.mjs`，把命令注册、命令分发和 `project root` 解析共用的元数据收敛到单一源。
+- 新增 `src/cli/index.mjs`，把 CLI 服务装配从 `bin/power-ai-skills.mjs` 拆出，保留薄壳入口。
+- 新增 `src/shared/fs.mjs`，消除运行时代码对 `scripts/` 的反向依赖。
+- 收紧 `package.json` 的 `files` 边界，只保留运行时必需资产和最小消费文档。
+- 同步更新 `scripts/check-package.mjs`，对 tarball 中不应出现的维护脚本、baseline、额外 manifest 文档和 release 中间产物做拦截。
+- 输出 `docs/project-structure-assessment.md`，把本轮结论、高优先级后续优化和清理范围写入维护文档。
+- 更新 `docs/command-manual.md`、`docs/maintenance-guide.md`、`docs/release-process.md`，让实现与维护说明保持一致。
+- 新增 `tests/command-registry.test.mjs`，覆盖命令注册表的唯一性与分发行为。
+- 修复 Windows / Node 24 下测试复制中文路径目录时 `fs.cpSync(...)` 导致的进程级崩溃，相关测试统一改为使用稳定的 `copyDir(...)`。
+- 升级 `scripts/clean-runtime-artifacts.mjs`：除了清理 `manifest/` 中的忽略产物，还会回收 `.power-ai/` 下的空运行时目录，并支持 `--json`、`--manifest-root`、`--runtime-root` 以便自动化验证。
+- 新增 `tests/clean-runtime-artifacts.test.mjs`，覆盖运行时产物清理与空目录回收。
+
+清理范围：
+
+- 本轮没有删除已跟踪的 release artifacts、历史归档目录或技术方案文档。
+- 已确认安全并纳入清理的内容，主要是 `manifest/` 中按规则生成的无价值运行时产物，以及 `.power-ai/` 下无内容的运行时空目录。
+- `.power-ai/` 下仍有内容的目录继续保留，避免误删现场数据。
+
+验收结果：
+
+- `pnpm test`
+- `pnpm check:package`
+- `pnpm check:docs`
+
+结论：
+
+- `P5-6` 已经完成第一轮结构收口，可以转入下一阶段，继续处理 `project-scan` 热点模块拆分、命令手册与注册表一致性，以及发布边界 smoke 校验。
+
+## 1.4.7 / P5-7 项目扫描拆分与发布验证第二版
+
+阶段目标：
+
+- 在 `P5-6` 的结构收口基础上，继续处理后续最容易持续膨胀的模块与校验链路。
+- 优先解决 `project-scan` 入口过重、命令文档与注册表的手工同步成本，以及发布边界缺少更直接 smoke 校验的问题。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- 完成 `src/project-scan/index.mjs` 的第一轮继续拆分，把 orchestration、分析管线、分析产物落盘和 project-local 入口进一步拆到独立模块。
+- 为命令手册补上基于注册表的自动生成 / 校验链路，避免命令清单继续完全依赖人工同步。
+- 新增 `tests/package-boundary-smoke.test.mjs`，对真实 `npm pack` tarball 做发布边界 smoke：
+  - 校验关键运行时资产仍在包内
+  - 校验维护脚本、baseline、通知载荷和维护侧文档未误入 tarball
+  - 从解包产物直接启动 `bin/power-ai-skills.mjs`
+  - 对内置 consumer fixture 跑最小 `show-defaults` / `init` / `doctor` 验证
+- 更新 `docs/release-process.md`、`docs/maintenance-guide.md`、`docs/project-structure-assessment.md`，把“路径名单 + 运行时 smoke”的发布边界校验口径写回维护说明。
+- `docs/upgrade-roadmap.md` 中本阶段未完成项已经全部勾完，阶段说明与自动化链路保持一致。
+
+验收结果：
+
+- `node --test ./tests/package-boundary-smoke.test.mjs`
+- `node ./scripts/check-package.mjs`
+- `node ./scripts/check-docs.mjs`
+
+结论：
+
+- `P5-7` 已按原阶段定义收口；下一阶段应继续优先处理 `project-scan` 的后续扩展热点，并评估仓库维护态 release 检查与消费项目运行时入口的进一步解耦。
+
+## 1.4.7 / P5-8 项目扫描深拆与维护态边界解耦
+
+阶段目标：
+
+- 在 `P5-7` 已完成的第一轮拆分基础上，继续压缩 `project-scan` 后续最容易重新膨胀的扩展面。
+- 优先处理 `project-scan` orchestration 与维护态 release 检查之间仍然偏近的边界，避免运行时概念继续侵入仓库维护流程。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- 输出 `docs/project-structure-assessment.md` 第二轮拆分方案，明确后续新增能力优先落到 `scan inputs`、`pattern inference`、`analysis projection`、`project-local materialization` 等稳定边界，而不是继续回堆入口文件。
+- 完成 `analysis-artifacts` 第一层结构收口：
+  - `src/project-scan/analysis-paths.mjs` 只负责 project-scan 路径模型
+  - `src/project-scan/analysis-artifact-store.mjs` 只负责 artifact load / write contract
+  - `src/project-scan/project-local-overlay.mjs` 只负责 overlay root lifecycle
+- 完成 `project-local-service` 第一层结构收口：
+  - `src/project-scan/project-local-generation-service.mjs` 只负责 draft generation / regenerate
+  - `src/project-scan/project-local-lifecycle-service.mjs` 只负责 list / promote 等 lifecycle 动作
+- 将 `src/project-scan/analysis-artifacts.mjs` 与 `src/project-scan/project-local-service.mjs` 收回为兼容装配层，避免路径模型、artifact store、overlay lifecycle 和 project-local lifecycle 继续绑定在同一文件中。
+- 将 CLI 运行时装配继续稳定在 `src/cli/index.mjs`，并把维护态 release 检查入口收敛为独立的 `scripts/run-release-check.mjs`，减少消费项目运行时包对维护流程概念的直接感知。
+- 新增 `scripts/release-consumer-inputs.mjs` 与 `pnpm release:consumer-inputs` / `pnpm release:check` 链路，明确维护态 release 检查的分步职责边界。
+- 同步更新 `docs/command-manual.md`、`docs/maintenance-guide.md`、`docs/release-process.md`、`docs/upgrade-roadmap.md`，保证结构变化、维护态边界和校验方式描述一致。
+- 补齐自动化验证：
+  - `tests/run-release-check.test.mjs`
+  - `tests/package-boundary-smoke.test.mjs`
+  - `pnpm test`
+  - `pnpm check:package`
+  - `pnpm check:docs`
+  - `pnpm release:check`
+
+阶段收口判断：
+
+- `project-scan` 后续新增能力已有更明确的边界落点，不再默认回堆到单一入口或同一批 helpers。
+- 仓库维护态 release 检查与消费项目运行时入口的职责边界比上一阶段更清晰，维护流程不再默认借道运行时概念层。
+- 现有命令文档、发布边界 smoke 和维护说明在结构变化后仍保持一致。
+- 本阶段实现、测试和文档已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-8` 已按原阶段定义收口；下一阶段应继续处理规则层目录化、测试热点收敛和运行时目录治理，而不是提前切回功能扩张。

@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, writeJson } from "../shared/fs.mjs";
 import { buildWrapperPromotionReadme } from "../conversation-miner/wrapper-promotion-support.mjs";
 import {
   buildEvolutionDraftId,

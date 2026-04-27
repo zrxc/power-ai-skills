@@ -10,7 +10,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, removeDirIfExists, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, removeDirIfExists, writeJson } from "../shared/fs.mjs";
 import { buildConversationReferenceMarkdown, buildConversationSkillMarkdown } from "./renderers.mjs";
 import { sceneDefinitions } from "./setup.mjs";
 

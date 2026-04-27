@@ -5,6 +5,7 @@
 
 // 导入必要的模块
 import path from "node:path";
+import { getCommandProjectRootStrategy, PROJECT_ROOT_STRATEGIES } from "../commands/registry.mjs";
 import {
   getPresetMap,
   isPathLikePositional,
@@ -160,8 +161,9 @@ export function resolveProjectRoot({ context, cliArgs, cwd = process.cwd() }) {
   // 解析位置参数中的选择配置
   const positionalSelection = parsePositionalSelection({ context, positionals: cliArgs.positionals });
   
-  // 对于 init、add-tool、remove-tool 命令
-  if (["init", "add-tool", "remove-tool"].includes(cliArgs.command)) {
+  const projectRootStrategy = getCommandProjectRootStrategy(cliArgs.command);
+
+  if (projectRootStrategy === PROJECT_ROOT_STRATEGIES.INIT_TARGET_OR_CWD) {
     // 如果只有一个位置参数，且看起来像路径，且不是选择配置
     if (
       cliArgs.positionals.length === 1 &&
@@ -175,7 +177,7 @@ export function resolveProjectRoot({ context, cliArgs, cwd = process.cwd() }) {
     return path.resolve(cwd);
   }
 
-  if (["promote-project-local-skill", "review-project-pattern", "generate-project-skill", "capture-session", "queue-auto-capture-response", "submit-auto-capture", "evaluate-session-capture", "prepare-session-capture", "confirm-session-capture", "consume-auto-capture-response-inbox", "consume-auto-capture-inbox", "watch-auto-capture-inbox", "codex-capture-session", "trae-capture-session", "cursor-capture-session", "claude-code-capture-session", "windsurf-capture-session", "gemini-cli-capture-session", "github-copilot-capture-session", "cline-capture-session", "aider-capture-session", "tool-capture-session", "analyze-patterns", "review-conversation-pattern", "merge-conversation-pattern", "archive-conversation-pattern", "restore-conversation-pattern", "scaffold-wrapper-promotion", "list-wrapper-promotions", "show-wrapper-promotion-timeline", "generate-wrapper-promotion-audit", "generate-wrapper-registry-governance", "generate-upgrade-summary", "generate-governance-summary", "show-evolution-policy", "validate-evolution-policy", "generate-evolution-candidates", "apply-evolution-actions", "generate-evolution-proposals", "list-evolution-proposals", "list-evolution-drafts", "show-evolution-draft", "review-evolution-proposal", "apply-evolution-proposal", "run-evolution-cycle", "show-governance-history", "generate-conversation-miner-strategy", "check-auto-capture-runtime", "show-auto-capture-bridge-contract", "show-capture-safety-policy", "validate-capture-safety-policy", "check-capture-retention", "apply-capture-retention", "check-project-baseline", "show-team-policy", "validate-team-policy", "check-team-policy-drift", "check-governance-review-deadlines", "show-project-profile-decision", "review-project-profile", "show-project-governance-context", "show-promotion-trace", "review-wrapper-promotion", "materialize-wrapper-promotion", "apply-wrapper-promotion", "finalize-wrapper-promotion", "register-wrapper-promotion", "archive-wrapper-promotion", "restore-wrapper-promotion"].includes(cliArgs.command)) return path.resolve(cwd);
+  if (projectRootStrategy === PROJECT_ROOT_STRATEGIES.CWD) return path.resolve(cwd);
 
   // 其他命令，使用第一个位置参数或当前工作目录
   return path.resolve(cliArgs.positionals[0] || cwd);

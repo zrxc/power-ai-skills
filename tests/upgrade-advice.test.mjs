@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyDir } from "../src/shared/fs.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
@@ -25,7 +26,7 @@ function runNodeScript(scriptPath, args = [], options = {}) {
 function createTempManifestSnapshot(t) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-upgrade-advice-"));
   const manifestRoot = path.join(tempRoot, "manifest");
-  fs.cpSync(path.join(root, "manifest"), manifestRoot, { recursive: true });
+  copyDir(path.join(root, "manifest"), manifestRoot);
   const versionRecordPath = path.join(manifestRoot, "version-record.json");
 
   const automationReport = {

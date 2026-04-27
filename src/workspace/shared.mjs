@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir } from "../../scripts/shared.mjs";
+import { ensureDir } from "../shared/fs.mjs";
 
 export function readTextIfExists(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";

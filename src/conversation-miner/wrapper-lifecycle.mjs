@@ -12,7 +12,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, readJson, removeDirIfExists, writeJson } from "../../scripts/shared.mjs";
+import { ensureDir, readJson, removeDirIfExists, writeJson } from "../shared/fs.mjs";
 import {
   buildWrapperPromotionReadme,
   buildWrapperRegistrationArtifacts,

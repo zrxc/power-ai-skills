@@ -19,7 +19,7 @@ import {
   upsertConversationDecision
 } from "./decision-ledger.mjs";
 import { buildConversationDecisionLedgerMarkdown } from "./decision-ledger.mjs";
-import { writeJson } from "../../scripts/shared.mjs";
+import { writeJson } from "../shared/fs.mjs";
 import fs from "node:fs";
 
 export { upsertConversationDecision } from "./decision-ledger.mjs";

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readJson } from "../scripts/shared.mjs";
+import { readJson } from "./shared/fs.mjs";
 
 export function createRuntimeContext(importMetaUrl) {
   const packageRoot = path.resolve(path.dirname(fileURLToPath(importMetaUrl)), "..");

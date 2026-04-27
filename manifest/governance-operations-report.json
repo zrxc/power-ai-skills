@@ -1,7 +1,7 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "generatedAt": "2026-04-24T07:37:55.798Z",
+  "generatedAt": "2026-04-27T04:28:31.659Z",
   "summary": {
     "releaseGateStatus": "pass",
     "releaseGateWarnings": 0,
@@ -70,7 +70,7 @@
     {
       "id": "upgrade-automation",
       "type": "automation",
-      "generatedAt": "2026-04-24T07:37:55.730Z",
+      "generatedAt": "2026-04-27T04:28:31.603Z",
       "summary": "Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release.",
       "details": {
         "changedFileCount": 11,
@@ -82,17 +82,17 @@
     {
       "id": "version-record",
       "type": "version-record",
-      "generatedAt": "2026-04-24T07:37:55.730Z",
+      "generatedAt": "2026-04-27T04:28:31.603Z",
       "summary": "Version record last updated for @power/power-ai-skills@1.4.7.",
       "details": {
         "version": "1.4.7",
-        "recordedAt": "2026-04-24T07:37:55.730Z"
+        "recordedAt": "2026-04-27T04:28:31.603Z"
       }
     },
     {
       "id": "upgrade-advice",
       "type": "upgrade-advice",
-      "generatedAt": "2026-04-24T07:37:55.727Z",
+      "generatedAt": "2026-04-27T04:28:31.599Z",
       "summary": "Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s).",
       "details": {
         "consumerCommandCount": 9,
@@ -104,7 +104,7 @@
     {
       "id": "promotion-trace",
       "type": "promotion-trace",
-      "generatedAt": "2026-04-24T07:37:55.662Z",
+      "generatedAt": "2026-04-27T04:28:31.539Z",
       "summary": "Promotion trace matched 1 relation(s) from 2 tracked relation(s).",
       "details": {
         "matchedRelations": 1,
@@ -115,19 +115,19 @@
     {
       "id": "release-gates",
       "type": "release-gates",
-      "generatedAt": "2026-04-22T10:20:37.908Z",
+      "generatedAt": "2026-04-27T04:26:23.070Z",
       "summary": "Release gates finished with status pass (0 blocking, 0 warning).",
       "details": {
         "overallStatus": "pass",
         "failedGates": 0,
         "warningGates": 0,
-        "totalGates": 7
+        "totalGates": 10
       }
     },
     {
       "id": "consumer-compatibility",
       "type": "consumer-compatibility",
-      "generatedAt": "2026-04-22T10:20:37.414Z",
+      "generatedAt": "2026-04-27T04:26:22.903Z",
       "summary": "Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s).",
       "details": {
         "totalScenarios": 1,
@@ -137,12 +137,12 @@
     }
   ],
   "artifacts": {
-    "automationReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\automation-report.json",
-    "releaseGateReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\release-gate-report.json",
-    "upgradeAdvicePackagePath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\upgrade-advice-package.json",
-    "consumerCompatibilityMatrixPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\consumer-compatibility-matrix.json",
-    "promotionTraceReportPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\promotion-trace-report.json",
-    "versionRecordPath": "D:\\webCode\\Myd\\power-ai-skills\\manifest\\version-record.json"
+    "automationReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\automation-report.json",
+    "releaseGateReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-gate-report.json",
+    "upgradeAdvicePackagePath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-advice-package.json",
+    "consumerCompatibilityMatrixPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\consumer-compatibility-matrix.json",
+    "promotionTraceReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\promotion-trace-report.json",
+    "versionRecordPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\version-record.json"
   },
   "recommendedActions": [
     "The current team policy requires a green consumer compatibility matrix before release."
