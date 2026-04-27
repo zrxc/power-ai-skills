@@ -9,6 +9,16 @@ import { analyzeVueSfc } from "../src/project-scan/vue-analysis.mjs";
 import { analyzeScriptAst } from "../src/project-scan/vue-analysis/script-analysis.mjs";
 import { buildScriptSignals } from "../src/project-scan/vue-analysis/signal-synthesis.mjs";
 import { analyzeTemplateAst } from "../src/project-scan/vue-analysis/template-analysis.mjs";
+import { analyzeProjectViewFiles, buildProjectScanAnalysis } from "../src/project-scan/scan-analysis.mjs";
+import {
+  buildComponentGraph,
+  buildComponentPropagation,
+  enrichSignalsWithComponentGraph
+} from "../src/project-scan/component-graph.mjs";
+import { collectProjectScanInputs } from "../src/project-scan/scan-inputs.mjs";
+import { buildProjectScanResult } from "../src/project-scan/scan-result-builder.mjs";
+import { createProjectScanPipelineService } from "../src/project-scan/project-scan-pipeline-service.mjs";
+import { createProjectScanReviewService } from "../src/project-scan/project-scan-review-service.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(root, "bin", "power-ai-skills.mjs");
@@ -288,6 +298,221 @@ function runCli(projectRoot, command, extraArgs = []) {
     }
   );
 }
+
+test("project scan orchestration keeps scan inputs, analysis, and result building on separate layers", (t) => {
+  const projectRoot = createProjectScanFixture(t);
+  const context = {
+    teamPolicy: {
+      projectProfiles: [
+        { name: "enterprise-vue" },
+        { name: "terminal-governance" }
+      ]
+    }
+  };
+  const generatedAt = "2026-04-27T00:00:00.000Z";
+  const inputs = collectProjectScanInputs(projectRoot);
+
+  assert.equal(inputs.packageJson.name, "consumer-project-scan");
+  assert.equal(inputs.structure.viewsRoot, "src/views");
+  assert.equal(inputs.viewFiles.length, 9);
+  assert.equal(inputs.frameworkSignals.vue, true);
+  assert.equal(inputs.frameworkSignals.powerComponents, true);
+
+  const fileAnalysis = analyzeProjectViewFiles({ projectRoot, viewFiles: inputs.viewFiles });
+  assert.equal(fileAnalysis.componentUsage["pc-table-warp"], 5);
+  assert.deepEqual(fileAnalysis.fileRoleSummary, {
+    page: 8,
+    pageCandidate: 0,
+    pageFragment: 0,
+    dialogFragment: 1
+  });
+  assert.equal(fileAnalysis.fileAnalyses.get("src/views/department-user/index.vue")?.hasTreeRefresh, true);
+
+  const projectScanAnalysis = buildProjectScanAnalysis(fileAnalysis.fileAnalyses);
+  assert.equal(projectScanAnalysis.componentGraph.summary.nodeCount, 9);
+  assert.equal(projectScanAnalysis.componentPropagation.summary.fileCount, 9);
+  assert.equal(projectScanAnalysis.patterns.some((pattern) => pattern.type === "basic-list-page"), true);
+
+  const result = buildProjectScanResult({
+    context,
+    projectRoot,
+    generatedAt,
+    packageJson: inputs.packageJson,
+    structure: inputs.structure,
+    frameworkSignals: inputs.frameworkSignals,
+    componentUsage: fileAnalysis.componentUsage,
+    componentGraph: projectScanAnalysis.componentGraph,
+    componentPropagation: projectScanAnalysis.componentPropagation,
+    fileRoleSummary: fileAnalysis.fileRoleSummary,
+    patterns: projectScanAnalysis.patterns,
+    viewFiles: inputs.viewFiles
+  });
+
+  assert.equal(result.generatedAt, generatedAt);
+  assert.equal(result.projectProfile.projectName, "consumer-project-scan");
+  assert.equal(result.projectProfile.teamProjectProfileRecommendation.recommendedProjectProfile, "enterprise-vue");
+  assert.equal(result.projectProfile.pagePatterns.basicListPage, 3);
+  assert.equal(result.projectProfile.pagePatterns.treeListPage, 1);
+  assert.equal(result.projectProfile.pagePatterns.detailPage, 3);
+  assert.equal(result.projectProfile.pagePatterns.dialogFormCrud, 4);
+  assert.equal(result.projectProfile.fileSummary.viewFileCount, 9);
+  assert.equal(result.patterns.patterns.length, 4);
+});
+
+test("component graph facade keeps graph building, propagation, and signal enrichment on dedicated layers", () => {
+  const fileAnalyses = new Map([
+    [
+      "src/views/orders/index.vue",
+      {
+        relativePath: "src/views/orders/index.vue",
+        fileRole: "page",
+        pageContainer: "PcLayoutPageCommon",
+        templateCustomTagNames: ["OrdersDialog"],
+        templateTagNames: ["pc-layout-page-common", "orders-dialog"],
+        localImports: [
+          {
+            source: "./components/OrdersDialog.vue",
+            specifiers: [{ localName: "OrdersDialog", importedName: "default" }]
+          }
+        ]
+      }
+    ],
+    [
+      "src/views/orders/components/OrdersDialog.vue",
+      {
+        relativePath: "src/views/orders/components/OrdersDialog.vue",
+        fileRole: "dialog-fragment",
+        pageContainer: "",
+        templateCustomTagNames: ["DialogShell"],
+        templateTagNames: ["dialog-shell"],
+        localImports: [
+          {
+            source: "./DialogShell.vue",
+            specifiers: [{ localName: "DialogShell", importedName: "default" }]
+          }
+        ],
+        hasPcDialog: true,
+        hasFormModel: true,
+        hasSubmitAction: true
+      }
+    ],
+    [
+      "src/views/orders/components/DialogShell.vue",
+      {
+        relativePath: "src/views/orders/components/DialogShell.vue",
+        fileRole: "dialog-fragment",
+        pageContainer: "",
+        templateCustomTagNames: [],
+        templateTagNames: [],
+        localImports: [],
+        hasPcDialog: true,
+        hasFormModel: true,
+        hasSubmitAction: true
+      }
+    ]
+  ]);
+
+  const componentGraph = buildComponentGraph(fileAnalyses);
+  const componentPropagation = buildComponentPropagation(fileAnalyses, componentGraph);
+  const enrichedFileAnalyses = enrichSignalsWithComponentGraph(fileAnalyses, componentGraph, componentPropagation);
+  const orderPageSignals = enrichedFileAnalyses.get("src/views/orders/index.vue");
+
+  assert.equal(componentGraph.summary.usedEdgeCount, 2);
+  assert.equal(componentGraph.summary.pageToFragmentEdgeCount, 1);
+  assert.equal(componentPropagation.summary.maxReachDepth, 2);
+  assert.deepEqual(orderPageSignals.relatedComponentPaths, ["src/views/orders/components/OrdersDialog.vue"]);
+  assert.deepEqual(orderPageSignals.transitiveRelatedComponentPaths, [
+    "src/views/orders/components/DialogShell.vue",
+    "src/views/orders/components/OrdersDialog.vue"
+  ]);
+  assert.deepEqual(orderPageSignals.transitiveSupportingFragmentPaths, [
+    "src/views/orders/components/DialogShell.vue",
+    "src/views/orders/components/OrdersDialog.vue"
+  ]);
+  assert.equal(orderPageSignals.transitiveLinkedHasPcDialog, true);
+  assert.equal(orderPageSignals.transitiveLinkedHasSubmitAction, true);
+});
+
+test("project scan review service owns feedback overrides without expanding service composition scope", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-project-scan-review-"));
+  t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
+  const paths = {
+    patternFeedbackPath: path.join(tempRoot, "pattern-feedback.json"),
+    feedbackReportPath: path.join(tempRoot, "project-scan-feedback.md")
+  };
+  const scanResult = {
+    patterns: {
+      patterns: [
+        {
+          id: "pattern_basic_list_page",
+          type: "basic-list-page"
+        }
+      ]
+    }
+  };
+  const reviewService = createProjectScanReviewService({
+    getAnalysisPaths: () => paths,
+    scanProject: () => scanResult,
+    buildAnalysisOutputs: ({ patternFeedback }) => ({
+      patternReview: {
+        patterns: [
+          {
+            id: "pattern_basic_list_page",
+            decision: patternFeedback.overrides[0]?.decision || "review",
+            autoDecision: "review"
+          }
+        ]
+      },
+      outputs: {
+        feedbackReportPath: paths.feedbackReportPath
+      }
+    })
+  });
+
+  const reviewResult = reviewService.reviewProjectPattern({
+    patternId: "basic-list-page",
+    decision: "generate",
+    note: "manual allowlist"
+  });
+
+  assert.equal(reviewResult.patternId, "pattern_basic_list_page");
+  assert.equal(reviewResult.patternType, "basic-list-page");
+  assert.equal(reviewResult.currentReview?.decision, "generate");
+  assert.equal(reviewResult.patternFeedback.summary.generate, 1);
+  assert.equal(fs.existsSync(paths.patternFeedbackPath), true);
+
+  const clearResult = reviewService.reviewProjectPattern({
+    patternId: "pattern_basic_list_page",
+    clear: true
+  });
+
+  assert.equal(clearResult.cleared, true);
+  assert.equal(clearResult.patternFeedback.summary.total, 0);
+});
+
+test("project scan pipeline service owns scan plus generation handoff without re-expanding index composition", () => {
+  const calls = [];
+  const pipelineService = createProjectScanPipelineService({
+    writeProjectAnalysis: () => {
+      calls.push("scan");
+      return { generatedAt: "scan" };
+    },
+    projectLocalSkillService: {
+      generateProjectLocalSkills: ({ regenerate }) => {
+        calls.push(`generate:${regenerate}`);
+        return { generatedAt: "generate", regenerate };
+      }
+    }
+  });
+
+  const result = pipelineService.runProjectScanPipeline({ regenerate: true });
+
+  assert.deepEqual(calls, ["scan", "generate:true"]);
+  assert.deepEqual(result, {
+    scanResult: { generatedAt: "scan" },
+    generationResult: { generatedAt: "generate", regenerate: true }
+  });
+});
 
 test("scan-project writes analysis artifacts and generate-project-local-skills emits draft skills", (t) => {
   const projectRoot = createProjectScanFixture(t);

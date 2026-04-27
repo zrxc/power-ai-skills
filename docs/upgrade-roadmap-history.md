@@ -1445,3 +1445,101 @@ pnpm release:prepare
 结论：
 
 - `P5-9` 已按原阶段定义收口；下一阶段应继续处理 `vue-analysis` 的细分拆层与剩余维护热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-10 Vue Analysis 拆层与维护热点第四版
+
+阶段目标：
+
+- 在 `P5-9` 已完成 detector 目录化、测试样板收敛和运行时目录治理的基础上，继续处理 `vue-analysis` 这块剩余的规则层热点。
+- 优先把 template analysis、script analysis 和 signal synthesis 的边界再拆清楚，避免后续 SFC 信号继续回堆到同一个文件。
+- 同时继续压缩剩余维护热点，尤其是 release / package 边界与结构说明中仍偏集中的位置。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/vue-analysis.mjs` 已退回兼容导出层，template analysis、script analysis、signal synthesis 与共享 helper 已拆到 `src/project-scan/vue-analysis/` 目录下的独立模块。
+- 当前拆分保持 `signals` 与 `scan-engine` 的现有调用面稳定，优先把 SFC 规则层边界先立住，再继续处理后续维护热点。
+- `docs/maintenance-guide.md` 已补充 `vue-analysis` 子层落点说明，明确 template AST、script AST、语义信号组合与兼容导出层的职责边界，避免后续 SFC 规则继续回堆。
+- `tests/project-scan.test.mjs` 已新增针对 `analyzeTemplateAst`、`analyzeScriptAst`、`buildScriptSignals` 与 `analyzeVueSfc` 的直接入口断言，保证这轮拆层不是单纯文件移动。
+- `scripts/shared.mjs` 已补充仓库维护侧共用的 `npm pack` 定位与 JSON 解析 helper，`scripts/check-package.mjs` 与 `tests/package-boundary-smoke.test.mjs` 不再各自维护重复的 pack 调用逻辑。
+- 发布边界相关校验链路在共享 helper 收口后仍保持一致，`pnpm check:package` 继续负责路径名单约束，`tests/package-boundary-smoke.test.mjs` 继续负责真实 tarball 的运行时 smoke。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "vue template analysis|vue script analysis|vue signal synthesis"`
+  - `pnpm check:docs`
+  - `pnpm check:package`
+  - `node --test ./tests/package-boundary-smoke.test.mjs`
+  - `pnpm release:check`
+
+阶段收口判断：
+
+- `vue-analysis` 的后续新增能力已有更明确的拆层落点，不再优先往单一文件回堆 template、script 与 synthesis 逻辑。
+- release / package 边界相关的剩余维护热点至少又收敛了一处，发布边界脚本与 smoke 测试不再继续复制 `npm pack` 调用逻辑。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-10` 已按原阶段定义收口；下一阶段应继续处理 `project-scan` 的扫描编排与聚合热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-11 扫描编排与聚合边界第五版
+
+阶段目标：
+
+- 在 `P5-10` 已完成 `vue-analysis` 拆层、维护说明补齐和 package/release 热点收敛的基础上，继续处理 `project-scan` 里仍偏集中的扫描编排与聚合边界。
+- 优先把 `scan-engine`、相邻信号聚合或项目级汇总里“新增能力容易继续回堆主流程”的位置再拆清楚，避免规则层稳定后热点重新回流到 orchestration。
+- 同时保持已收口的 `vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/scan-engine.mjs` 已收窄为 orchestration，只负责串联输入采集、逐文件分析和项目级结果拼装。
+- `src/project-scan/scan-inputs.mjs` 已承接项目文件读取、目录结构探测、view file 枚举与 framework signals 汇总，不再让这些输入采集细节继续堆在 `scan-engine` 主流程里。
+- `src/project-scan/scan-analysis.mjs` 已承接逐文件 signals 收集、component usage 汇总、file role 聚合以及 graph / pattern 分析的项目内分析层逻辑。
+- `src/project-scan/scan-result-builder.mjs` 已承接 project profile、pattern artifact 与项目级摘要拼装，避免新增 profile 汇总或输出结构时继续直接改 orchestration 主流程。
+- `docs/maintenance-guide.md` 已补充 `scan-inputs`、`scan-analysis`、`scan-result-builder` 与 `scan-engine` 的职责边界，约束后续新增输入采集、项目级汇总与 profile 聚合的落点。
+- `tests/project-scan.test.mjs` 已新增针对 `collectProjectScanInputs`、`analyzeProjectViewFiles`、`buildProjectScanAnalysis` 与 `buildProjectScanResult` 的直接边界断言，保证这轮拆分不是单纯文件搬家。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "project scan orchestration keeps scan inputs|scan-project writes analysis artifacts|component graph links|component propagation reaches|scan-project tolerates malformed vue files"`
+  - `pnpm check:docs`
+
+阶段收口判断：
+
+- `project-scan` 的扫描编排或项目级聚合后续新增能力已有更明确的落点，不再优先回堆到单一 orchestration 主流程。
+- 已收口的 `vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，没有出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-11` 已按原阶段定义收口；下一阶段应继续处理 `project-scan` 的服务装配与评审聚合边界，而不是回到功能扩张。
+
+## 1.4.7 / P5-12 服务装配与评审边界第六版
+
+阶段目标：
+
+- 在 `P5-11` 已完成 `scan-engine` orchestration 收窄、扫描输入 / 分析 / 结果拼装拆层的基础上，继续处理 `project-scan` 仍偏集中的服务装配与评审聚合边界。
+- 优先把 `src/project-scan/index.mjs` 里 service composition、pattern feedback review、scan + generation 联动这些“后续能力容易继续堆回一个 service 文件”的位置再拆清楚。
+- 同时保持已收口的 `scan-engine`、`vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/project-scan-review-service.mjs` 已承接 pattern feedback override、review 决策校验与 review 结果回写，`src/project-scan/index.mjs` 不再直接维护整段 review 细节。
+- `src/project-scan/project-scan-pipeline-service.mjs` 已承接 scan + generation handoff，`src/project-scan/index.mjs` 不再直接维护扫描后草案生成联动流程。
+- `src/project-scan/index.mjs` 目前主要保留 `project-scan` service composition、分析产物装配与对外 service contract，结构上更接近纯装配层。
+- `docs/maintenance-guide.md` 已补充 review service、pipeline service 与 `index.mjs` 的职责边界，约束后续新增 review 或 scan handoff 行为的落点。
+- `tests/project-scan.test.mjs` 已新增针对 `createProjectScanReviewService(...)` 与 `createProjectScanPipelineService(...)` 的直接边界断言。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "project scan review service owns|project scan pipeline service owns|review-project-pattern feedback overrides|init runs project scan by default|project scan orchestration keeps scan inputs"`
+  - `pnpm check:docs`
+
+阶段收口判断：
+
+- `project-scan` 的服务装配或评审聚合后续新增能力已有更明确的落点，不再优先回堆到单一 service composition / review 入口。
+- 已收口的 `scan-engine`、`vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，不出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-12` 已按原阶段定义收口；下一阶段应继续处理 `project-scan` 的图传播与模式聚合热点，而不是回到功能扩张。

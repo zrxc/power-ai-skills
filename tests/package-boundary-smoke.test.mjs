@@ -6,19 +6,11 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { copyDir } from "../src/shared/fs.mjs";
+import { runNpmPackJson } from "../scripts/shared.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRoot = path.join(root, "tests", "fixtures", "consumer-basic");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-
-function resolveNpmCliPath() {
-  const candidates = [
-    path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js"),
-    path.join(root, "node_modules", "npm", "bin", "npm-cli.js")
-  ];
-
-  return candidates.find((candidate) => fs.existsSync(candidate)) || "";
-}
 
 function runCommand(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -32,22 +24,13 @@ function runCommand(command, args, options = {}) {
 }
 
 function createPackedPackageSnapshot(t) {
-  const npmCliPath = resolveNpmCliPath();
-  assert.ok(npmCliPath, "npm-cli.js should be available for pack smoke tests");
-
   const tempRoot = fs.mkdtempSync(path.join(root, ".tmp-package-boundary-"));
   t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
 
-  const packResult = runCommand(process.execPath, [
-    npmCliPath,
-    "pack",
-    "--json",
-    "--pack-destination",
-    tempRoot
-  ]);
-  assert.equal(packResult.status, 0, packResult.stderr || packResult.stdout);
+  const packResult = runNpmPackJson(root, ["--pack-destination", tempRoot]);
+  assert.equal(packResult.ok, true, packResult.error || packResult.stderr || packResult.stdout);
 
-  const packPayload = JSON.parse(packResult.stdout)[0];
+  const packPayload = packResult.payload[0];
   const tarballPath = path.join(tempRoot, packPayload.filename);
   const extractResult = runCommand("tar", ["-xf", tarballPath, "-C", tempRoot]);
   assert.equal(extractResult.status, 0, extractResult.stderr || extractResult.stdout);

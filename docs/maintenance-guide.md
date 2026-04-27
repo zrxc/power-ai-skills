@@ -23,6 +23,17 @@
   - 新增 Vue SFC script AST 信号优先放 `src/project-scan/vue-analysis/script-analysis.mjs`
   - 新增由 template / script 组合得到的语义信号优先放 `src/project-scan/vue-analysis/signal-synthesis.mjs`
   - `src/project-scan/vue-analysis.mjs` 只保留兼容导出入口，不再回填新规则
+  - 新增项目文件读取、目录结构探测、view file 枚举或 framework signal 汇总优先放 `src/project-scan/scan-inputs.mjs`
+  - 新增逐文件 signals 收集、component usage 汇总或 file role 聚合优先放 `src/project-scan/scan-analysis.mjs`
+  - 新增 graph、pattern、project profile 这类项目级扫描结果拼装优先放 `src/project-scan/scan-result-builder.mjs`
+  - 新增组件引用边、template import 解析或 graph summary 字段优先放 `src/project-scan/component-graph/graph-builders.mjs`
+  - 新增 relation propagation、reach depth 或跨组件 fragment 传播规则优先放 `src/project-scan/component-graph/propagation-analysis.mjs`
+  - 新增由 graph / propagation 回灌到单文件 signals 的关联字段优先放 `src/project-scan/component-graph/signal-enrichment.mjs`
+  - `src/project-scan/component-graph.mjs` 只保留兼容导出入口，不再继续回填 graph / propagation / enrichment 细节
+  - `src/project-scan/scan-engine.mjs` 只保留 orchestration，不再继续回填输入采集或项目级结果拼装细节
+  - 新增 pattern feedback override、review 决策校验或 review 结果回写优先放 `src/project-scan/project-scan-review-service.mjs`
+  - 新增 scan + generation 联动、扫描后草案生成 handoff 优先放 `src/project-scan/project-scan-pipeline-service.mjs`
+  - `src/project-scan/index.mjs` 只保留 project-scan service composition，不再继续回填 review 或 pipeline 细节
   - 新增 artifact / report / history 不要回塞 detector 或 `scan-engine`
   - 新增 project-local lifecycle 行为不要回塞 scan 聚合入口
 
@@ -39,6 +50,7 @@
 - 在仓库根目录执行 `npx power-ai-skills doctor`，会进入 `package-maintenance` 模式，只检查发布产物，不检查消费项目 `.power-ai/`。
 - `pnpm refresh:release-artifacts` 会统一刷新当前版本的 `skills-manifest.json`、`release-notes-<version>.md`、`impact-report.json`、`automation-report.json`、通知载荷以及 `manifest/version-record.json`。
 - `manifest/version-record.json` 是当前版本发布产物的正式记录文件，后续校验和排障都以它为准。
+- `scripts/shared.mjs` 现在统一承接仓库维护侧的 `npm pack` 定位与 JSON 解析 helper；如果继续扩发布边界脚本或 smoke 测试，优先复用这里，不要在脚本和测试里各自再写一套 pack 调用逻辑。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
 - 如只想单独归档旧通知，可执行 `pnpm clean:release-artifacts`。
 - 如需同时清理 `manifest/` 忽略产物和 `.power-ai/` 空目录，可执行 `pnpm clean:runtime`。
