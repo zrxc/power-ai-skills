@@ -53,6 +53,7 @@
 - `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"` 已通过，可作为本阶段第一轮规则层拆分的回归基线。
 - `docs/project-structure-assessment.md` 与 `docs/maintenance-guide.md` 已补充规则层落点说明，明确 detector、SFC signal、scan orchestration、analysis projection 与 project-local lifecycle 的边界分工。
 - `tests/selection.test.mjs` 中成批 `resolveProjectRoot keeps cwd ...` 用例已收敛为表驱动结构，后续新增命令解析覆盖时不再需要继续复制整段测试样板。
+- `tests/run-release-check.test.mjs` 中 release 产物快照的 JSON / Markdown 搭建已抽成复用 helper，release 边界测试的样板量进一步下降。
 
 ## 完成标准
 

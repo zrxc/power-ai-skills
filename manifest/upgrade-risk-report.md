@@ -1,7 +1,7 @@
 # Upgrade Risk Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-27T05:30:53.508Z`
+- generatedAt: `2026-04-27T05:40:30.147Z`
 - overall risk: `medium`
 - overall release hint: `minor`
 - changed files: 11

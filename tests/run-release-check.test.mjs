@@ -32,6 +32,11 @@ function writeMarkdown(filePath, title, lines = []) {
   fs.writeFileSync(filePath, `# ${title}\n${lines.length ? `\n${lines.join("\n")}\n` : ""}`, "utf8");
 }
 
+function writeArtifactPair({ jsonPath, jsonPayload, markdownPath, markdownTitle, markdownLines = [] }) {
+  writeJson(jsonPath, jsonPayload);
+  writeMarkdown(markdownPath, markdownTitle, markdownLines);
+}
+
 function normalizeManifestSnapshot(tempManifestDir) {
   const notificationsDir = path.join(tempManifestDir, "notifications");
   const latestNotificationJson = fs.readdirSync(notificationsDir)
@@ -50,148 +55,164 @@ function normalizeManifestSnapshot(tempManifestDir) {
   const automationReportPath = path.join(tempManifestDir, "automation-report.json");
   const releaseNotesPath = path.join(tempManifestDir, `release-notes-${version}.md`);
 
-  writeJson(matrixJsonPath, {
-    packageName: packageJson.name,
-    version,
-    generatedAt: new Date().toISOString(),
-    summary: {
-      totalScenarios: 1,
-      passedScenarios: 1,
-      failedScenarios: 0,
-      fixtureScenarioCount: 1,
-      projectScenarioCount: 0,
-      strategies: [{ strategy: "team-default", count: 1 }],
-      fixtures: [{ fixtureName: "basic", count: 1 }],
-      selectedTools: [{ toolName: "codex", count: 1 }],
-      unresolvedProjectProfileDecisions: 0,
-      deferredProjectProfileDecisions: 0,
-      rejectedProjectProfileDecisions: 0,
-      overdueGovernanceReviews: 0,
-      dueTodayGovernanceReviews: 0,
-      scenariosWithOverdueGovernanceReviews: 0,
-      pendingConversationReviews: 0,
-      scenariosWithPendingConversationReviews: 0,
-      pendingWrapperProposals: 0,
-      scenariosWithPendingWrapperProposals: 0
+  writeArtifactPair({
+    jsonPath: matrixJsonPath,
+    jsonPayload: {
+      packageName: packageJson.name,
+      version,
+      generatedAt: new Date().toISOString(),
+      summary: {
+        totalScenarios: 1,
+        passedScenarios: 1,
+        failedScenarios: 0,
+        fixtureScenarioCount: 1,
+        projectScenarioCount: 0,
+        strategies: [{ strategy: "team-default", count: 1 }],
+        fixtures: [{ fixtureName: "basic", count: 1 }],
+        selectedTools: [{ toolName: "codex", count: 1 }],
+        unresolvedProjectProfileDecisions: 0,
+        deferredProjectProfileDecisions: 0,
+        rejectedProjectProfileDecisions: 0,
+        overdueGovernanceReviews: 0,
+        dueTodayGovernanceReviews: 0,
+        scenariosWithOverdueGovernanceReviews: 0,
+        pendingConversationReviews: 0,
+        scenariosWithPendingConversationReviews: 0,
+        pendingWrapperProposals: 0,
+        scenariosWithPendingWrapperProposals: 0
+      },
+      dimensions: {
+        commandSet: ["init", "sync", "doctor"],
+        initStrategy: "team-default",
+        profiles: [],
+        requestedTools: [],
+        selectedTools: ["codex"],
+        fixtures: ["basic"]
+      },
+      scenarios: []
     },
-    dimensions: {
-      commandSet: ["init", "sync", "doctor"],
-      initStrategy: "team-default",
-      profiles: [],
-      requestedTools: [],
-      selectedTools: ["codex"],
-      fixtures: ["basic"]
-    },
-    scenarios: []
+    markdownPath: matrixMarkdownPath,
+    markdownTitle: "Consumer Compatibility Matrix"
   });
-  writeMarkdown(matrixMarkdownPath, "Consumer Compatibility Matrix");
 
-  writeJson(adviceJsonPath, {
-    packageName: packageJson.name,
-    version,
-    generatedAt: new Date().toISOString(),
-    releaseLevel: "minor",
-    overallRiskLevel: "high",
-    blocked: false,
-    summary: {
-      consumerCommandCount: 2,
-      maintainerCommandCount: 3,
-      manualCheckCount: 1,
-      blockingCheckCount: 0,
-      compatibilityFailures: 0,
-      releaseGateFailures: 0,
-      releaseGateWarnings: 0,
-      unresolvedProjectProfileDecisions: 0,
-      deferredProjectProfileDecisions: 0,
-      rejectedProjectProfileDecisions: 0,
-      overdueGovernanceReviews: 0,
-      dueTodayGovernanceReviews: 0,
-      pendingConversationReviews: 0,
-      pendingWrapperProposals: 0
+  writeArtifactPair({
+    jsonPath: adviceJsonPath,
+    jsonPayload: {
+      packageName: packageJson.name,
+      version,
+      generatedAt: new Date().toISOString(),
+      releaseLevel: "minor",
+      overallRiskLevel: "high",
+      blocked: false,
+      summary: {
+        consumerCommandCount: 2,
+        maintainerCommandCount: 3,
+        manualCheckCount: 1,
+        blockingCheckCount: 0,
+        compatibilityFailures: 0,
+        releaseGateFailures: 0,
+        releaseGateWarnings: 0,
+        unresolvedProjectProfileDecisions: 0,
+        deferredProjectProfileDecisions: 0,
+        rejectedProjectProfileDecisions: 0,
+        overdueGovernanceReviews: 0,
+        dueTodayGovernanceReviews: 0,
+        pendingConversationReviews: 0,
+        pendingWrapperProposals: 0
+      },
+      consumerCommands: [],
+      maintainerCommands: [],
+      manualChecks: []
     },
-    consumerCommands: [],
-    maintainerCommands: [],
-    manualChecks: []
+    markdownPath: adviceMarkdownPath,
+    markdownTitle: "Upgrade Advice Package"
   });
-  writeMarkdown(adviceMarkdownPath, "Upgrade Advice Package");
 
-  writeJson(releaseGateJsonPath, {
-    packageName: packageJson.name,
-    version,
-    generatedAt: new Date().toISOString(),
-    overallStatus: "pass",
-    summary: {
-      totalGates: 6,
-      passedGates: 6,
-      warningGates: 0,
-      failedGates: 0,
-      blockingIssues: 0,
-      teamPolicyErrorCount: 0,
-      readyForRegistration: 0,
-      pendingFollowUps: 0,
-      stalledProposalCount: 0,
-      failedCompatibilityScenarios: 0,
-      unresolvedProjectProfileDecisions: 0,
-      deferredProjectProfileDecisions: 0,
-      rejectedProjectProfileDecisions: 0,
-      overdueGovernanceReviews: 0,
-      dueTodayGovernanceReviews: 0,
-      scenariosWithOverdueGovernanceReviews: 0,
-      pendingConversationReviews: 0,
-      scenariosWithPendingConversationReviews: 0,
-      pendingWrapperProposals: 0,
-      scenariosWithPendingWrapperProposals: 0
+  writeArtifactPair({
+    jsonPath: releaseGateJsonPath,
+    jsonPayload: {
+      packageName: packageJson.name,
+      version,
+      generatedAt: new Date().toISOString(),
+      overallStatus: "pass",
+      summary: {
+        totalGates: 6,
+        passedGates: 6,
+        warningGates: 0,
+        failedGates: 0,
+        blockingIssues: 0,
+        teamPolicyErrorCount: 0,
+        readyForRegistration: 0,
+        pendingFollowUps: 0,
+        stalledProposalCount: 0,
+        failedCompatibilityScenarios: 0,
+        unresolvedProjectProfileDecisions: 0,
+        deferredProjectProfileDecisions: 0,
+        rejectedProjectProfileDecisions: 0,
+        overdueGovernanceReviews: 0,
+        dueTodayGovernanceReviews: 0,
+        scenariosWithOverdueGovernanceReviews: 0,
+        pendingConversationReviews: 0,
+        scenariosWithPendingConversationReviews: 0,
+        pendingWrapperProposals: 0,
+        scenariosWithPendingWrapperProposals: 0
+      },
+      gates: [],
+      recommendedActions: [],
+      governance: {
+        matrixAvailable: true,
+        unresolvedProjectProfileDecisions: 0,
+        deferredProjectProfileDecisions: 0,
+        rejectedProjectProfileDecisions: 0,
+        overdueGovernanceReviews: 0,
+        dueTodayGovernanceReviews: 0,
+        scenariosWithOverdueGovernanceReviews: 0,
+        pendingConversationReviews: 0,
+        scenariosWithPendingConversationReviews: 0,
+        pendingWrapperProposals: 0,
+        scenariosWithPendingWrapperProposals: 0
+      }
     },
-    gates: [],
-    recommendedActions: [],
-    governance: {
-      matrixAvailable: true,
-      unresolvedProjectProfileDecisions: 0,
-      deferredProjectProfileDecisions: 0,
-      rejectedProjectProfileDecisions: 0,
-      overdueGovernanceReviews: 0,
-      dueTodayGovernanceReviews: 0,
-      scenariosWithOverdueGovernanceReviews: 0,
-      pendingConversationReviews: 0,
-      scenariosWithPendingConversationReviews: 0,
-      pendingWrapperProposals: 0,
-      scenariosWithPendingWrapperProposals: 0
-    }
+    markdownPath: releaseGateMarkdownPath,
+    markdownTitle: "Release Gate Report"
   });
-  writeMarkdown(releaseGateMarkdownPath, "Release Gate Report");
 
-  writeJson(governanceOperationsJsonPath, {
-    packageName: packageJson.name,
-    version,
-    generatedAt: new Date().toISOString(),
-    summary: {
-      releaseGateStatus: "pass",
-      releaseGateWarnings: 0,
-      blockingIssues: 0,
-      failedCompatibilityScenarios: 0,
-      consumerMatrixScenarioCount: 1,
-      unresolvedProjectProfileDecisions: 0,
-      deferredProjectProfileDecisions: 0,
-      rejectedProjectProfileDecisions: 0,
-      overdueGovernanceReviews: 0,
-      dueTodayGovernanceReviews: 0,
-      pendingConversationReviews: 0,
-      pendingWrapperProposals: 0,
-      readyForRegistration: 0,
-      pendingFollowUps: 0,
-      stalledProposalCount: 0,
-      matchedPromotionRelations: 1,
-      totalPromotionRelations: 2,
-      manualCheckCount: 1,
-      blockingCheckCount: 0,
-      recentActivityCount: 6
+  writeArtifactPair({
+    jsonPath: governanceOperationsJsonPath,
+    jsonPayload: {
+      packageName: packageJson.name,
+      version,
+      generatedAt: new Date().toISOString(),
+      summary: {
+        releaseGateStatus: "pass",
+        releaseGateWarnings: 0,
+        blockingIssues: 0,
+        failedCompatibilityScenarios: 0,
+        consumerMatrixScenarioCount: 1,
+        unresolvedProjectProfileDecisions: 0,
+        deferredProjectProfileDecisions: 0,
+        rejectedProjectProfileDecisions: 0,
+        overdueGovernanceReviews: 0,
+        dueTodayGovernanceReviews: 0,
+        pendingConversationReviews: 0,
+        pendingWrapperProposals: 0,
+        readyForRegistration: 0,
+        pendingFollowUps: 0,
+        stalledProposalCount: 0,
+        matchedPromotionRelations: 1,
+        totalPromotionRelations: 2,
+        manualCheckCount: 1,
+        blockingCheckCount: 0,
+        recentActivityCount: 6
+      },
+      backlog: {},
+      releaseReadiness: {},
+      recentActivities: [],
+      recommendedActions: []
     },
-    backlog: {},
-    releaseReadiness: {},
-    recentActivities: [],
-    recommendedActions: []
+    markdownPath: governanceOperationsMarkdownPath,
+    markdownTitle: "Governance Operations Report"
   });
-  writeMarkdown(governanceOperationsMarkdownPath, "Governance Operations Report");
 
   writeJson(automationReportPath, {
     packageName: packageJson.name,
