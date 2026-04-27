@@ -19,7 +19,10 @@
 - 本轮结构评估与后续建议见 `docs/project-structure-assessment.md`。
 - `project-scan` 规则层默认按“detector / SFC signal / scan orchestration / analysis projection / project-local lifecycle”分层扩展：
   - 新增 pattern 规则优先放 `src/project-scan/pattern-detectors/`
-  - 新增 Vue SFC 信号优先放 `src/project-scan/vue-analysis.mjs` 对应子层
+  - 新增 Vue SFC template AST 信号优先放 `src/project-scan/vue-analysis/template-analysis.mjs`
+  - 新增 Vue SFC script AST 信号优先放 `src/project-scan/vue-analysis/script-analysis.mjs`
+  - 新增由 template / script 组合得到的语义信号优先放 `src/project-scan/vue-analysis/signal-synthesis.mjs`
+  - `src/project-scan/vue-analysis.mjs` 只保留兼容导出入口，不再回填新规则
   - 新增 artifact / report / history 不要回塞 detector 或 `scan-engine`
   - 新增 project-local lifecycle 行为不要回塞 scan 聚合入口
 

@@ -1,7 +1,7 @@
 # Governance Operations Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-27T05:47:07.636Z`
+- generatedAt: `2026-04-27T06:15:19.664Z`
 - release gate status: `pass`
 - release gate warnings: 0
 - blocking issues: 0
@@ -51,10 +51,10 @@
 
 ## Recent Activities
 
-- [automation] Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release. (`2026-04-27T05:47:07.585Z`)
-- [version-record] Version record last updated for @power/power-ai-skills@1.4.7. (`2026-04-27T05:47:07.585Z`)
-- [upgrade-advice] Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s). (`2026-04-27T05:47:07.583Z`)
-- [promotion-trace] Promotion trace matched 1 relation(s) from 2 tracked relation(s). (`2026-04-27T05:47:07.533Z`)
+- [automation] Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release. (`2026-04-27T06:15:19.575Z`)
+- [version-record] Version record last updated for @power/power-ai-skills@1.4.7. (`2026-04-27T06:15:19.575Z`)
+- [upgrade-advice] Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s). (`2026-04-27T06:15:19.571Z`)
+- [promotion-trace] Promotion trace matched 1 relation(s) from 2 tracked relation(s). (`2026-04-27T06:15:19.478Z`)
 - [release-gates] Release gates finished with status pass (0 blocking, 0 warning). (`2026-04-27T04:26:23.070Z`)
 - [consumer-compatibility] Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s). (`2026-04-27T04:26:22.903Z`)
 

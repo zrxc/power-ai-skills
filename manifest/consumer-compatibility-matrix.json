@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T04:26:22.903Z",
+  "generatedAt": "2026-04-27T06:15:54.750Z",
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
   "commands": [
@@ -121,7 +121,7 @@
       "scenarioLabel": "fixture:basic",
       "targetType": "fixture",
       "fixtureName": "basic",
-      "projectRoot": "C:\\Users\\82591\\AppData\\Local\\Temp\\power-ai-skills-verify-basic-eCR7Mb\\basic",
+      "projectRoot": "C:\\Users\\82591\\AppData\\Local\\Temp\\power-ai-skills-verify-basic-hYHmFk\\basic",
       "initStrategy": "team-default",
       "commands": [
         "init",

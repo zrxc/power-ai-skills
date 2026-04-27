@@ -13,18 +13,18 @@
 
 ## 当前阶段
 
-### P5-9 规则层目录化与维护收口第三版
+### P5-10 Vue Analysis 拆层与维护热点第四版
 阶段目标：
-- 在 `P5-8` 已完成服务边界收口的基础上，继续处理 `project-scan` 里最容易再次膨胀的规则层与测试热点。
-- 优先把 detector / vue-analysis 一类“规则继续增长就会回到大文件”的位置，收敛成更稳定的目录化落点。
-- 同时补齐运行时目录保留策略和测试结构治理，避免后续维护成本重新上升。
+- 在 `P5-9` 已完成 detector 目录化、测试样板收敛和运行时目录治理的基础上，继续处理 `vue-analysis` 这块剩余的规则层热点。
+- 优先把 template analysis、script analysis 和 signal synthesis 的边界再拆清楚，避免后续 SFC 信号继续回堆到同一个文件。
+- 同时继续压缩剩余维护热点，尤其是 release / package 边界与结构说明中仍偏集中的位置。
 - 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
 
 本阶段只做：
 
-- 继续拆分 `project-scan` 的规则层热点，优先处理 `pattern-detectors` 与 `vue-analysis` 的目录化或更窄边界落点。
-- 收敛大型测试文件中的重复样例，把命令解析、边界 smoke 或相似行为测试逐步整理成更稳定的表驱动结构。
-- 梳理 `.power-ai/` 运行时目录的保留与回收策略，明确哪些目录需要长期保留、哪些目录适合继续纳入安全清理。
+- 继续拆分 `project-scan` 的规则层热点，优先处理 `vue-analysis` 的 template / script / signal synthesis 边界收口。
+- 保持 detector 目录化后的调用面稳定，避免因继续拆层把 `scan-engine` 或 `signals` 再次推回热点。
+- 继续收敛剩余维护热点，优先处理 release / package 边界相关说明、脚本或测试中仍明显偏集中的位置。
 - 保持现有命令文档、发布边界 smoke、维护文档和 release 检查链路稳定，不在这一阶段重新放宽 npm 发布面。
 - 持续保持 `pnpm test`、`pnpm check:package`、`pnpm check:docs`、`pnpm release:check` 和关键 CLI 验证通过。
 
@@ -40,38 +40,20 @@
 
 ## 未完成项
 
-- [x] 至少把 `pattern-detectors` 或 `vue-analysis` 其中一个热点拆到更稳定的目录化规则边界，减少继续堆大文件的惯性。
-- [x] 为规则层后续扩展补一份明确落点说明，约束新增检测规则、SFC 分析能力和聚合逻辑应落在哪一层。
-- [x] 收敛至少一类大型重复测试样例，优先处理命令解析类或边界 smoke 类测试，让新增覆盖不再主要依赖复制粘贴。
-- [x] 明确 `.power-ai/` 运行时目录保留策略，并把必要的清理边界、例外项和维护说明同步到文档与校验链路。
-- [x] 补齐本阶段新增变更对应的自动化测试与校验命令。
-
-当前进展：
-
-- `src/project-scan/pattern-detectors.mjs` 已退回为兼容导出层，四类 page pattern detector 已拆到 `src/project-scan/pattern-detectors/` 目录下的独立规则模块。
-- 当前拆分先保持 `scan-engine` 与现有调用面的 contract 不变，优先验证“规则层目录化”已经成立，再决定是否继续处理 `vue-analysis`。
-- `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"` 已通过，可作为本阶段第一轮规则层拆分的回归基线。
-- `docs/project-structure-assessment.md` 与 `docs/maintenance-guide.md` 已补充规则层落点说明，明确 detector、SFC signal、scan orchestration、analysis projection 与 project-local lifecycle 的边界分工。
-- `tests/selection.test.mjs` 中成批 `resolveProjectRoot keeps cwd ...` 用例已收敛为表驱动结构，后续新增命令解析覆盖时不再需要继续复制整段测试样板。
-- `tests/run-release-check.test.mjs` 中 release 产物快照的 JSON / Markdown 搭建已抽成复用 helper，release 边界测试的样板量进一步下降。
-- `clean-runtime-artifacts` 已切换为“白名单式空目录回收”：只回收 `analysis`、`context`、`reports`、`patterns`、`conversations`、`proposals`、`auto-capture` 等已确认安全的空目录，`skills`、`shared`、`adapters`、`governance` 等基础结构目录即使为空也继续保留。
-- 本阶段关键回归基线已补齐并通过：
-  - `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"`
-  - `pnpm test -- --test-name-pattern "resolveProjectRoot|parsePositionalSelection|expandToolSelection|resolveSelection|detectProjectProfileRecommendation"`
-  - `pnpm test -- --test-name-pattern "run-release-check|release consumer inputs|check-release-gates|check-release-consistency"`
-  - `pnpm test -- --test-name-pattern "clean-runtime-artifacts|clean runtime"`
-  - `pnpm check:docs`
+- [ ] 至少把 `vue-analysis` 拆成更明确的子边界，优先让 template analysis、script analysis 与 signal synthesis 不再长期共栖同一文件。
+- [ ] 为 `vue-analysis` 拆层后的新增信号落点补一段明确维护说明，避免未来 SFC 规则继续回堆。
+- [ ] 再收敛一处剩余维护热点，优先处理 release / package 边界相关脚本、测试或文档中的重复结构。
+- [ ] 补齐本阶段新增变更对应的自动化测试与校验命令。
 
 ## 完成标准
 
-- `project-scan` 规则层的后续新增能力有更明确的目录化落点，不再优先堆回 detector / vue-analysis 热点文件。
-- 大型测试文件中至少有一类重复样例被稳定收敛，后续扩展测试时不再默认复制整段场景。
-- `.power-ai/` 运行时目录的保留和回收策略更清晰，清理命令与维护说明对边界表达一致。
+- `vue-analysis` 的后续新增能力有更明确的拆层落点，不再优先往单一文件回堆 template、script 与 synthesis 逻辑。
+- release / package 边界相关的剩余维护热点至少再收敛一处，避免结构评估已经收口但实现侧仍保留明显重复热点。
 - 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
 - 本阶段文档、测试和实现保持一致，可继续作为后续结构优化的基础。
 
 ## 下一次进入本文档时的动作
 
-- 如果上面还有未勾选项：继续只做“规则层目录化与维护收口第三版”，不要提前切到新功能阶段。
-- 优先核对规则层和测试结构是否真的降低维护热点，而不是只做文件移动或样例搬家。
+- 如果上面还有未勾选项：继续只做“Vue Analysis 拆层与维护热点第四版”，不要提前切到新功能阶段。
+- 优先核对 `vue-analysis` 的拆层是否真的降低规则热点，而不是只做文件移动。
 - 如果上面全部勾选：把本阶段迁移到 `docs/upgrade-roadmap-history.md`，再写入下一个活动阶段。

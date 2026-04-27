@@ -5,9 +5,156 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { analyzeVueSfc } from "../src/project-scan/vue-analysis.mjs";
+import { analyzeScriptAst } from "../src/project-scan/vue-analysis/script-analysis.mjs";
+import { buildScriptSignals } from "../src/project-scan/vue-analysis/signal-synthesis.mjs";
+import { analyzeTemplateAst } from "../src/project-scan/vue-analysis/template-analysis.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(root, "bin", "power-ai-skills.mjs");
+
+test("vue template analysis keeps template-only signals inside the template layer", () => {
+  const templateState = analyzeTemplateAst(`
+<CommonLayoutContainer>
+  <pc-tree />
+  <pc-dialog @on-confirm="submit">
+    <pc-tree />
+  </pc-dialog>
+  <pc-table-warp />
+  <el-descriptions />
+  <tabs />
+</CommonLayoutContainer>
+`);
+
+  assert.equal(templateState.templateAstAvailable, true);
+  assert.equal(templateState.pageContainer, "CommonLayoutContainer");
+  assert.equal(templateState.hasPcDialog, true);
+  assert.equal(templateState.hasPcTableWarp, true);
+  assert.equal(templateState.hasReadOnlyView, true);
+  assert.equal(templateState.hasTabs, true);
+  assert.equal(templateState.hasPageLevelTree, true);
+  assert.equal(templateState.treeInsideDialog, true);
+  assert.equal(templateState.componentPresence.CommonLayoutContainer, true);
+  assert.equal(templateState.componentPresence.PcTree, true);
+  assert.equal(templateState.dialogEventNames.has("on-confirm"), true);
+  assert.deepEqual(templateState.rootFlags, {
+    hasRootCommonLayout: true,
+    hasRootPcContainer: false,
+    hasRootPcLayoutPageCommon: false,
+    hasPageLevelTree: true
+  });
+});
+
+test("vue script analysis keeps AST traversal and import collection inside the script layer", () => {
+  const scriptState = analyzeScriptAst(`
+import localHelper, { fetchList as loadListAlias } from "./api";
+import { useUserStore } from "@/store/user";
+
+const pageValue = { pageNum: 1, pageSize: 20 };
+const currentNode = this.treeState.currentNode;
+const detailPath = this.formModel.value;
+const message = \`detail-\${pageValue.pageNum}\`;
+
+function handleSearch() {
+  return loadListAlias();
+}
+`);
+
+  assert.equal(scriptState.scriptAstAvailable, true);
+  assert.equal(scriptState.identifiers.has("pageValue"), true);
+  assert.equal(scriptState.identifiers.has("handleSearch"), true);
+  assert.equal(scriptState.memberPaths.has("pageValue.pageNum"), true);
+  assert.equal(scriptState.memberPaths.has("this.treeState.currentNode"), true);
+  assert.equal(scriptState.memberPaths.has("this.formModel.value"), true);
+  assert.equal(scriptState.stringLiterals.has("./api"), true);
+  assert.equal(scriptState.stringLiterals.has("detail-"), true);
+  assert.deepEqual(scriptState.imports, [
+    {
+      source: "./api",
+      specifiers: [
+        { localName: "localHelper", importedName: "default" },
+        { localName: "loadListAlias", importedName: "fetchList" }
+      ]
+    },
+    {
+      source: "@/store/user",
+      specifiers: [
+        { localName: "useUserStore", importedName: "useUserStore" }
+      ]
+    }
+  ]);
+});
+
+test("vue signal synthesis combines template and script layers without leaking rule ownership", () => {
+  const templateState = analyzeTemplateAst(`
+<pc-layout-page-common>
+  <pc-dialog @on-confirm="submitDialog" />
+  <el-form />
+</pc-layout-page-common>
+`);
+  const scriptState = analyzeScriptAst(`
+import localHelper from "./helper";
+
+const searchForm = {};
+const pageValue = { pageNum: 1, pageSize: 20 };
+const tableData = { value: { loading: true } };
+
+function getList() {}
+function handleAdd() {}
+function handleNodeClick() {}
+`);
+
+  const scriptSignals = buildScriptSignals(scriptState, templateState);
+
+  assert.equal(scriptSignals.hasSearchForm, true);
+  assert.equal(scriptSignals.hasCrudAction, true);
+  assert.equal(scriptSignals.hasFormModel, true);
+  assert.equal(scriptSignals.hasSubmitAction, true);
+  assert.equal(scriptSignals.hasTreeRefresh, true);
+  assert.equal(scriptSignals.hasPaging, true);
+  assert.equal(scriptSignals.hasListFetch, true);
+  assert.equal(scriptSignals.hasDetailLoad, false);
+
+  const sfcAnalysis = analyzeVueSfc(`
+<template>
+  <pc-layout-page-common>
+    <pc-dialog @on-confirm="submitDialog" />
+    <el-form />
+  </pc-layout-page-common>
+</template>
+<script setup lang="ts">
+import localHelper from "./helper";
+import { useUserStore } from "@/store/user";
+
+const searchForm = {};
+const pageValue = { pageNum: 1, pageSize: 20 };
+const tableData = { value: { loading: true } };
+
+function getList() {}
+function handleAdd() {}
+function handleNodeClick() {}
+</script>
+`);
+
+  assert.equal(sfcAnalysis.pageContainer, "PcLayoutPageCommon");
+  assert.equal(sfcAnalysis.hasPcDialog, true);
+  assert.equal(sfcAnalysis.hasEditableForm, true);
+  assert.equal(sfcAnalysis.hasSearchForm, true);
+  assert.equal(sfcAnalysis.hasCrudAction, true);
+  assert.equal(sfcAnalysis.hasSubmitAction, true);
+  assert.equal(sfcAnalysis.hasTreeRefresh, true);
+  assert.equal(sfcAnalysis.hasPaging, true);
+  assert.equal(sfcAnalysis.hasListFetch, true);
+  assert.equal(sfcAnalysis.hasDetailLoad, false);
+  assert.deepEqual(sfcAnalysis.localImports, [
+    {
+      source: "./helper",
+      specifiers: [
+        { localName: "localHelper", importedName: "default" }
+      ]
+    }
+  ]);
+});
 
 function writeFile(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
