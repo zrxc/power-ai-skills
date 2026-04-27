@@ -1,7 +1,7 @@
 # Promotion Trace Release Report
 
 - package: `@power/power-ai-skills@1.4.7`
-- generatedAt: `2026-04-27T04:28:31.539Z`
+- generatedAt: `2026-04-27T05:17:56.213Z`
 - available: true
 - changed files: 11
 - total relations: 2

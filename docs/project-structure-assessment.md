@@ -139,6 +139,8 @@
   - `project-local-generation-service.mjs` 只负责 draft generation / regenerate
   - `project-local-lifecycle-service.mjs` 只负责 list / promote 等 lifecycle 动作
 - `project-local-service.mjs` 现在退回到装配层，后续如果继续补 governance handoff、archive 或 cleanup，不必再默认堆回同一文件。
+- `pattern-detectors.mjs` 已进一步退回为兼容导出层，四类 detector 现已落到 `pattern-detectors/` 目录中的独立规则模块。
+- 这一轮先保持 `detectFilePatterns(...)` 对外 contract 不变，优先验证“规则继续扩张时不再默认回堆同一文件”的目录化边界已经成立。
 
 ## 后续优化
 
