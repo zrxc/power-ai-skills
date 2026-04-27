@@ -30,6 +30,21 @@
   - 新增 relation propagation、reach depth 或跨组件 fragment 传播规则优先放 `src/project-scan/component-graph/propagation-analysis.mjs`
   - 新增由 graph / propagation 回灌到单文件 signals 的关联字段优先放 `src/project-scan/component-graph/signal-enrichment.mjs`
   - `src/project-scan/component-graph.mjs` 只保留兼容导出入口，不再继续回填 graph / propagation / enrichment 细节
+  - 新增 pattern aggregate 累积、matched file entry 组装或 aggregate collection 规则优先放 `src/project-scan/pattern-aggregation/aggregate-collector.mjs`
+  - 新增 pattern aggregate summary、sample file 选择或最终 pattern payload 拼装优先放 `src/project-scan/pattern-aggregation/pattern-result-builder.mjs`
+  - `src/project-scan/pattern-aggregation.mjs` 只保留兼容导出入口，不再继续回填 aggregate collection 或 result builder 细节
+  - 新增项目级 page pattern summary、pattern frequency 摘要或 profile pattern counters 优先放 `src/project-scan/scan-result/pattern-profile-summary.mjs`
+  - 新增 project profile artifact 字段拼装优先放 `src/project-scan/scan-result/project-profile-builder.mjs`
+  - 新增最终 result payload 包装或 artifact payload shape 优先放 `src/project-scan/scan-result/result-payload-builder.mjs`
+  - `src/project-scan/scan-result-builder.mjs` 只保留兼容导出入口，不再继续回填 profile summary 或 result payload 细节
+  - 新增 project scan summary markdown 渲染优先放 `src/project-scan/report-renderers/scan-summary-renderer.mjs`
+  - 新增 project scan diff markdown 渲染优先放 `src/project-scan/report-renderers/scan-diff-renderer.mjs`
+  - 新增 component graph / propagation 报告渲染优先放 `src/project-scan/report-renderers/component-graph-renderer.mjs` 或 `component-propagation-renderer.mjs`
+  - `src/project-scan/report-renderers.mjs` 只保留兼容导出入口，不再继续回填具体 markdown renderer 细节
+  - 新增 artifact 存在性校验、load contract 或反馈回退逻辑优先放 `src/project-scan/analysis-artifact-store/artifact-loader.mjs`
+  - 新增 json artifact write projection 或 analysis 持久化字段优先放 `src/project-scan/analysis-artifact-store/artifact-json-writer.mjs`
+  - 新增 markdown report 输出或 report write persistence 优先放 `src/project-scan/analysis-artifact-store/artifact-report-writer.mjs`
+  - `src/project-scan/analysis-artifact-store.mjs` 只保留兼容导出入口，不再继续回填 load / json write / report write 细节
   - `src/project-scan/scan-engine.mjs` 只保留 orchestration，不再继续回填输入采集或项目级结果拼装细节
   - 新增 pattern feedback override、review 决策校验或 review 结果回写优先放 `src/project-scan/project-scan-review-service.mjs`
   - 新增 scan + generation 联动、扫描后草案生成 handoff 优先放 `src/project-scan/project-scan-pipeline-service.mjs`

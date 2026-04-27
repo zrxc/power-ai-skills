@@ -15,8 +15,26 @@ import {
   buildComponentPropagation,
   enrichSignalsWithComponentGraph
 } from "../src/project-scan/component-graph.mjs";
+import {
+  buildAggregatedPatterns,
+  collectPatternAggregates
+} from "../src/project-scan/pattern-aggregation.mjs";
 import { collectProjectScanInputs } from "../src/project-scan/scan-inputs.mjs";
-import { buildProjectScanResult } from "../src/project-scan/scan-result-builder.mjs";
+import {
+  buildProjectPagePatternSummary,
+  buildProjectProfileArtifact,
+  buildProjectScanResult
+} from "../src/project-scan/scan-result-builder.mjs";
+import {
+  buildComponentGraphSummaryMarkdown,
+  buildComponentPropagationSummaryMarkdown,
+  buildScanDiffMarkdown,
+  buildScanSummaryMarkdown
+} from "../src/project-scan/report-renderers.mjs";
+import {
+  loadAnalysisArtifacts,
+  writeProjectAnalysisArtifacts
+} from "../src/project-scan/analysis-artifact-store.mjs";
 import { createProjectScanPipelineService } from "../src/project-scan/project-scan-pipeline-service.mjs";
 import { createProjectScanReviewService } from "../src/project-scan/project-scan-review-service.mjs";
 
@@ -431,6 +449,400 @@ test("component graph facade keeps graph building, propagation, and signal enric
   ]);
   assert.equal(orderPageSignals.transitiveLinkedHasPcDialog, true);
   assert.equal(orderPageSignals.transitiveLinkedHasSubmitAction, true);
+});
+
+test("pattern aggregation facade keeps aggregate collection and result building on dedicated layers", () => {
+  const enrichedFileAnalyses = new Map([
+    [
+      "src/views/orders/index.vue",
+      {
+        relativePath: "src/views/orders/index.vue",
+        relatedComponentPaths: ["src/views/orders/components/OrdersDialog.vue"],
+        supportingFragmentPaths: ["src/views/orders/components/OrdersDialog.vue"],
+        transitiveRelatedComponentPaths: ["src/views/orders/components/OrdersDialog.vue"],
+        transitiveSupportingFragmentPaths: ["src/views/orders/components/OrdersDialog.vue"]
+      }
+    ],
+    [
+      "src/views/orders/components/OrdersDialog.vue",
+      {
+        relativePath: "src/views/orders/components/OrdersDialog.vue",
+        relatedComponentPaths: [],
+        supportingFragmentPaths: [],
+        transitiveRelatedComponentPaths: [],
+        transitiveSupportingFragmentPaths: []
+      }
+    ]
+  ]);
+
+  const detectFilePatterns = (signals) => {
+    if (signals.relativePath === "src/views/orders/index.vue") {
+      return [
+        {
+          type: "dialog-form",
+          files: [signals.relativePath],
+          entity: "orders",
+          componentStack: { page: "PcLayoutPageCommon", dialog: "pc-dialog" },
+          score: 92,
+          structuralScore: 90,
+          sceneType: "dialog-form",
+          reasons: ["page-uses-dialog"],
+          interactionTraits: ["submit"],
+          dataFlowTraits: ["form-model"],
+          subpattern: "page-dialog-form",
+          fileRole: "page",
+          confidence: "high"
+        }
+      ];
+    }
+
+    return [
+      {
+        type: "dialog-form",
+        files: [signals.relativePath],
+        entity: "orders",
+        componentStack: { dialog: "pc-dialog" },
+        score: 80,
+        structuralScore: 82,
+        sceneType: "dialog-form",
+        reasons: ["fragment-provides-form"],
+        interactionTraits: ["submit"],
+        dataFlowTraits: ["form-model"],
+        subpattern: "fragment-dialog-form",
+        fileRole: "dialog-fragment",
+        confidence: "medium"
+      }
+    ];
+  };
+
+  const aggregates = collectPatternAggregates(enrichedFileAnalyses, detectFilePatterns);
+  const patterns = buildAggregatedPatterns({
+    aggregates,
+    patternDefinitions: new Map([["dialog-form", { baseSkill: "dialog-form" }]])
+  });
+  const dialogPattern = patterns[0];
+
+  assert.equal(aggregates.get("dialog-form")?.matchedFiles.length, 2);
+  assert.equal(dialogPattern.type, "dialog-form");
+  assert.equal(dialogPattern.baseSkill, "dialog-form");
+  assert.equal(dialogPattern.frequency, 1);
+  assert.equal(dialogPattern.fileCount, 2);
+  assert.equal(dialogPattern.fragmentFileCount, 1);
+  assert.deepEqual(dialogPattern.sampleFiles, [
+    "src/views/orders/index.vue",
+    "src/views/orders/components/OrdersDialog.vue"
+  ]);
+  assert.deepEqual(dialogPattern.relatedComponents, ["src/views/orders/components/OrdersDialog.vue"]);
+  assert.deepEqual(dialogPattern.supportingFragments, ["src/views/orders/components/OrdersDialog.vue"]);
+  assert.equal(dialogPattern.subpatterns.some((item) => item.name === "page-dialog-form" && item.count === 1), true);
+  assert.equal(
+    dialogPattern.subpatterns.some((item) => item.name === "fragment-dialog-form" && item.count === 1),
+    true
+  );
+  assert.equal(dialogPattern.matchedFiles[0]?.path, "src/views/orders/index.vue");
+});
+
+test("scan result facade keeps pattern summary, project profile, and result payload on dedicated layers", () => {
+  const context = {
+    teamPolicy: {
+      projectProfiles: [{ name: "enterprise-vue" }]
+    }
+  };
+  const patterns = [
+    { type: "basic-list-page", frequency: 3 },
+    { type: "tree-list-page", frequency: 1 },
+    { type: "detail-page", frequency: 2 },
+    { type: "dialog-form", frequency: 4 }
+  ];
+
+  const pagePatterns = buildProjectPagePatternSummary(patterns);
+  const projectProfile = buildProjectProfileArtifact({
+    context,
+    projectRoot: "D:/fixtures/demo-project",
+    generatedAt: "2026-04-27T00:00:00.000Z",
+    packageJson: { name: "demo-project" },
+    structure: { viewsRoot: "src/views" },
+    frameworkSignals: { vue: true, powerComponents: true },
+    componentUsage: { "pc-table-warp": 3 },
+    componentGraph: { summary: { edgeCount: 2 } },
+    componentPropagation: { summary: { maxReachDepth: 2 } },
+    fileRoleSummary: { page: 4, pageCandidate: 0, pageFragment: 1, dialogFragment: 1 },
+    patterns,
+    viewFiles: ["a.vue", "b.vue", "c.vue"]
+  });
+  const result = buildProjectScanResult({
+    context,
+    projectRoot: "D:/fixtures/demo-project",
+    generatedAt: "2026-04-27T00:00:00.000Z",
+    packageJson: { name: "demo-project" },
+    structure: { viewsRoot: "src/views" },
+    frameworkSignals: { vue: true, powerComponents: true },
+    componentUsage: { "pc-table-warp": 3 },
+    componentGraph: { summary: { edgeCount: 2 } },
+    componentPropagation: { summary: { maxReachDepth: 2 } },
+    fileRoleSummary: { page: 4, pageCandidate: 0, pageFragment: 1, dialogFragment: 1 },
+    patterns,
+    viewFiles: ["a.vue", "b.vue", "c.vue"]
+  });
+
+  assert.deepEqual(pagePatterns, {
+    basicListPage: 3,
+    treeListPage: 1,
+    detailPage: 2,
+    dialogFormCrud: 4
+  });
+  assert.deepEqual(projectProfile.pagePatterns, pagePatterns);
+  assert.equal(projectProfile.projectName, "demo-project");
+  assert.equal(projectProfile.fileSummary.viewFileCount, 3);
+  assert.equal(result.projectProfile.projectName, "demo-project");
+  assert.equal(result.patterns.generatedAt, "2026-04-27T00:00:00.000Z");
+  assert.deepEqual(result.patterns.patterns, patterns);
+  assert.equal(result.componentGraph.summary.edgeCount, 2);
+  assert.equal(result.componentPropagation.summary.maxReachDepth, 2);
+});
+
+test("report renderer facade keeps summary, diff, graph, and propagation markdown on dedicated layers", () => {
+  const summaryMarkdown = buildScanSummaryMarkdown({
+    projectProfile: {
+      projectName: "demo-project",
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      fileSummary: { viewFileCount: 3 },
+      componentGraphSummary: { edgeCount: 2 },
+      componentPropagationSummary: { maxReachDepth: 2, filesWithReachableFragments: 1 }
+    },
+    patternReview: {
+      summary: { generate: 1, review: 1, skip: 0 },
+      feedbackSummary: { overrides: 1, applied: 1, stale: 0 },
+      patterns: [
+        {
+          type: "dialog-form",
+          autoDecision: "review",
+          decision: "generate",
+          decisionSource: "manual",
+          dominantSubpattern: "page-dialog-form",
+          frequency: 2,
+          confidence: "high",
+          averageScore: 90,
+          structuralScore: 88,
+          purityScore: 80,
+          reuseScore: 85,
+          reasons: ["dialog pattern detected"],
+          feedbackNote: "approved"
+        }
+      ]
+    },
+    patternDiff: {
+      summary: { added: 1, changed: 0, removed: 0 }
+    }
+  });
+  const diffMarkdown = buildScanDiffMarkdown({
+    projectName: "demo-project",
+    patternDiff: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      hasPreviousSnapshot: true,
+      summary: { added: 1, changed: 1, removed: 0, unchanged: 2 },
+      changes: [
+        {
+          type: "dialog-form",
+          changeType: "changed",
+          previous: { frequency: 1, confidence: "medium", decision: "review", dominantSubpattern: "fragment-dialog-form" },
+          current: { frequency: 2, confidence: "high", decision: "generate", dominantSubpattern: "page-dialog-form" },
+          fields: ["frequency", "decision"]
+        }
+      ]
+    }
+  });
+  const graphMarkdown = buildComponentGraphSummaryMarkdown({
+    projectName: "demo-project",
+    componentGraph: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      summary: {
+        nodeCount: 2,
+        edgeCount: 1,
+        usedEdgeCount: 1,
+        referencedComponentCount: 1,
+        pageToFragmentEdgeCount: 1
+      },
+      edges: [
+        {
+          from: "src/views/orders/index.vue",
+          to: "src/views/orders/components/OrdersDialog.vue",
+          localName: "OrdersDialog",
+          usedInTemplate: true
+        }
+      ]
+    }
+  });
+  const propagationMarkdown = buildComponentPropagationSummaryMarkdown({
+    projectName: "demo-project",
+    componentPropagation: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      summary: {
+        fileCount: 2,
+        maxReachDepth: 2,
+        transitivePageToFragmentCount: 1,
+        filesWithReachableFragments: 1
+      },
+      files: [
+        {
+          path: "src/views/orders/index.vue",
+          reachableFragments: [
+            {
+              path: "src/views/orders/components/OrdersDialog.vue",
+              depth: 1,
+              fileRole: "dialog-fragment"
+            }
+          ]
+        }
+      ]
+    }
+  });
+
+  assert.equal(summaryMarkdown.includes("# Project Scan Summary"), true);
+  assert.equal(summaryMarkdown.includes("dialog-form"), true);
+  assert.equal(diffMarkdown.includes("# Project Scan Diff"), true);
+  assert.equal(diffMarkdown.includes("changeType"), true);
+  assert.equal(graphMarkdown.includes("# Component Graph Summary"), true);
+  assert.equal(graphMarkdown.includes("OrdersDialog"), true);
+  assert.equal(propagationMarkdown.includes("# Component Propagation Summary"), true);
+  assert.equal(propagationMarkdown.includes("reachable fragments") || propagationMarkdown.includes("OrdersDialog.vue"), true);
+});
+
+test("analysis artifact store facade keeps load, json projection, and report writes on dedicated layers", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-analysis-artifacts-"));
+  t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
+  const paths = {
+    analysisRoot: path.join(tempRoot, "analysis"),
+    reportsRoot: path.join(tempRoot, "reports"),
+    projectProfilePath: path.join(tempRoot, "analysis", "project-profile.json"),
+    patternsPath: path.join(tempRoot, "analysis", "patterns.json"),
+    patternReviewPath: path.join(tempRoot, "analysis", "pattern-review.json"),
+    patternFeedbackPath: path.join(tempRoot, "analysis", "pattern-feedback.json"),
+    patternDiffPath: path.join(tempRoot, "analysis", "pattern-diff.json"),
+    patternHistoryPath: path.join(tempRoot, "analysis", "pattern-history.json"),
+    componentGraphPath: path.join(tempRoot, "analysis", "component-graph.json"),
+    componentPropagationPath: path.join(tempRoot, "analysis", "component-propagation.json"),
+    summaryReportPath: path.join(tempRoot, "reports", "project-scan-summary.md"),
+    diffReportPath: path.join(tempRoot, "reports", "project-scan-diff.md"),
+    feedbackReportPath: path.join(tempRoot, "reports", "project-scan-feedback.md"),
+    componentGraphReportPath: path.join(tempRoot, "reports", "component-graph-summary.md"),
+    componentPropagationReportPath: path.join(tempRoot, "reports", "component-propagation-summary.md")
+  };
+  const result = {
+    generatedAt: "2026-04-27T00:00:00.000Z",
+    projectProfile: {
+      projectName: "demo-project",
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      fileSummary: { viewFileCount: 3 },
+      componentGraphSummary: { edgeCount: 1 },
+      componentPropagationSummary: { maxReachDepth: 1, filesWithReachableFragments: 1 }
+    },
+    patterns: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      patterns: [{ type: "dialog-form", frequency: 1 }]
+    },
+    componentGraph: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      summary: {
+        nodeCount: 2,
+        edgeCount: 1,
+        usedEdgeCount: 1,
+        referencedComponentCount: 1,
+        pageToFragmentEdgeCount: 1
+      },
+      edges: [
+        {
+          from: "src/views/orders/index.vue",
+          to: "src/views/orders/components/OrdersDialog.vue",
+          localName: "OrdersDialog",
+          usedInTemplate: true
+        }
+      ]
+    },
+    componentPropagation: {
+      generatedAt: "2026-04-27T00:00:00.000Z",
+      summary: {
+        fileCount: 2,
+        maxReachDepth: 1,
+        transitivePageToFragmentCount: 0,
+        filesWithReachableFragments: 1
+      },
+      files: [
+        {
+          path: "src/views/orders/index.vue",
+          reachableFragments: [
+            {
+              path: "src/views/orders/components/OrdersDialog.vue",
+              depth: 1,
+              fileRole: "dialog-fragment"
+            }
+          ]
+        }
+      ]
+    }
+  };
+  const patternReview = {
+    summary: { generate: 1, review: 0, skip: 0 },
+    feedbackSummary: { overrides: 0, applied: 0, stale: 0 },
+    patterns: [
+      {
+        type: "dialog-form",
+        autoDecision: "generate",
+        decision: "generate",
+        dominantSubpattern: "page-dialog-form",
+        frequency: 1,
+        confidence: "high",
+        averageScore: 90,
+        structuralScore: 88,
+        purityScore: 80,
+        reuseScore: 85,
+        reasons: ["dialog pattern detected"]
+      }
+    ]
+  };
+  const patternFeedback = {
+    overrides: [],
+    summary: { total: 0, generate: 0, review: 0, skip: 0 }
+  };
+  const patternDiff = {
+    generatedAt: "2026-04-27T00:00:00.000Z",
+    hasPreviousSnapshot: false,
+    summary: { added: 1, changed: 0, removed: 0, unchanged: 0 },
+    changes: []
+  };
+  const patternHistory = {
+    snapshots: [
+      {
+        generatedAt: "2026-04-27T00:00:00.000Z",
+        projectName: "demo-project"
+      }
+    ]
+  };
+
+  const outputs = writeProjectAnalysisArtifacts({
+    paths,
+    result,
+    patternReview,
+    patternFeedback,
+    patternDiff,
+    patternHistory
+  });
+  const loadedArtifacts = loadAnalysisArtifacts(paths);
+
+  assert.equal(fs.existsSync(outputs.projectProfilePath), true);
+  assert.equal(fs.existsSync(outputs.summaryReportPath), true);
+  assert.equal(fs.existsSync(outputs.componentPropagationReportPath), true);
+  assert.equal(loadedArtifacts.projectProfile.projectName, "demo-project");
+  assert.equal(loadedArtifacts.patterns.patterns[0]?.type, "dialog-form");
+  assert.equal(loadedArtifacts.patternFeedback.summary.total, 0);
+  assert.equal(
+    fs.readFileSync(outputs.summaryReportPath, "utf8").includes("# Project Scan Summary"),
+    true
+  );
+  assert.equal(
+    fs.readFileSync(outputs.componentGraphReportPath, "utf8").includes("# Component Graph Summary"),
+    true
+  );
 });
 
 test("project scan review service owns feedback overrides without expanding service composition scope", (t) => {

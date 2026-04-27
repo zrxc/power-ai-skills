@@ -1543,3 +1543,110 @@ pnpm release:prepare
 结论：
 
 - `P5-12` 已按原阶段定义收口；下一阶段应继续处理 `project-scan` 的图传播与模式聚合热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-13 图传播与模式聚合第七版
+
+阶段目标：
+
+- 在 `P5-12` 已完成 `project-scan` service composition、review service 与 pipeline handoff 收口的基础上，继续处理图传播与模式聚合这一批仍偏集中的规则聚合热点。
+- 优先把 `component-graph.mjs`、`pattern-aggregation.mjs` 里“新增传播规则、聚合字段或关联摘要就容易继续堆大文件”的位置再拆清楚。
+- 同时保持已收口的 `scan-engine`、`index.mjs`、`vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/component-graph.mjs` 已退回兼容导出层，graph 构建、propagation 分析和 signals enrichment 分拆到了 `src/project-scan/component-graph/` 下的独立模块。
+- `src/project-scan/component-graph/graph-builders.mjs` 已承接组件引用边构建、template import 解析与 graph summary 字段；后续新增 graph 规则不再默认回堆到兼容入口。
+- `src/project-scan/component-graph/propagation-analysis.mjs` 已承接 relation propagation、reach depth 与跨组件 fragment 传播分析；后续新增传播规则有了明确落点。
+- `src/project-scan/component-graph/signal-enrichment.mjs` 已承接 graph / propagation 对单文件 signals 的回灌；后续新增关联字段不再继续混在 graph 构建逻辑里。
+- `docs/maintenance-guide.md` 已补充 component graph 子层落点说明，明确 graph builder、propagation analysis、signal enrichment 与兼容导出层的职责边界。
+- `tests/project-scan.test.mjs` 已新增针对 `buildComponentGraph(...)`、`buildComponentPropagation(...)` 与 `enrichSignalsWithComponentGraph(...)` 的直接 facade 断言，保证这轮拆分不是单纯文件搬家。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "component graph facade|component graph links|component propagation reaches|project scan orchestration keeps"`
+  - `pnpm check:docs`
+  - `pnpm check:package`
+  - `pnpm release:check`
+  - `pnpm test`
+
+阶段收口判断：
+
+- `component-graph` 的后续新增能力已有更明确的落点，不再优先回堆到单一传播 / 聚合热点文件。
+- 已收口的 `scan-engine`、`index.mjs`、`vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，不出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-13` 已按原阶段定义收口；下一阶段应继续处理 `pattern-aggregation` 与项目级关联摘要热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-14 模式聚合与关联摘要第八版
+
+阶段目标：
+
+- 在 `P5-13` 已完成 component graph 子层拆分的基础上，继续处理 `pattern-aggregation` 与项目级关联摘要这一批仍偏集中的聚合热点。
+- 优先把 `pattern-aggregation.mjs` 里“新增 aggregate 累积字段、sample summary 或关联摘要就容易继续堆大文件”的位置再拆清楚。
+- 同时保持已收口的 `component-graph`、`scan-engine`、`index.mjs`、`vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/pattern-aggregation.mjs` 已退回兼容导出层，pattern aggregate collection 与结果构建分拆到了 `src/project-scan/pattern-aggregation/` 下的独立模块。
+- `src/project-scan/pattern-aggregation/aggregate-collector.mjs` 已承接 aggregate 累积、matched file entry 组装和聚合收集规则；后续新增聚合字段不再默认回堆到兼容入口。
+- `src/project-scan/pattern-aggregation/pattern-result-builder.mjs` 已承接 aggregate summary、sample file 选择与最终 pattern payload 拼装；后续新增 pattern summary 规则有了明确落点。
+- `src/project-scan/scan-result-builder.mjs` 已退回兼容导出层，page pattern summary、project profile artifact 与最终 result payload 分拆到了 `src/project-scan/scan-result/` 下的独立模块。
+- `src/project-scan/scan-result/pattern-profile-summary.mjs` 已承接项目级 page pattern summary / frequency counters；`src/project-scan/scan-result/project-profile-builder.mjs` 与 `result-payload-builder.mjs` 已分别承接 project profile 和最终结果包装。
+- `docs/maintenance-guide.md` 已补充 pattern aggregation 与 scan result 子层落点说明，明确 aggregate collector、pattern result builder、pattern profile summary、project profile builder 与 result payload builder 的职责边界。
+- `tests/project-scan.test.mjs` 已新增针对 `collectPatternAggregates(...)`、`buildAggregatedPatterns(...)`、`buildProjectPagePatternSummary(...)`、`buildProjectProfileArtifact(...)` 与 `buildProjectScanResult(...)` 的直接 facade 断言，保证这轮拆分不是单纯文件搬家。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "pattern aggregation facade|scan result facade|project scan orchestration keeps|scan-project writes analysis artifacts|component graph facade"`
+  - `pnpm check:docs`
+  - `pnpm check:package`
+  - `pnpm release:check`
+  - `pnpm test`
+
+阶段收口判断：
+
+- `pattern-aggregation` 的后续新增能力已有更明确的落点，不再优先回堆到单一模式聚合热点文件。
+- 项目级 pattern 关联摘要或结果拼装至少又收敛了一处，避免结构评估已收口但 summary 侧仍保留明显集中热点。
+- 已收口的 `component-graph`、`scan-engine`、`index.mjs`、`vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，不出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-14` 已按原阶段定义收口；下一阶段应继续处理 project-scan 的结果投影与报告渲染热点，而不是回到功能扩张。
+
+## 1.4.7 / P5-15 结果投影与报告渲染第九版
+
+阶段目标：
+
+- 在 `P5-14` 已完成 pattern aggregation 与 scan result 子层拆分的基础上，继续处理 `analysis-artifact-store`、`report-renderers` 这批仍偏集中的结果投影与报告渲染热点。
+- 优先把“新增 artifact report、summary markdown 或结果投影规则就容易继续堆大文件”的位置再拆清楚。
+- 同时保持已收口的 `component-graph`、`pattern-aggregation`、`scan-result`、`scan-engine`、`index.mjs`、`vue-analysis`、发布边界 smoke 和 release 检查链路稳定，不把这轮结构变化重新扩散到 npm 发布面。
+- 保持“先稳结构、再扩能力”的节奏，不在这一阶段引入新的业务能力扩张。
+
+已完成：
+
+- `src/project-scan/report-renderers.mjs` 已退回兼容导出层，scan summary、scan diff、component graph summary 与 component propagation summary markdown renderer 分拆到了 `src/project-scan/report-renderers/` 下的独立模块。
+- `src/project-scan/report-renderers/scan-summary-renderer.mjs` 已承接项目扫描摘要 markdown 渲染；后续新增 summary 字段不再默认回堆到兼容入口。
+- `src/project-scan/report-renderers/scan-diff-renderer.mjs` 已承接 diff markdown 渲染；`component-graph-renderer.mjs` 与 `component-propagation-renderer.mjs` 已分别承接图摘要与传播摘要的独立报告输出。
+- `docs/maintenance-guide.md` 已补充 report renderer 子层落点说明，明确 scan summary、scan diff、component graph / propagation report 与兼容导出层的职责边界。
+- `tests/project-scan.test.mjs` 已新增针对 `buildScanSummaryMarkdown(...)`、`buildScanDiffMarkdown(...)`、`buildComponentGraphSummaryMarkdown(...)` 与 `buildComponentPropagationSummaryMarkdown(...)` 的直接 facade 断言，保证这轮拆分不是单纯文件搬家。
+- 本阶段关键回归基线已补齐并通过：
+  - `node --test ./tests/project-scan.test.mjs --test-name-pattern "report renderer facade|scan-project writes analysis artifacts|scan result facade|pattern aggregation facade|component graph facade"`
+  - `pnpm check:docs`
+  - `pnpm check:package`
+  - `pnpm release:check`
+  - `pnpm test`
+
+阶段收口判断：
+
+- `report-renderers` 的后续新增能力已有更明确的落点，不再优先回堆到单一结果投影 / 报告热点文件。
+- 项目级 report summary 至少又收敛了一处，避免结构评估已收口但输出侧仍保留明显集中热点。
+- 已收口的 `component-graph`、`pattern-aggregation`、`scan-result`、`scan-engine`、`index.mjs`、`vue-analysis`、detector 目录化与 package/release 边界校验在本阶段结构变化后仍保持稳定，不出现热点回流。
+- 现有命令文档、发布边界 smoke、维护说明和 release 检查链路在结构变化后仍保持一致。
+- 本阶段文档、测试和实现已对齐，可继续作为后续结构优化的基础。
+
+结论：
+
+- `P5-15` 已按原阶段定义收口；下一阶段应继续处理 `analysis-artifact-store` 的 artifact projection 与写盘热点，而不是回到功能扩张。
