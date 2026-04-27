@@ -17,6 +17,11 @@
 - `pnpm clean:runtime` 现在除了清理 `manifest/` 下的忽略产物，还会回收 `.power-ai/` 下的空运行时目录；有内容的运行时目录仍会保留。
 - `docs/command-manual.md` 里的“注册表命令清单”片段由 `pnpm docs:command-manual` 自动生成，并在 `pnpm check:docs` 中校验，新增命令后不要只改文档正文而忽略这段清单。
 - 本轮结构评估与后续建议见 `docs/project-structure-assessment.md`。
+- `project-scan` 规则层默认按“detector / SFC signal / scan orchestration / analysis projection / project-local lifecycle”分层扩展：
+  - 新增 pattern 规则优先放 `src/project-scan/pattern-detectors/`
+  - 新增 Vue SFC 信号优先放 `src/project-scan/vue-analysis.mjs` 对应子层
+  - 新增 artifact / report / history 不要回塞 detector 或 `scan-engine`
+  - 新增 project-local lifecycle 行为不要回塞 scan 聚合入口
 
 ## 修改 skill 后要做什么
 

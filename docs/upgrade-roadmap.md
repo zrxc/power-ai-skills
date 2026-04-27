@@ -41,7 +41,7 @@
 ## 未完成项
 
 - [x] 至少把 `pattern-detectors` 或 `vue-analysis` 其中一个热点拆到更稳定的目录化规则边界，减少继续堆大文件的惯性。
-- [ ] 为规则层后续扩展补一份明确落点说明，约束新增检测规则、SFC 分析能力和聚合逻辑应落在哪一层。
+- [x] 为规则层后续扩展补一份明确落点说明，约束新增检测规则、SFC 分析能力和聚合逻辑应落在哪一层。
 - [ ] 收敛至少一类大型重复测试样例，优先处理命令解析类或边界 smoke 类测试，让新增覆盖不再主要依赖复制粘贴。
 - [ ] 明确 `.power-ai/` 运行时目录保留策略，并把必要的清理边界、例外项和维护说明同步到文档与校验链路。
 - [ ] 补齐本阶段新增变更对应的自动化测试与校验命令。
@@ -51,6 +51,7 @@
 - `src/project-scan/pattern-detectors.mjs` 已退回为兼容导出层，四类 page pattern detector 已拆到 `src/project-scan/pattern-detectors/` 目录下的独立规则模块。
 - 当前拆分先保持 `scan-engine` 与现有调用面的 contract 不变，优先验证“规则层目录化”已经成立，再决定是否继续处理 `vue-analysis`。
 - `pnpm test -- --test-name-pattern "project scan|component graph|component propagation|scan-project"` 已通过，可作为本阶段第一轮规则层拆分的回归基线。
+- `docs/project-structure-assessment.md` 与 `docs/maintenance-guide.md` 已补充规则层落点说明，明确 detector、SFC signal、scan orchestration、analysis projection 与 project-local lifecycle 的边界分工。
 
 ## 完成标准
 

@@ -142,6 +142,41 @@
 - `pattern-detectors.mjs` 已进一步退回为兼容导出层，四类 detector 现已落到 `pattern-detectors/` 目录中的独立规则模块。
 - 这一轮先保持 `detectFilePatterns(...)` 对外 contract 不变，优先验证“规则继续扩张时不再默认回堆同一文件”的目录化边界已经成立。
 
+### 规则层新增能力落点
+
+- 新增某一种 page pattern 的识别规则：
+  - 优先在 `src/project-scan/pattern-detectors/` 下新增独立 detector 文件
+  - 只在 `pattern-detectors/index.mjs` 中补注册与聚合顺序
+  - 不要把新规则直接回填到兼容层 `pattern-detectors.mjs`
+- 调整某个已存在 pattern 的命中条件、解释文案或分数计算：
+  - 只修改对应 detector 文件
+  - 只有当多个 detector 需要共享辅助逻辑时，才抽到 `pattern-detectors/shared.mjs`
+- 新增 template AST 识别信号，例如页面骨架、容器标签、只读视图、tabs 结构：
+  - 优先落到 `vue-analysis` 的 template analysis 子层
+  - 不要直接把 template 解析细节塞回 scan orchestration
+- 新增 script AST 识别信号，例如成员路径、导入模式、命名约定或事件流：
+  - 优先落到 `vue-analysis` 的 script analysis 子层
+  - 不要直接在 detector 中重复写 AST 遍历逻辑
+- 新增由 template / script 信号组合得到的业务语义信号：
+  - 优先落到 `vue-analysis` 的 signal synthesis 子层
+  - detector 只消费信号，不负责重新拼装底层 AST 结果
+- 新增 scan 过程中的文件遍历、输入采集或项目级汇总：
+  - 优先落到 `scan-engine` 的 orchestration 或更窄的 scan input / result builder 子层
+  - 不要因为需要某个新输入，就把 detector 变成文件系统入口
+- 新增 artifact、report、history 或落盘格式：
+  - 优先落到 `analysis projection` 相关模块，例如 `analysis-pipeline`、`analysis-artifact-store`、`analysis-paths`
+  - 不要把 artifact 写盘逻辑回塞进 detector、`vue-analysis` 或 `scan-engine`
+- 新增 project-local draft 生成、增量刷新、promote 或 lifecycle 行为：
+  - 优先落到 `project-local-generation-service` 或 `project-local-lifecycle-service`
+  - 不要让 detector 或 scan aggregation 直接承担 project-local 生命周期副作用
+
+### 规则层修改前的判断顺序
+
+1. 先判断这次变更属于 `detector rule`、`SFC signal extraction`、`scan orchestration`、`analysis projection` 还是 `project-local materialization`
+2. 如果一个改动同时跨越两层，优先把底层信号抽稳，再让上层消费，不要在上层临时拼装底层细节
+3. 只有为了兼容外部调用面时，才继续保留 `pattern-detectors.mjs` 这类兼容导出层；新增能力默认不再落这里
+4. 如果新增能力需要修改超过一个 detector 且逻辑明显重复，先抽共享 helper，再继续扩规则，避免目录化后重新长回 switchboard
+
 ## 后续优化
 
 - 评估是否把仓库维护态的 release 检查入口与消费项目 CLI 再做一次解耦，减少运行时包对维护流程概念的感知。
