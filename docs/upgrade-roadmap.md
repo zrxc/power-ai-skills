@@ -41,14 +41,14 @@
   - `plan-release-publish --json`，可输出 `eligible / blocked`、目标 registry、evidence 与人工确认命令
   - `release:prepare`、`release:check`、`upgrade:payload`、`governance:operations`、`upgrade:advice` 已能生成和校验发版前治理材料
   - `manifest/version-record.json`、release notes、notification payload、risk / advice / governance report 已可作为发版前证据
+  - `execute-release-publish [--confirm] [--acknowledge-warnings] --json` 已作为受控执行入口落地，并且每次执行前都会重新运行最新 planner，而不是复用旧 dry-run 结果
+  - `manifest/release-publish-record.json`、`manifest/release-publish-records/`、`manifest/release-publish-failure-summary.md`、`manifest/version-record.json.publishExecutionSummary` 已能沉淀最近一次受控执行状态，并被 package-maintenance `doctor`、upgrade summary 和 planner evidence 复用
 - 当前缺口：
-  - 真实 publish 仍完全依赖维护者手工拼接和执行命令
-  - publish 成败还没有统一的 manifest 记录或治理回写
-  - planner 与真实执行之间还缺一层“执行前再确认”的受控闸口
+  - `execute-release-publish` 目前仍是受控 skeleton，`ready-to-execute` 之后还不会真正调用 `npm publish`
+  - 因为还没进入真实 publish，这一阶段的“第一版真实执行链路”完成标准还没有达成
 - 当前主要风险：
-  - planner 通过后，人工执行时使用了已过期的 artifact 快照
-  - 不同维护者手工执行步骤不一致，导致发布证据与真实动作脱节
-  - 没有统一的 publish record，后续难以回溯“是否真的发过、何时发的、向哪里发的”
+  - 如果后续直接把 skeleton 接到真实 publish，但没有继续沿用当前 record contract，可能再次出现“dry-run / execute / publish result”语义脱节
+  - 在尚未接入真实 publish 前，维护者仍需要把 `ready-to-execute` 结果和最终手工 `npm publish` 明确区分，避免把受控闸口通过误读成“已经发版”
 
 本阶段不做：
 - 不做无人值守自动 publish 或定时发版
@@ -58,10 +58,12 @@
 
 ## 未完成项
 
-- [ ] 设计 release 受控执行 contract，至少明确执行命令、显式确认参数、执行前复核步骤和失败返回结构。
-- [ ] 增加真实 publish 前的二次资格校验，避免直接复用过期 dry-run 结果去执行发布。
-- [ ] 为 publish 结果增加 manifest / governance 记录，至少沉淀目标 registry、package、version、执行时间、状态与错误摘要。
-- [ ] 在路线图和维护说明里固定“受控执行”与“无人值守自动 publish”的边界，避免后续把这一阶段误扩成全自动发版。
+- [x] 设计 release 受控执行 contract，至少明确执行命令、显式确认参数、执行前复核步骤和失败返回结构。
+- [x] 增加真实 publish 前的二次资格校验，避免直接复用过期 dry-run 结果去执行发布。
+- [x] 为 publish 结果增加 manifest / governance 记录，至少沉淀目标 registry、package、version、执行时间、状态与错误摘要。
+- [x] 在路线图和维护说明里固定“受控执行”与“无人值守自动 publish”的边界，避免后续把这一阶段误扩成全自动发版。
+- [ ] 在明确允许前继续保持 `execute-release-publish` 为受控 skeleton；等边界放开后，再把 `ready-to-execute` 接到真实 `npm publish`，并把真实 publish 结果继续落进同一份 record contract。
+  当前 contract 已额外固定 `realPublishEnabled: false`，用于在 record / version record / upgrade summary 里显式声明“真实 publish 尚未启用”。
 
 ## 完成标准
 
@@ -72,5 +74,5 @@
 ## 下一次进入本文档时的动作
 
 - 如果上面还有未勾选项：继续只做 release 受控执行第一版，不要提前跳到无人值守自动 publish。
-- 优先补执行 contract、二次资格校验和 publish record，再决定是否引入更高风险的自动发布能力。
+- 优先沿用现有 planner / executor / record contract 收口真实 publish 接口，不要推倒当前受控 skeleton 重做。
 - 如果上面全部勾选：把本阶段迁移到 `docs/upgrade-roadmap-history.md`，再决定是否需要立新的“自动发布编排”阶段。

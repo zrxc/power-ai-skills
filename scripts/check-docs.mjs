@@ -93,6 +93,26 @@ for (const relativePath of filesToScan) {
   }
 }
 
+const requiredDocSnippets = [
+  {
+    relativePath: "docs/maintenance-guide.md",
+    snippets: ["plan-release-publish", "execute-release-publish", "realPublishEnabled: false"]
+  },
+  {
+    relativePath: "docs/release-process.md",
+    snippets: ["execute-release-publish --confirm --json", "ready-to-execute", "realPublishEnabled: false"]
+  }
+];
+
+for (const { relativePath, snippets } of requiredDocSnippets) {
+  const content = fs.readFileSync(path.join(root, relativePath), "utf8");
+  for (const snippet of snippets) {
+    if (!content.includes(snippet)) {
+      fail(`${relativePath} is missing required release publish boundary snippet: ${snippet}`);
+    }
+  }
+}
+
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 for (const docName of [
   "docs/governance.md",

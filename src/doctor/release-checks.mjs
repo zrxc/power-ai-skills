@@ -206,6 +206,7 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
         recordedAt: controlledPublishSnapshot.recordedAt || "",
         status: controlledPublishSnapshot.status || "unknown",
         plannerStatus: controlledPublishSnapshot.plannerStatus || controlledPublishSnapshot.plannerSummary?.status || "unknown",
+        realPublishEnabled: Boolean(controlledPublishSnapshot.realPublishEnabled),
         publishAttempted: Boolean(controlledPublishSnapshot.publishAttempted),
         publishSucceeded: Boolean(controlledPublishSnapshot.publishSucceeded),
         failureSummaryPresent: Boolean(controlledPublishSnapshot.failureSummaryPresent ?? controlledPublishSnapshot.failureSummary?.present),

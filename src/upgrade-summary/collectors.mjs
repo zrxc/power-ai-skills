@@ -405,6 +405,7 @@ export function collectReleaseSection(context, doctorReport) {
       recordedAt: publishExecutionSnapshot.recordedAt || "",
       status: publishExecutionSnapshot.status || "unknown",
       executionMode: publishExecutionSnapshot.executionMode || "",
+      realPublishEnabled: Boolean(publishExecutionSnapshot.realPublishEnabled),
       publishAttempted: Boolean(publishExecutionSnapshot.publishAttempted),
       publishSucceeded: Boolean(publishExecutionSnapshot.publishSucceeded),
       wouldExecuteCommand: publishExecutionSnapshot.wouldExecuteCommand || "",

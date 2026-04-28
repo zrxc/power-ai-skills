@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ensureDir, readJson, writeJson } from "./shared/fs.mjs";
+import { buildExecutorNextAction } from "./release-publish-guidance.mjs";
 
 function normalizeText(value = "") {
   return String(value || "").trim();
@@ -39,6 +40,7 @@ function buildFailureSummaryMarkdown(record) {
     `- status: \`${record.status}\``,
     `- package: \`${record.packageName}@${record.version}\``,
     `- registry: \`${record.targetPublish.registryUrl || "missing"}\``,
+    `- realPublishEnabled: \`${record.realPublishEnabled}\``,
     `- planner status: \`${record.plannerSummary.status}\``,
     `- publishAttempted: \`${record.publishAttempted}\``,
     `- primaryReason: ${primaryReason}`,
@@ -62,7 +64,11 @@ function buildFailureSummaryMarkdown(record) {
   }
 
   lines.push("## Next Step", "");
-  lines.push(`- Review \`${record.recordPathRelative}\`, resolve the current gate condition, then re-run \`execute-release-publish\` with the required confirmation flags before any manual \`${record.manualConfirmation.publishCommand}\`.`);
+  if (record.nextAction?.command) {
+    lines.push(`- Review \`${record.recordPathRelative}\`, then continue with \`${record.nextAction.command}\`.`);
+  } else {
+    lines.push(`- Review \`${record.recordPathRelative}\`, resolve the current gate condition, then re-run \`execute-release-publish\` with the required confirmation flags before any manual \`${record.manualConfirmation.publishCommand}\`.`);
+  }
   lines.push("");
 
   return lines.join("\n");
@@ -83,6 +89,7 @@ function buildExecutionRecord({
     projectRoot: result.projectRoot,
     status: result.status,
     executionMode: result.executionMode,
+    realPublishEnabled: result.realPublishEnabled,
     publishAttempted: result.publishAttempted,
     publishSucceeded: false,
     wouldExecuteCommand: result.wouldExecuteCommand,
@@ -102,6 +109,7 @@ function buildExecutionRecord({
       commands: result.manualConfirmation.commands,
       publishCommand: result.manualConfirmation.publishCommand
     },
+    nextAction: result.nextAction,
     failureSummary: ""
   };
 }
@@ -112,6 +120,7 @@ function buildPublishExecutionSnapshot(record, manifestArtifacts) {
     recordedAt: record.recordedAt || "",
     status: record.status || "unknown",
     executionMode: record.executionMode || "",
+    realPublishEnabled: Boolean(record.realPublishEnabled),
     publishAttempted: Boolean(record.publishAttempted),
     publishSucceeded: Boolean(record.publishSucceeded),
     wouldExecuteCommand: record.wouldExecuteCommand || "",
@@ -126,6 +135,7 @@ function buildPublishExecutionSnapshot(record, manifestArtifacts) {
     requiresExplicitAcknowledgement: Boolean(record.plannerSummary?.publishReadiness?.requiresExplicitAcknowledgement),
     failureSummaryPresent: Boolean(record.failureSummary?.present),
     failurePrimaryReason: record.failureSummary?.primaryReason || "",
+    nextAction: record.nextAction || null,
     recordPath: manifestArtifacts.recordPath,
     recordPathRelative: manifestArtifacts.recordPathRelative,
     historicalRecordPath: manifestArtifacts.historicalRecordPath,
@@ -239,6 +249,7 @@ export function createReleasePublishExecutorService({
       targetPublish: plannerResult.targetPublish,
       manualConfirmation: plannerResult.manualConfirmation,
       executionMode: "manifest-recorded-skeleton",
+      realPublishEnabled: false,
       publishAttempted: false,
       wouldExecuteCommand: plannerResult.targetPublish.publishCommand
     };
@@ -284,7 +295,11 @@ export function createReleasePublishExecutorService({
       recordedAt,
       status,
       blockers,
-      notes
+      notes,
+      nextAction: buildExecutorNextAction({
+        status,
+        targetPublish: plannerResult.targetPublish
+      })
     };
     const record = buildExecutionRecord({
       recordedAt,

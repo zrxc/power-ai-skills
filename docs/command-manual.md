@@ -865,6 +865,8 @@ npx power-ai-skills plan-release-publish --json
 - 资格判定会同时读取 `manifest/automation-report.json`、`manifest/version-record.json`、`manifest/release-gate-report.json`、`manifest/governance-operations-report.json`、`manifest/upgrade-advice-package.json` 和最新 notification payload。
 - 返回结果会显式区分 `eligible` / `blocked`，并给出 `blockers`、`targetPublish`、artifact evidence、版本比对结果以及建议的人工确认链路。
 - 如果 `manifest/version-record.json` 里已经带有 `publishExecutionSummary`，planner 也会把这份最近一次 controlled publish execution snapshot 回显到 evidence 里，方便把 dry-run 资格和最近执行闸口放在一起看；这份 snapshot 当前只作为辅助证据，不直接改变 `eligible / blocked` 判定。
+- planner 结果现在还会额外给出 `nextAction`：当 dry-run `eligible` 时，会直接指向推荐的 `execute-release-publish` 受控命令；当 dry-run `blocked` 时，则明确要求先解决 blocker，而不是误以为可以直接进入执行层。
+- 非 `--json` 的普通 CLI 输出现在也会直接摘要 `latest controlled execution` 状态；如果已有受控执行 record，还会顺带显示 `manifest/release-publish-record.json` 和失败摘要路径，方便在终端里快速判断最近一次卡在哪个确认闸口。
 - `targetPublish` 第一版固定从 `package.json` 读取 `name`、`version` 和 `publishConfig.registry`；如果缺少 registry，planner 会直接阻断，而不是猜测发布目标。
 - `manualConfirmation` 只会输出建议顺序：`pnpm refresh:release-artifacts`、`pnpm release:validate`、`pnpm release:check`、`pnpm release:generate` 和最终的 `npm publish` 命令，真实发版仍然需要维护者手动执行。
 - 当 release gate 只有 `warn` 而没有 blocking issue 时，planner 仍可返回 `eligible`，但会在 `manualConfirmation.notes` 里要求显式 acknowledgement，避免把 warning 版本误当成“完全无风险自动发布”。
@@ -882,7 +884,9 @@ npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --j
 - 如果 planner 已经 `blocked`，执行命令会直接返回 `blocked`；如果 planner 通过但没有 `--confirm`，则返回 `confirmation-required`。
 - 如果 release gate 是 `warn`，即使 planner 仍然 `eligible`，执行层也会要求显式 `--acknowledge-warnings`，否则返回 `acknowledgement-required`。
 - 当前第一版通过所有二次校验后只会返回 `ready-to-execute`，并给出 would-run 的 publish 命令；真实 `npm publish` 还没有在这一层启用。
+- 对应的 record 和 `publishExecutionSummary` 现在会显式带出 `realPublishEnabled: false`，用于声明“受控闸口已通过”与“CLI 已自动执行真实 publish”仍是两件事。
 - 每次执行都会刷新 `manifest/release-publish-record.json`，并追加一份带时间戳的历史记录到 `manifest/release-publish-records/`，至少沉淀 package、version、target registry、执行时间、planner 摘要与最终状态。
+- 执行结果、最新 record 快照和 `manifest/version-record.json.publishExecutionSummary` 现在都会带一份 `nextAction`：例如缺少确认时会直接给出 `execute-release-publish --confirm --json`，warn-level 情况会直接给出 `--confirm --acknowledge-warnings`，而 `ready-to-execute` 只会说明 controlled gate 已满足、真实 `npm publish` 仍保持手动分离。
 - 当状态不是 `ready-to-execute` 时，还会额外写出 `manifest/release-publish-failure-summary.md`，把当前失败原因和下一步人工动作固定下来；如果后续执行恢复到 `ready-to-execute`，这份失败摘要会被清理。
 
 ## 1.4.4 Conversation miner strategy template

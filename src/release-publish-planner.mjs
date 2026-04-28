@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readJson } from "./shared/fs.mjs";
+import { buildPlannerNextAction } from "./release-publish-guidance.mjs";
 
 export const DEFAULT_RELEASE_PUBLISH_CRITERIA = Object.freeze({
   allowedReleaseGateStatuses: ["pass", "warn"],
@@ -384,11 +385,13 @@ export function createReleasePublishPlannerService({ context, projectRoot }) {
       latestNotificationJsonPath
     });
 
+    const status = blockers.length > 0 ? "blocked" : "eligible";
+
     return {
       packageRoot,
       manifestRoot: releaseManifestDir,
       criteria: normalizedCriteria,
-      status: blockers.length > 0 ? "blocked" : "eligible",
+      status,
       blockers,
       targetPublish,
       evidence,
@@ -396,6 +399,11 @@ export function createReleasePublishPlannerService({ context, projectRoot }) {
         packageRoot,
         targetPublish,
         publishReadiness
+      }),
+      nextAction: buildPlannerNextAction({
+        status,
+        publishReadiness,
+        targetPublish
       })
     };
   }

@@ -265,6 +265,7 @@ function createTempManifestSnapshot(t) {
       projectRoot: root,
       status: "ready-to-execute",
       executionMode: "manifest-recorded-skeleton",
+      realPublishEnabled: false,
       publishAttempted: false,
       publishSucceeded: false,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
@@ -1166,6 +1167,7 @@ test("doctor package-maintenance surfaces controlled publish gate warnings witho
       projectRoot: root,
       status: "confirmation-required",
       executionMode: "manifest-recorded-skeleton",
+      realPublishEnabled: false,
       publishAttempted: false,
       publishSucceeded: false,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
@@ -1220,6 +1222,7 @@ test("doctor package-maintenance surfaces controlled publish gate warnings witho
   assert.equal(controlledPublishCheck.ok, false);
   assert.equal(controlledPublishCheck.severity, "warning");
   assert.equal(controlledPublishCheck.detail.status, "confirmation-required");
+  assert.equal(controlledPublishCheck.detail.realPublishEnabled, false);
   assert.equal(controlledPublishCheck.detail.failureSummaryPresent, true);
   assert.equal(controlledPublishCheck.detail.failureSummaryPath, path.join(manifestRoot, "release-publish-failure-summary.md"));
 });

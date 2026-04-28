@@ -263,6 +263,7 @@ export function buildUpgradeSummaryMarkdown(payload) {
     if (payload.release.publishExecution) {
       lines.push(`- publish execution status: \`${payload.release.publishExecution.status}\``);
       lines.push(`- publish execution planner status: \`${payload.release.publishExecution.plannerStatus}\``);
+      lines.push(`- real publish enabled: ${payload.release.publishExecution.realPublishEnabled}`);
       lines.push(`- publish execution attempted: ${payload.release.publishExecution.publishAttempted}`);
       lines.push(`- publish execution requires acknowledgement: ${payload.release.publishExecution.requiresExplicitAcknowledgement}`);
       lines.push(`- publish execution record: \`${payload.release.publishExecution.recordPath}\``);

@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createRuntimeContext } from "../src/context.mjs";
 import { createReleasePublishPlannerService } from "../src/release-publish-planner.mjs";
+import { formatPlanReleasePublishMessage } from "../src/commands/project-output.mjs";
 import { writeJson } from "../src/shared/fs.mjs";
 
 function createTempManifestRoot(t) {
@@ -123,10 +124,13 @@ test("planReleasePublish returns an eligible dry-run plan for a consistent relea
   assert.equal(result.manualConfirmation.mode, "package-maintainer-manual");
   assert.equal(result.manualConfirmation.commands.at(-1), result.targetPublish.publishCommand);
   assert.equal(result.evidence.publishExecutionSummary, null);
+  assert.equal(result.nextAction.kind, "run-controlled-executor");
+  assert.equal(result.nextAction.command, "npx power-ai-skills execute-release-publish --confirm --json");
   assert.equal(
     result.evidence.artifacts.notificationJsonPath.endsWith("manifest/notifications/upgrade-payload-20260428-120000.json"),
     true
   );
+  assert.match(formatPlanReleasePublishMessage(result), /latest controlled execution: none, next action: `npx power-ai-skills execute-release-publish --confirm --json`\./);
 });
 
 test("planReleasePublish blocks mismatched or failed release evidence", (t) => {
@@ -194,6 +198,8 @@ test("planReleasePublish blocks mismatched or failed release evidence", (t) => {
   const blockerCodes = result.blockers.map((item) => item.code);
 
   assert.equal(result.status, "blocked");
+  assert.equal(result.nextAction.kind, "resolve-blockers");
+  assert.equal(result.nextAction.command, "");
   assert.equal(blockerCodes.includes("version-record-version-mismatch"), true);
   assert.equal(blockerCodes.includes("release-gate-status-not-allowed"), true);
   assert.equal(blockerCodes.includes("release-readiness-blocked"), true);
@@ -247,6 +253,7 @@ test("planReleasePublish keeps warn-level releases eligible but requires explici
 
   assert.equal(result.status, "eligible");
   assert.equal(result.evidence.publishReadiness.requiresExplicitAcknowledgement, true);
+  assert.equal(result.nextAction.command, "npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json");
   assert.match(result.manualConfirmation.notes[0], /explicit acknowledgement/i);
 });
 
@@ -278,6 +285,7 @@ test("planReleasePublish reuses publishExecutionSummary from version-record evid
       recordedAt: "2026-04-28T12:30:00.000Z",
       status: "confirmation-required",
       executionMode: "manifest-recorded-skeleton",
+      realPublishEnabled: false,
       publishAttempted: false,
       publishSucceeded: false,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
@@ -305,10 +313,15 @@ test("planReleasePublish reuses publishExecutionSummary from version-record evid
 
   assert.equal(result.status, "eligible");
   assert.equal(result.evidence.publishExecutionSummary.status, "confirmation-required");
+  assert.equal(result.evidence.publishExecutionSummary.realPublishEnabled, false);
   assert.equal(result.evidence.publishExecutionSummary.failureSummaryPresent, true);
   assert.equal(
     result.evidence.publishExecutionSummary.recordPath,
     path.join(manifestDir, "release-publish-record.json")
+  );
+  assert.match(
+    formatPlanReleasePublishMessage(result),
+    /latest controlled execution: confirmation-required \(record: manifest\/release-publish-record\.json, failure summary: manifest\/release-publish-failure-summary\.md\), next action: `npx power-ai-skills execute-release-publish --confirm --json`\./
   );
 });
 

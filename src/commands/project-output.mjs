@@ -177,16 +177,42 @@ export function formatGenerateUpgradeSummaryMessage(result) {
   return `Generated upgrade summary: ${result.reportPath}, mode: ${result.mode}, status: ${result.status}, actions: ${result.recommendedActions.length}.`;
 }
 
+function formatLatestControlledExecutionSummary(publishExecutionSummary) {
+  if (!publishExecutionSummary) {
+    return "latest controlled execution: none";
+  }
+  const recordLabel = publishExecutionSummary.recordPathRelative || publishExecutionSummary.recordPath || "record unavailable";
+  const failureSummaryLabel = publishExecutionSummary.failureSummaryPathRelative || publishExecutionSummary.failureSummaryPath || null;
+  const failureSummarySuffix = failureSummaryLabel ? `, failure summary: ${failureSummaryLabel}` : "";
+  return `latest controlled execution: ${publishExecutionSummary.status} (record: ${recordLabel}${failureSummarySuffix})`;
+}
+
+function formatNextActionSummary(nextAction) {
+  if (!nextAction) {
+    return "next action: review the latest release evidence manually";
+  }
+  if (nextAction.command) {
+    return `next action: \`${nextAction.command}\``;
+  }
+  if (nextAction.kind === "controlled-gate-satisfied" && nextAction.manualPublishCommand) {
+    return `next action: controlled gate satisfied; manual publish remains separate as \`${nextAction.manualPublishCommand}\``;
+  }
+  return `next action: ${nextAction.reason}`;
+}
+
 export function formatPlanReleasePublishMessage(result) {
   const registryLabel = result.targetPublish.registryUrl || "missing";
-  return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}. Keep publish manual with \`${result.manualConfirmation.publishCommand}\` after \`${result.manualConfirmation.refreshArtifactsCommand}\`, \`${result.manualConfirmation.releaseCheckCommand}\`, and \`${result.manualConfirmation.releaseGenerateCommand}\`.`;
+  const latestExecutionSummary = formatLatestControlledExecutionSummary(result.evidence?.publishExecutionSummary || null);
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}, ${latestExecutionSummary}, ${nextActionSummary}. Keep publish manual with \`${result.manualConfirmation.publishCommand}\` after \`${result.manualConfirmation.refreshArtifactsCommand}\`, \`${result.manualConfirmation.releaseCheckCommand}\`, and \`${result.manualConfirmation.releaseGenerateCommand}\`.`;
 }
 
 export function formatExecuteReleasePublishMessage(result) {
   const registryLabel = result.targetPublish.registryUrl || "missing";
   const recordLabel = result.executionRecordPathRelative || result.manifestArtifacts?.recordPathRelative || "manifest/release-publish-record.json";
   const failureSummaryLabel = result.failureSummaryPathRelative || result.manifestArtifacts?.failureSummaryPathRelative || "none";
-  return `Release publish execution: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, confirm: ${result.commandFlags.confirm}, acknowledgeWarnings: ${result.commandFlags.acknowledgeWarnings}, publishAttempted: ${result.publishAttempted}, record: ${recordLabel}, failure summary: ${failureSummaryLabel}. Next command target: \`${result.wouldExecuteCommand}\`.`;
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release publish execution: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, confirm: ${result.commandFlags.confirm}, acknowledgeWarnings: ${result.commandFlags.acknowledgeWarnings}, publishAttempted: ${result.publishAttempted}, record: ${recordLabel}, failure summary: ${failureSummaryLabel}, ${nextActionSummary}. Next command target: \`${result.wouldExecuteCommand}\`.`;
 }
 
 export function formatGenerateGovernanceSummaryMessage(result) {

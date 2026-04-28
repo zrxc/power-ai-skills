@@ -408,6 +408,7 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
     projectRoot: root,
     status: "confirmation-required",
     executionMode: "manifest-recorded-skeleton",
+    realPublishEnabled: false,
     publishAttempted: false,
     publishSucceeded: false,
     wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
@@ -504,6 +505,7 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
   assert.equal(versionRecord.governanceSummary.consumerMatrixScenarioCount >= 0, true);
   assert.equal(versionRecord.governanceSummary.recentGovernanceActivityCount >= 1, true);
   assert.equal(versionRecord.publishExecutionSummary.status, "confirmation-required");
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, false);
   assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, true);
   assert.equal(typeof payload.cleanupSummary, "object");
 

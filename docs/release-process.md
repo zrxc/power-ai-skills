@@ -106,7 +106,28 @@ pnpm release:prepare
 node ./scripts/verify-consumer.mjs <project-path>
 ```
 
-19. 发布到私有 npm：
+19. 在正式 publish 前，先确认 planner 仍然 `eligible`：
+
+```bash
+npx power-ai-skills plan-release-publish --json
+```
+
+20. 再运行一次受控 executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
+
+```bash
+npx power-ai-skills execute-release-publish --confirm --json
+```
+
+- 如果 release gate 是 `warn`，改为：
+
+```bash
+npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json
+```
+
+- 当前 executor 仍是受控 skeleton；即使返回 `ready-to-execute`，record 里也会保留 `realPublishEnabled: false`，表示真实 `npm publish` 还没有在 CLI 内自动执行。
+- 因此 `ready-to-execute` 只代表这一轮 controlled gate 已满足，不代表包已经发布。
+
+21. 发布到私有 npm：
 
 ```bash
 pnpm publish --registry http://192.168.140.17:8081/nexus/repository/npm-private/

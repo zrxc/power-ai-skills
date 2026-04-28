@@ -179,6 +179,7 @@ function collectPublishExecutionSummary(artifacts) {
     recordedAt: publishRecord.recordedAt || "",
     status: publishRecord.status || "unknown",
     executionMode: publishRecord.executionMode || "",
+    realPublishEnabled: Boolean(publishRecord.realPublishEnabled),
     publishAttempted: Boolean(publishRecord.publishAttempted),
     publishSucceeded: Boolean(publishRecord.publishSucceeded),
     wouldExecuteCommand: publishRecord.wouldExecuteCommand || "",

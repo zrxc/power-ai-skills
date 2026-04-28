@@ -402,6 +402,7 @@ function createTempManifestSnapshot(t) {
       projectRoot: root,
       status: "confirmation-required",
       executionMode: "manifest-recorded-skeleton",
+      realPublishEnabled: false,
       publishAttempted: false,
       publishSucceeded: false,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
@@ -784,6 +785,7 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(payload.release.upgradeAdvice.consumerCommandCount, 2);
   assert.equal(payload.release.upgradeAdvice.blocked, false);
   assert.equal(payload.release.publishExecution.status, "confirmation-required");
+  assert.equal(payload.release.publishExecution.realPublishEnabled, false);
   assert.equal(payload.release.publishExecution.publishAttempted, false);
   assert.equal(payload.release.publishExecution.failureSummaryPresent, true);
   assert.equal(payload.release.publishExecution.recordPath, path.join(manifestRoot, "release-publish-record.json"));
@@ -810,8 +812,10 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(savedJson.release.releaseGates.overallStatus, "pass");
   assert.equal(savedJson.release.upgradeAdvice.consumerCommandCount, 2);
   assert.equal(savedJson.release.publishExecution.status, "confirmation-required");
+  assert.equal(savedJson.release.publishExecution.realPublishEnabled, false);
   assert.equal(savedJson.release.publishExecution.failureSummaryPresent, true);
   assert.equal(markdown.includes("publish execution status: `confirmation-required`"), true);
+  assert.equal(markdown.includes("real publish enabled: false"), true);
   assert.equal(markdown.includes("publish execution failure summary"), true);
   assert.equal(payload.recommendedActions.some((item) => item.includes("execute-release-publish --confirm --json")), true);
 });
