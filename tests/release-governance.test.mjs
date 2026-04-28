@@ -16,6 +16,8 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), 
 const notificationsDir = path.join(root, "manifest", "notifications");
 const versionRecordPath = path.join(root, "manifest", "version-record.json");
 const archiveNotificationsDir = path.join(root, "manifest", "archive", "notifications");
+const releasePublishRecordPath = path.join(root, "manifest", "release-publish-record.json");
+const releasePublishFailureSummaryPath = path.join(root, "manifest", "release-publish-failure-summary.md");
 
 function runNodeScript(scriptPath, args = [], options = {}) {
   return spawnSync(process.execPath, [scriptPath, ...args], {
@@ -363,6 +365,12 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "power-ai-skills-promotion-trace-"));
   const tracePath = path.join(tempRoot, "promotion-trace.json");
   const changedFilesPath = path.join(root, "manifest", "changed-files.txt");
+  const originalReleasePublishRecord = fs.existsSync(releasePublishRecordPath)
+    ? fs.readFileSync(releasePublishRecordPath, "utf8")
+    : null;
+  const originalReleasePublishFailureSummary = fs.existsSync(releasePublishFailureSummaryPath)
+    ? fs.readFileSync(releasePublishFailureSummaryPath, "utf8")
+    : null;
   const firstChangedFile = fs.existsSync(changedFilesPath)
     ? String(fs.readFileSync(changedFilesPath, "utf8").split(/\r?\n/u).find(Boolean) || "")
     : "";
@@ -391,7 +399,60 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
       }
     ]
   }, null, 2)}\n`, "utf8");
-  t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
+  fs.writeFileSync(releasePublishRecordPath, `${JSON.stringify({
+    executionId: "release_publish_20260428130000000",
+    recordedAt: "2026-04-28T13:00:00.000Z",
+    packageName: packageJson.name,
+    version: packageJson.version,
+    packageRoot: root,
+    projectRoot: root,
+    status: "confirmation-required",
+    executionMode: "manifest-recorded-skeleton",
+    publishAttempted: false,
+    publishSucceeded: false,
+    wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
+    commandFlags: {
+      confirm: false,
+      acknowledgeWarnings: false
+    },
+    plannerSummary: {
+      status: "eligible",
+      blockerCount: 0,
+      blockers: [],
+      publishReadiness: {
+        releaseGateStatus: "pass",
+        warningGates: 0,
+        blockingIssues: 0,
+        canPublish: true,
+        broadRolloutReady: true,
+        requiresExplicitAcknowledgement: false
+      }
+    },
+    blockers: [],
+    notes: [
+      "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided."
+    ],
+    failureSummary: {
+      present: true,
+      primaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+      summaryPath: releasePublishFailureSummaryPath,
+      summaryPathRelative: "manifest/release-publish-failure-summary.md"
+    }
+  }, null, 2)}\n`, "utf8");
+  fs.writeFileSync(releasePublishFailureSummaryPath, "# Release Publish Failure Summary\n", "utf8");
+  t.after(() => {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+    if (originalReleasePublishRecord === null) {
+      fs.rmSync(releasePublishRecordPath, { force: true });
+    } else {
+      fs.writeFileSync(releasePublishRecordPath, originalReleasePublishRecord, "utf8");
+    }
+    if (originalReleasePublishFailureSummary === null) {
+      fs.rmSync(releasePublishFailureSummaryPath, { force: true });
+    } else {
+      fs.writeFileSync(releasePublishFailureSummaryPath, originalReleasePublishFailureSummary, "utf8");
+    }
+  });
 
   const result = runNodeScript(refreshScriptPath, [], {
     env: {
@@ -438,8 +499,12 @@ test("refresh-release-artifacts rebuilds current release artifacts and notificat
   assert.equal(versionRecord.artifacts.governanceOperationsMarkdownPath.endsWith(path.join("manifest", "governance-operations-report.md")), true);
   assert.equal(versionRecord.artifacts.upgradeAdvicePackagePath.endsWith(path.join("manifest", "upgrade-advice-package.json")), true);
   assert.equal(versionRecord.artifacts.upgradeAdvicePackageMarkdownPath.endsWith(path.join("manifest", "upgrade-advice-package.md")), true);
+  assert.equal(versionRecord.artifacts.releasePublishRecordPath, releasePublishRecordPath);
+  assert.equal(versionRecord.artifacts.releasePublishFailureSummaryPath, releasePublishFailureSummaryPath);
   assert.equal(versionRecord.governanceSummary.consumerMatrixScenarioCount >= 0, true);
   assert.equal(versionRecord.governanceSummary.recentGovernanceActivityCount >= 1, true);
+  assert.equal(versionRecord.publishExecutionSummary.status, "confirmation-required");
+  assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, true);
   assert.equal(typeof payload.cleanupSummary, "object");
 
   const updatedTrace = JSON.parse(fs.readFileSync(tracePath, "utf8"));

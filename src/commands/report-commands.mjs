@@ -10,6 +10,7 @@
 import {
   formatGenerateUpgradeSummaryMessage,
   formatPlanReleasePublishMessage,
+  formatExecuteReleasePublishMessage,
   formatGenerateGovernanceSummaryMessage,
   formatShowGovernanceHistoryMessage
 } from "./project-output.mjs";
@@ -21,6 +22,7 @@ import {
  * @param {Object} params.selectionService - 选择服务
  * @param {Object} params.upgradeSummaryService - 升级摘要服务
  * @param {Object} params.releasePublishPlannerService - 发布规划服务
+ * @param {Object} params.releasePublishExecutorService - 发布执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @returns {Object} 报告命令对象
@@ -30,6 +32,7 @@ export function createReportCommands({
   selectionService,
   upgradeSummaryService,
   releasePublishPlannerService,
+  releasePublishExecutorService,
   governanceSummaryService,
   governanceHistoryService
 }) {
@@ -84,6 +87,18 @@ export function createReportCommands({
   }
 
   /**
+   * 受控执行发布命令骨架 - 执行前必须重新做资格判定和确认闸口
+   */
+  function executeReleasePublishCommand() {
+    const result = releasePublishExecutorService.executeReleasePublish({
+      confirm: selectionService.hasFlag("--confirm") || selectionService.hasFlag("--yes"),
+      acknowledgeWarnings: selectionService.hasFlag("--acknowledge-warnings")
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatExecuteReleasePublishMessage(result));
+  }
+
+  /**
    * 生成治理摘要命令 - 汇总项目治理状态信息
    */
   function generateGovernanceSummaryCommand() {
@@ -108,6 +123,7 @@ export function createReportCommands({
   return {
     generateUpgradeSummaryCommand,
     planReleasePublishCommand,
+    executeReleasePublishCommand,
     generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand
   };

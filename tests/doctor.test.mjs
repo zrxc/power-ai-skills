@@ -254,6 +254,50 @@ function createTempManifestSnapshot(t) {
     "utf8"
   );
   fs.writeFileSync(path.join(manifestRoot, "release-gate-report.md"), "# Release Gate Report\n", "utf8");
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-publish-record.json"),
+    `${JSON.stringify({
+      executionId: "release_publish_20260428121000000",
+      recordedAt: "2026-04-28T12:10:00.000Z",
+      packageName: "@power/power-ai-skills",
+      version,
+      packageRoot: root,
+      projectRoot: root,
+      status: "ready-to-execute",
+      executionMode: "manifest-recorded-skeleton",
+      publishAttempted: false,
+      publishSucceeded: false,
+      wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
+      commandFlags: {
+        confirm: true,
+        acknowledgeWarnings: true
+      },
+      plannerSummary: {
+        status: "eligible",
+        blockerCount: 0,
+        blockers: [],
+        publishReadiness: {
+          releaseGateStatus: "pass",
+          warningGates: 0,
+          blockingIssues: 0,
+          canPublish: true,
+          broadRolloutReady: true,
+          requiresExplicitAcknowledgement: false
+        }
+      },
+      blockers: [],
+      notes: [
+        "Secondary eligibility check passed and confirmation gates are satisfied."
+      ],
+      failureSummary: {
+        present: false,
+        primaryReason: "",
+        summaryPath: "",
+        summaryPathRelative: ""
+      }
+    }, null, 2)}\n`,
+    "utf8"
+  );
   return manifestRoot;
 }
 
@@ -1064,11 +1108,14 @@ test("doctor reports release governance when run in package root", { concurrency
       "PAI-RELEASE-009",
       "PAI-RELEASE-010",
       "PAI-RELEASE-011",
-      "PAI-RELEASE-012"
+      "PAI-RELEASE-012",
+      "PAI-RELEASE-013"
     ]
   );
   assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-011")?.ok, true);
   assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-012")?.severity, "warning");
+  assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-013")?.ok, true);
+  assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-013")?.severity, "warning");
 });
 
 test("doctor package-maintenance surfaces release governance warnings without failing", { concurrency: false }, (t) => {
@@ -1102,6 +1149,79 @@ test("doctor package-maintenance surfaces release governance warnings without fa
   assert.equal(releaseWarningCheck.severity, "warning");
   assert.equal(releaseWarningCheck.detail.warningGates, 1);
   assert.equal(releaseWarningCheck.detail.pendingConversationReviews, 2);
+});
+
+test("doctor package-maintenance surfaces controlled publish gate warnings without failing", { concurrency: false }, (t) => {
+  const manifestRoot = createTempManifestSnapshot(t);
+  const releasePublishRecordPath = path.join(manifestRoot, "release-publish-record.json");
+
+  fs.writeFileSync(
+    releasePublishRecordPath,
+    `${JSON.stringify({
+      executionId: "release_publish_20260428123000000",
+      recordedAt: "2026-04-28T12:30:00.000Z",
+      packageName: "@power/power-ai-skills",
+      version: JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version,
+      packageRoot: root,
+      projectRoot: root,
+      status: "confirmation-required",
+      executionMode: "manifest-recorded-skeleton",
+      publishAttempted: false,
+      publishSucceeded: false,
+      wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
+      commandFlags: {
+        confirm: false,
+        acknowledgeWarnings: false
+      },
+      plannerSummary: {
+        status: "eligible",
+        blockerCount: 0,
+        blockers: [],
+        publishReadiness: {
+          releaseGateStatus: "pass",
+          warningGates: 0,
+          blockingIssues: 0,
+          canPublish: true,
+          broadRolloutReady: true,
+          requiresExplicitAcknowledgement: false
+        }
+      },
+      blockers: [],
+      notes: [
+        "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided."
+      ],
+      failureSummary: {
+        present: true,
+        primaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+        summaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
+        summaryPathRelative: "manifest/release-publish-failure-summary.md"
+      },
+      failureSummaryPath: path.join(manifestRoot, "release-publish-failure-summary.md")
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-publish-failure-summary.md"),
+    "# Release Publish Failure Summary\n\n- status: `confirmation-required`\n",
+    "utf8"
+  );
+
+  const doctorResult = runRepoCli("doctor", [], {
+    env: {
+      POWER_AI_RELEASE_MANIFEST_DIR: manifestRoot
+    }
+  });
+  assert.equal(doctorResult.status, 0, doctorResult.stderr);
+
+  const payload = JSON.parse(doctorResult.stdout);
+  const controlledPublishCheck = payload.checks.find((check) => check.code === "PAI-RELEASE-013");
+  assert.ok(controlledPublishCheck);
+  assert.equal(payload.ok, true);
+  assert.equal(controlledPublishCheck.ok, false);
+  assert.equal(controlledPublishCheck.severity, "warning");
+  assert.equal(controlledPublishCheck.detail.status, "confirmation-required");
+  assert.equal(controlledPublishCheck.detail.failureSummaryPresent, true);
+  assert.equal(controlledPublishCheck.detail.failureSummaryPath, path.join(manifestRoot, "release-publish-failure-summary.md"));
 });
 
 test("doctor reports release governance failures when version record drifts", { concurrency: false }, (t) => {

@@ -128,6 +128,7 @@ npx power-ai-skills review-conversation-pattern --pattern <id> --reject --reason
 | `PAI-RELEASE-010` | `manifest/upgrade-advice-package.json` 缺失 | 执行 `pnpm upgrade:advice -- --automation-report manifest/automation-report.json` |
 | `PAI-RELEASE-011` | `version-record.json` 缺少 `governanceSummary` | 执行 `pnpm refresh:release-artifacts`，让当前 release 重新记录治理摘要 |
 | `PAI-RELEASE-012` | release gate 里仍有 governance warning | 复核 `manifest/release-gate-report.json` 的治理 warning，并确认这些 warning 是否允许随当前版本一起发布 |
+| `PAI-RELEASE-013` | 最近一次受控 publish 执行仍停在 `blocked` / `confirmation-required` / `acknowledgement-required` 闸口 | 复核 `manifest/release-publish-record.json` 与 `manifest/release-publish-failure-summary.md`，确认后用需要的 `execute-release-publish` 参数重新推进 |
 
 ### Workspace
 

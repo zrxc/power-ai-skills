@@ -1,7 +1,7 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "generatedAt": "2026-04-27T08:03:53.659Z",
+  "generatedAt": "2026-04-28T03:25:38.237Z",
   "summary": {
     "releaseGateStatus": "pass",
     "releaseGateWarnings": 0,
@@ -70,7 +70,7 @@
     {
       "id": "upgrade-automation",
       "type": "automation",
-      "generatedAt": "2026-04-27T08:03:53.574Z",
+      "generatedAt": "2026-04-28T03:25:38.178Z",
       "summary": "Release automation summarized 11 changed file(s), 1 affected domain(s), and recommended a minor release.",
       "details": {
         "changedFileCount": 11,
@@ -82,17 +82,17 @@
     {
       "id": "version-record",
       "type": "version-record",
-      "generatedAt": "2026-04-27T08:03:53.574Z",
+      "generatedAt": "2026-04-28T03:25:38.178Z",
       "summary": "Version record last updated for @power/power-ai-skills@1.4.7.",
       "details": {
         "version": "1.4.7",
-        "recordedAt": "2026-04-27T08:03:53.574Z"
+        "recordedAt": "2026-04-28T03:25:38.178Z"
       }
     },
     {
       "id": "upgrade-advice",
       "type": "upgrade-advice",
-      "generatedAt": "2026-04-27T08:03:53.569Z",
+      "generatedAt": "2026-04-28T03:25:38.168Z",
       "summary": "Upgrade advice prepared 9 consumer command(s), 4 maintainer command(s), and 9 manual check(s).",
       "details": {
         "consumerCommandCount": 9,
@@ -104,7 +104,7 @@
     {
       "id": "promotion-trace",
       "type": "promotion-trace",
-      "generatedAt": "2026-04-27T08:03:53.474Z",
+      "generatedAt": "2026-04-28T03:25:38.094Z",
       "summary": "Promotion trace matched 1 relation(s) from 2 tracked relation(s).",
       "details": {
         "matchedRelations": 1,
@@ -115,7 +115,7 @@
     {
       "id": "release-gates",
       "type": "release-gates",
-      "generatedAt": "2026-04-27T08:00:12.572Z",
+      "generatedAt": "2026-04-27T08:44:41.075Z",
       "summary": "Release gates finished with status pass (0 blocking, 0 warning).",
       "details": {
         "overallStatus": "pass",
@@ -127,7 +127,7 @@
     {
       "id": "consumer-compatibility",
       "type": "consumer-compatibility",
-      "generatedAt": "2026-04-27T08:00:12.353Z",
+      "generatedAt": "2026-04-27T08:44:40.929Z",
       "summary": "Consumer compatibility matrix covered 1 scenario(s) with 0 failure(s).",
       "details": {
         "totalScenarios": 1,

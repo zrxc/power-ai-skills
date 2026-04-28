@@ -328,6 +328,11 @@ export function collectReleaseSection(context, doctorReport) {
   const automationReport = readJsonIfExists(path.join(manifestRoot, "automation-report.json"));
   const notificationJsonPath = versionRecord?.artifacts?.notificationJsonPath || "";
   const notificationPayload = readJsonIfExists(notificationJsonPath);
+  const releasePublishRecord = readJsonIfExists(
+    versionRecord?.artifacts?.releasePublishRecordPath || path.join(manifestRoot, "release-publish-record.json")
+  );
+  const publishExecutionSummary = versionRecord?.publishExecutionSummary || null;
+  const publishExecutionSnapshot = publishExecutionSummary || releasePublishRecord;
   const releaseGroup = (doctorReport.checkGroups || []).find((group) => group.name === "release");
 
   return {
@@ -395,6 +400,31 @@ export function collectReleaseSection(context, doctorReport) {
       jsonPath: versionRecord?.artifacts?.upgradeAdvicePackagePath || path.join(manifestRoot, "upgrade-advice-package.json"),
       markdownPath: versionRecord?.artifacts?.upgradeAdvicePackageMarkdownPath || path.join(manifestRoot, "upgrade-advice-package.md")
     } : null,
+    publishExecution: publishExecutionSnapshot ? {
+      executionId: publishExecutionSnapshot.executionId || "",
+      recordedAt: publishExecutionSnapshot.recordedAt || "",
+      status: publishExecutionSnapshot.status || "unknown",
+      executionMode: publishExecutionSnapshot.executionMode || "",
+      publishAttempted: Boolean(publishExecutionSnapshot.publishAttempted),
+      publishSucceeded: Boolean(publishExecutionSnapshot.publishSucceeded),
+      wouldExecuteCommand: publishExecutionSnapshot.wouldExecuteCommand || "",
+      confirm: Boolean(publishExecutionSnapshot.commandFlags?.confirm),
+      acknowledgeWarnings: Boolean(publishExecutionSnapshot.commandFlags?.acknowledgeWarnings),
+      plannerStatus: publishExecutionSnapshot.plannerStatus || publishExecutionSnapshot.plannerSummary?.status || "unknown",
+      plannerBlockerCount: publishExecutionSnapshot.plannerBlockerCount || publishExecutionSnapshot.plannerSummary?.blockerCount || 0,
+      requiresExplicitAcknowledgement: Boolean(
+        publishExecutionSnapshot.requiresExplicitAcknowledgement
+        ?? publishExecutionSnapshot.plannerSummary?.publishReadiness?.requiresExplicitAcknowledgement
+      ),
+      failureSummaryPresent: Boolean(
+        publishExecutionSnapshot.failureSummaryPresent
+        ?? publishExecutionSnapshot.failureSummary?.present
+      ),
+      failurePrimaryReason: publishExecutionSnapshot.failurePrimaryReason || publishExecutionSnapshot.failureSummary?.primaryReason || "",
+      recordPath: publishExecutionSnapshot.recordPath || versionRecord?.artifacts?.releasePublishRecordPath || path.join(manifestRoot, "release-publish-record.json"),
+      historyPath: publishExecutionSnapshot.historicalRecordPath || publishExecutionSnapshot.historyPath || "",
+      failureSummaryPath: publishExecutionSnapshot.failureSummaryPath || publishExecutionSnapshot.failureSummary?.summaryPath || versionRecord?.artifacts?.releasePublishFailureSummaryPath || ""
+    } : null,
     consumerVerification: automationReport?.consumerVerification || { skipped: true, reason: "not available" },
     notification: notificationPayload ? {
       title: notificationPayload.title || "",
@@ -410,6 +440,9 @@ export function collectReleaseSection(context, doctorReport) {
       promotionTraceReportPath: versionRecord?.artifacts?.promotionTraceReportPath || path.join(manifestRoot, "promotion-trace-report.json"),
       consumerCompatibilityMatrixPath: versionRecord?.artifacts?.consumerCompatibilityMatrixPath || path.join(manifestRoot, "consumer-compatibility-matrix.json"),
       automationReportPath: path.join(manifestRoot, "automation-report.json"),
+      releasePublishRecordPath: path.join(manifestRoot, "release-publish-record.json"),
+      releasePublishRecordsRoot: path.join(manifestRoot, "release-publish-records"),
+      releasePublishFailureSummaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
       doctorReportPath: doctorReport.reportPath,
       doctorJsonPath: doctorReport.jsonPath
     }

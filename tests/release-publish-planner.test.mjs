@@ -122,6 +122,7 @@ test("planReleasePublish returns an eligible dry-run plan for a consistent relea
   assert.equal(result.targetPublish.registryUrl, context.packageJson.publishConfig.registry);
   assert.equal(result.manualConfirmation.mode, "package-maintainer-manual");
   assert.equal(result.manualConfirmation.commands.at(-1), result.targetPublish.publishCommand);
+  assert.equal(result.evidence.publishExecutionSummary, null);
   assert.equal(
     result.evidence.artifacts.notificationJsonPath.endsWith("manifest/notifications/upgrade-payload-20260428-120000.json"),
     true
@@ -247,6 +248,68 @@ test("planReleasePublish keeps warn-level releases eligible but requires explici
   assert.equal(result.status, "eligible");
   assert.equal(result.evidence.publishReadiness.requiresExplicitAcknowledgement, true);
   assert.match(result.manualConfirmation.notes[0], /explicit acknowledgement/i);
+});
+
+test("planReleasePublish reuses publishExecutionSummary from version-record evidence", (t) => {
+  const context = createRuntimeContext(import.meta.url);
+  const tempRoot = createTempManifestRoot(t);
+  const manifestDir = path.join(tempRoot, "manifest");
+  withReleaseManifestEnv(t, manifestDir);
+  const service = createReleasePublishPlannerService({
+    context,
+    projectRoot: context.packageRoot
+  });
+  const { notificationJsonPath } = createReleaseSnapshot(manifestDir, {
+    packageName: context.packageJson.name,
+    version: context.packageJson.version
+  });
+
+  writeJson(path.join(manifestDir, "version-record.json"), {
+    packageName: context.packageJson.name,
+    version: context.packageJson.version,
+    recordedAt: "2026-04-28T12:00:00.000Z",
+    artifacts: {
+      notificationJsonPath,
+      releasePublishRecordPath: path.join(manifestDir, "release-publish-record.json"),
+      releasePublishFailureSummaryPath: path.join(manifestDir, "release-publish-failure-summary.md")
+    },
+    publishExecutionSummary: {
+      executionId: "release_publish_20260428123000000",
+      recordedAt: "2026-04-28T12:30:00.000Z",
+      status: "confirmation-required",
+      executionMode: "manifest-recorded-skeleton",
+      publishAttempted: false,
+      publishSucceeded: false,
+      wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
+      commandFlags: {
+        confirm: false,
+        acknowledgeWarnings: false
+      },
+      plannerStatus: "eligible",
+      plannerBlockerCount: 0,
+      plannerBlockers: [],
+      releaseGateStatus: "pass",
+      requiresExplicitAcknowledgement: false,
+      failureSummaryPresent: true,
+      failurePrimaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+      recordPath: path.join(manifestDir, "release-publish-record.json"),
+      recordPathRelative: "manifest/release-publish-record.json",
+      historicalRecordPath: path.join(manifestDir, "release-publish-records", "release_publish_20260428123000000.json"),
+      historicalRecordPathRelative: "manifest/release-publish-records/release_publish_20260428123000000.json",
+      failureSummaryPath: path.join(manifestDir, "release-publish-failure-summary.md"),
+      failureSummaryPathRelative: "manifest/release-publish-failure-summary.md"
+    }
+  });
+
+  const result = service.planReleasePublish();
+
+  assert.equal(result.status, "eligible");
+  assert.equal(result.evidence.publishExecutionSummary.status, "confirmation-required");
+  assert.equal(result.evidence.publishExecutionSummary.failureSummaryPresent, true);
+  assert.equal(
+    result.evidence.publishExecutionSummary.recordPath,
+    path.join(manifestDir, "release-publish-record.json")
+  );
 });
 
 test("planReleasePublish is limited to package-maintenance mode from the package root", () => {

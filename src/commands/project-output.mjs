@@ -182,6 +182,13 @@ export function formatPlanReleasePublishMessage(result) {
   return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}. Keep publish manual with \`${result.manualConfirmation.publishCommand}\` after \`${result.manualConfirmation.refreshArtifactsCommand}\`, \`${result.manualConfirmation.releaseCheckCommand}\`, and \`${result.manualConfirmation.releaseGenerateCommand}\`.`;
 }
 
+export function formatExecuteReleasePublishMessage(result) {
+  const registryLabel = result.targetPublish.registryUrl || "missing";
+  const recordLabel = result.executionRecordPathRelative || result.manifestArtifacts?.recordPathRelative || "manifest/release-publish-record.json";
+  const failureSummaryLabel = result.failureSummaryPathRelative || result.manifestArtifacts?.failureSummaryPathRelative || "none";
+  return `Release publish execution: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, confirm: ${result.commandFlags.confirm}, acknowledgeWarnings: ${result.commandFlags.acknowledgeWarnings}, publishAttempted: ${result.publishAttempted}, record: ${recordLabel}, failure summary: ${failureSummaryLabel}. Next command target: \`${result.wouldExecuteCommand}\`.`;
+}
+
 export function formatGenerateGovernanceSummaryMessage(result) {
   return `Generated governance summary: ${result.reportPath}, status: ${result.status}, overdue reviews: ${result.summary.overdueGovernanceReviews}, pending conversation reviews: ${result.summary.pendingConversationReviews}, pending wrapper proposals: ${result.summary.pendingWrapperProposals}.`;
 }

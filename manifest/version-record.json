@@ -1,11 +1,13 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "recordedAt": "2026-04-27T08:44:41.077Z",
+  "recordedAt": "2026-04-28T03:25:38.315Z",
   "artifacts": {
     "skillsManifestPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\skills-manifest.json",
     "releaseNotesPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-notes-1.4.7.md",
     "versionRecordPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\version-record.json",
+    "releasePublishRecordPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-publish-record.json",
+    "releasePublishFailureSummaryPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-publish-failure-summary.md",
     "impactReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\impact-report.json",
     "upgradeRiskReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.json",
     "upgradeRiskMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\upgrade-risk-report.md",
@@ -14,8 +16,8 @@
     "governanceOperationsReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\governance-operations-report.json",
     "governanceOperationsMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\governance-operations-report.md",
     "automationReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\automation-report.json",
-    "notificationJsonPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260427-160353.json",
-    "notificationMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260427-160353.md",
+    "notificationJsonPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260428-112538.json",
+    "notificationMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\notifications\\upgrade-payload-20260428-112538.md",
     "consumerCompatibilityMatrixPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\consumer-compatibility-matrix.json",
     "consumerCompatibilityMatrixMarkdownPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\consumer-compatibility-matrix.md",
     "releaseGateReportPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-gate-report.json",
@@ -50,5 +52,31 @@
     "autoCaptureCaptureBacklog": 0,
     "autoCaptureResponseBacklog": 0,
     "autoCaptureFailedRequests": 0
+  },
+  "publishExecutionSummary": {
+    "executionId": "release_publish_20260428130000000",
+    "recordedAt": "2026-04-28T13:00:00.000Z",
+    "status": "confirmation-required",
+    "executionMode": "manifest-recorded-skeleton",
+    "publishAttempted": false,
+    "publishSucceeded": false,
+    "wouldExecuteCommand": "npm publish --registry \"https://registry.npmjs.org/\"",
+    "commandFlags": {
+      "confirm": false,
+      "acknowledgeWarnings": false
+    },
+    "plannerStatus": "eligible",
+    "plannerBlockerCount": 0,
+    "plannerBlockers": [],
+    "releaseGateStatus": "pass",
+    "requiresExplicitAcknowledgement": false,
+    "failureSummaryPresent": true,
+    "failurePrimaryReason": "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+    "recordPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-publish-record.json",
+    "recordPathRelative": "manifest/release-publish-record.json",
+    "historicalRecordPath": "",
+    "historicalRecordPathRelative": "",
+    "failureSummaryPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-publish-failure-summary.md",
+    "failureSummaryPathRelative": "manifest/release-publish-failure-summary.md"
   }
 }

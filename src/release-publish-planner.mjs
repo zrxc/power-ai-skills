@@ -212,6 +212,7 @@ function buildEvidence({
     version: normalizeText(packageJson.version),
     targetPublish,
     publishReadiness,
+    publishExecutionSummary: versionRecord?.publishExecutionSummary || null,
     manifestRoot: normalizePosixPath(path.relative(packageRoot, releaseManifestDir)),
     artifacts: {
       automationReportPath: normalizePosixPath(path.relative(packageRoot, paths.automationReportPath)),

@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（82）
+### project 命令（83）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -103,6 +103,7 @@
 | `plan-wrapper-registrations` | `planWrapperRegistrationsCommand` | `cwd` |
 | `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
 | `plan-release-publish` | `planReleasePublishCommand` | `cwd` |
+| `execute-release-publish` | `executeReleasePublishCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
 | `validate-evolution-policy` | `validateEvolutionPolicyCommand` | `cwd` |
@@ -181,6 +182,7 @@ pnpm clean:release-artifacts
 
 说明：
 - `pnpm refresh:release-artifacts` 会更新当前版本产物，并维护 `manifest/version-record.json`。
+- `manifest/version-record.json` 现在除了 release artifact 路径和 `governanceSummary` 之外，也会复用最新的 controlled publish execution 快照：包括 `releasePublishRecordPath`、可选的 `releasePublishFailureSummaryPath` 以及 `publishExecutionSummary`，供 `doctor` package-maintenance 和 `generate-upgrade-summary` 统一读取。
 - `pnpm clean:release-artifacts` 会保留最近 3 组通知载荷，把更旧记录归档到 `manifest/archive/notifications/`。
 
 查看工具注册表：
@@ -812,6 +814,7 @@ npx power-ai-skills generate-upgrade-summary --json
 - `generate-upgrade-summary` 会统一汇总当前环境下已有的治理产物，并同时落盘 markdown/json 摘要。
 - 在消费项目中，摘要默认写到 `.power-ai/reports/upgrade-summary.md` 和 `.power-ai/reports/upgrade-summary.json`，重点汇总 `doctor`、`project-scan`、`conversation-miner` 和 `wrapper promotion audit`。
 - 在仓库根目录运行并进入 `package-maintenance` 模式时，摘要会写到 `manifest/upgrade-summary.md` 和 `manifest/upgrade-summary.json`，并额外汇总 `impact-report.json`、`upgrade-risk-report.json`、`automation-report.json`、`version-record.json` 与最新 notification payload。
+- 如果已经运行过 `execute-release-publish`，package-maintenance 模式下的升级摘要还会带出最新的 `manifest/release-publish-record.json` 状态，以及对应的 `manifest/release-publish-failure-summary.md` 路径，方便维护者直接看到最近一次受控执行卡在哪个闸口。
 - 命令会复用并刷新 `doctor` 报告与 `wrapper-promotion-audit` 报告，可作为团队升级治理的单份入口报告。
 
 ## 1.4.4 Project baseline check
@@ -861,9 +864,26 @@ npx power-ai-skills plan-release-publish --json
 - `plan-release-publish` 只在仓库根目录的 `package-maintenance` 模式下可用，用来对当前版本做发布资格 dry-run，不会执行真实 `npm publish`。
 - 资格判定会同时读取 `manifest/automation-report.json`、`manifest/version-record.json`、`manifest/release-gate-report.json`、`manifest/governance-operations-report.json`、`manifest/upgrade-advice-package.json` 和最新 notification payload。
 - 返回结果会显式区分 `eligible` / `blocked`，并给出 `blockers`、`targetPublish`、artifact evidence、版本比对结果以及建议的人工确认链路。
+- 如果 `manifest/version-record.json` 里已经带有 `publishExecutionSummary`，planner 也会把这份最近一次 controlled publish execution snapshot 回显到 evidence 里，方便把 dry-run 资格和最近执行闸口放在一起看；这份 snapshot 当前只作为辅助证据，不直接改变 `eligible / blocked` 判定。
 - `targetPublish` 第一版固定从 `package.json` 读取 `name`、`version` 和 `publishConfig.registry`；如果缺少 registry，planner 会直接阻断，而不是猜测发布目标。
 - `manualConfirmation` 只会输出建议顺序：`pnpm refresh:release-artifacts`、`pnpm release:validate`、`pnpm release:check`、`pnpm release:generate` 和最终的 `npm publish` 命令，真实发版仍然需要维护者手动执行。
 - 当 release gate 只有 `warn` 而没有 blocking issue 时，planner 仍可返回 `eligible`，但会在 `manualConfirmation.notes` 里要求显式 acknowledgement，避免把 warning 版本误当成“完全无风险自动发布”。
+
+## 1.4.7 Release publish execution skeleton
+
+```bash
+npx power-ai-skills execute-release-publish --json
+npx power-ai-skills execute-release-publish --confirm --json
+npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json
+```
+
+- `execute-release-publish` 当前还是受控骨架，不会真正执行 `npm publish`；这一层的目标是先固定命令 contract、二次资格校验和确认闸口。
+- 命令每次都会重新运行最新的 release planner，而不是直接复用上一次 `plan-release-publish` 的结果，避免拿过期 artifact 快照去做真实发布决策。
+- 如果 planner 已经 `blocked`，执行命令会直接返回 `blocked`；如果 planner 通过但没有 `--confirm`，则返回 `confirmation-required`。
+- 如果 release gate 是 `warn`，即使 planner 仍然 `eligible`，执行层也会要求显式 `--acknowledge-warnings`，否则返回 `acknowledgement-required`。
+- 当前第一版通过所有二次校验后只会返回 `ready-to-execute`，并给出 would-run 的 publish 命令；真实 `npm publish` 还没有在这一层启用。
+- 每次执行都会刷新 `manifest/release-publish-record.json`，并追加一份带时间戳的历史记录到 `manifest/release-publish-records/`，至少沉淀 package、version、target registry、执行时间、planner 摘要与最终状态。
+- 当状态不是 `ready-to-execute` 时，还会额外写出 `manifest/release-publish-failure-summary.md`，把当前失败原因和下一步人工动作固定下来；如果后续执行恢复到 `ready-to-execute`，这份失败摘要会被清理。
 
 ## 1.4.4 Conversation miner strategy template
 

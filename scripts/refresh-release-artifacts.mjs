@@ -31,6 +31,8 @@ const promotionTraceMarkdownPath = path.join(manifestDir, "promotion-trace-repor
 const governanceOperationsReportPath = path.join(manifestDir, "governance-operations-report.json");
 const governanceOperationsMarkdownPath = path.join(manifestDir, "governance-operations-report.md");
 const versionRecordPath = path.join(manifestDir, "version-record.json");
+const releasePublishRecordPath = path.join(manifestDir, "release-publish-record.json");
+const releasePublishFailureSummaryPath = path.join(manifestDir, "release-publish-failure-summary.md");
 
 const scripts = {
   buildManifest: path.join(root, "scripts", "build-manifest.mjs"),
@@ -165,13 +167,49 @@ function collectGovernanceSummary(artifacts) {
   };
 }
 
+function collectPublishExecutionSummary(artifacts) {
+  const publishRecordPath = artifacts.releasePublishRecordPath || releasePublishRecordPath;
+  if (!publishRecordPath || !fs.existsSync(publishRecordPath)) {
+    return null;
+  }
+
+  const publishRecord = readJson(publishRecordPath);
+  return {
+    executionId: publishRecord.executionId || "",
+    recordedAt: publishRecord.recordedAt || "",
+    status: publishRecord.status || "unknown",
+    executionMode: publishRecord.executionMode || "",
+    publishAttempted: Boolean(publishRecord.publishAttempted),
+    publishSucceeded: Boolean(publishRecord.publishSucceeded),
+    wouldExecuteCommand: publishRecord.wouldExecuteCommand || "",
+    commandFlags: {
+      confirm: Boolean(publishRecord.commandFlags?.confirm),
+      acknowledgeWarnings: Boolean(publishRecord.commandFlags?.acknowledgeWarnings)
+    },
+    plannerStatus: publishRecord.plannerSummary?.status || "unknown",
+    plannerBlockerCount: publishRecord.plannerSummary?.blockerCount || 0,
+    plannerBlockers: publishRecord.plannerSummary?.blockers || [],
+    releaseGateStatus: publishRecord.plannerSummary?.publishReadiness?.releaseGateStatus || "",
+    requiresExplicitAcknowledgement: Boolean(publishRecord.plannerSummary?.publishReadiness?.requiresExplicitAcknowledgement),
+    failureSummaryPresent: Boolean(publishRecord.failureSummary?.present),
+    failurePrimaryReason: publishRecord.failureSummary?.primaryReason || "",
+    recordPath: publishRecord.recordPath || publishRecordPath,
+    recordPathRelative: publishRecord.recordPathRelative || "manifest/release-publish-record.json",
+    historicalRecordPath: publishRecord.historicalRecordPath || "",
+    historicalRecordPathRelative: publishRecord.historicalRecordPathRelative || "",
+    failureSummaryPath: publishRecord.failureSummary?.summaryPath || publishRecord.failureSummaryPath || "",
+    failureSummaryPathRelative: publishRecord.failureSummary?.summaryPathRelative || publishRecord.failureSummaryPathRelative || ""
+  };
+}
+
 function writeVersionRecord(artifacts) {
   writeJson(versionRecordPath, {
     packageName: packageJson.name,
     version: packageJson.version,
     recordedAt: new Date().toISOString(),
     artifacts,
-    governanceSummary: collectGovernanceSummary(artifacts)
+    governanceSummary: collectGovernanceSummary(artifacts),
+    publishExecutionSummary: collectPublishExecutionSummary(artifacts)
   });
 }
 
@@ -250,6 +288,16 @@ const versionArtifacts = {
   releaseNotesPath: path.join(manifestDir, `release-notes-${packageJson.version}.md`),
   versionRecordPath
 };
+
+if (fs.existsSync(releasePublishRecordPath)) {
+  versionArtifacts.releasePublishRecordPath = releasePublishRecordPath;
+  refreshedArtifacts.push(path.relative(root, releasePublishRecordPath));
+}
+
+if (fs.existsSync(releasePublishFailureSummaryPath)) {
+  versionArtifacts.releasePublishFailureSummaryPath = releasePublishFailureSummaryPath;
+  refreshedArtifacts.push(path.relative(root, releasePublishFailureSummaryPath));
+}
 
 if (hasChangedFiles()) {
   runNodeScript(scripts.upgradeAutomation, [

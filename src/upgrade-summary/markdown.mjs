@@ -82,6 +82,15 @@ export function buildRecommendedActions({ doctorReport, projectScan, conversatio
     if ((release.compatibilityMatrix?.failedScenarioCount || 0) > 0) {
       actions.push("Investigate failed consumer compatibility matrix scenarios before promoting the current release as broadly compatible.");
     }
+    if (release.publishExecution?.status === "blocked") {
+      actions.push("Resolve the latest controlled release publish blockers recorded in `manifest/release-publish-record.json` before treating the release as execution-ready.");
+    }
+    if (release.publishExecution?.status === "confirmation-required") {
+      actions.push("After reviewing the latest planner evidence, re-run `npx power-ai-skills execute-release-publish --confirm --json` to advance the controlled publish gate.");
+    }
+    if (release.publishExecution?.status === "acknowledgement-required") {
+      actions.push("If the warn-level release snapshot is acceptable, re-run `npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json` after manual review.");
+    }
   }
 
   return [...new Set(actions)];
@@ -250,6 +259,17 @@ export function buildUpgradeSummaryMarkdown(payload) {
       lines.push(`- upgrade advice consumer commands: ${payload.release.upgradeAdvice.consumerCommandCount}`);
       lines.push(`- upgrade advice manual checks: ${payload.release.upgradeAdvice.manualCheckCount}`);
       lines.push(`- upgrade advice package: \`${payload.release.upgradeAdvice.jsonPath}\``);
+    }
+    if (payload.release.publishExecution) {
+      lines.push(`- publish execution status: \`${payload.release.publishExecution.status}\``);
+      lines.push(`- publish execution planner status: \`${payload.release.publishExecution.plannerStatus}\``);
+      lines.push(`- publish execution attempted: ${payload.release.publishExecution.publishAttempted}`);
+      lines.push(`- publish execution requires acknowledgement: ${payload.release.publishExecution.requiresExplicitAcknowledgement}`);
+      lines.push(`- publish execution record: \`${payload.release.publishExecution.recordPath}\``);
+      if (payload.release.publishExecution.failureSummaryPresent) {
+        lines.push(`- publish execution failure summary: \`${payload.release.publishExecution.failureSummaryPath}\``);
+        lines.push(`- publish execution reason: ${payload.release.publishExecution.failurePrimaryReason || "unknown"}`);
+      }
     }
     if (payload.release.consumerVerification?.skipped) {
       lines.push(`- consumer verification: skipped (${payload.release.consumerVerification.reason || "no reason"})`);

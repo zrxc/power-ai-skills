@@ -147,6 +147,8 @@ function validateVersionRecord(filePath) {
     "upgradeAdvicePackagePath",
     "upgradeAdvicePackageMarkdownPath",
     "automationReportPath",
+    "releasePublishRecordPath",
+    "releasePublishFailureSummaryPath",
     "notificationJsonPath",
     "notificationMarkdownPath"
   ];

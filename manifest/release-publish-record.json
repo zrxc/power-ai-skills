@@ -1,0 +1,40 @@
+{
+  "executionId": "release_publish_20260428130000000",
+  "recordedAt": "2026-04-28T13:00:00.000Z",
+  "packageName": "@power/power-ai-skills",
+  "version": "1.4.7",
+  "packageRoot": "D:\\webCode\\个人\\power-ai-skills",
+  "projectRoot": "D:\\webCode\\个人\\power-ai-skills",
+  "status": "confirmation-required",
+  "executionMode": "manifest-recorded-skeleton",
+  "publishAttempted": false,
+  "publishSucceeded": false,
+  "wouldExecuteCommand": "npm publish --registry \"https://registry.npmjs.org/\"",
+  "commandFlags": {
+    "confirm": false,
+    "acknowledgeWarnings": false
+  },
+  "plannerSummary": {
+    "status": "eligible",
+    "blockerCount": 0,
+    "blockers": [],
+    "publishReadiness": {
+      "releaseGateStatus": "pass",
+      "warningGates": 0,
+      "blockingIssues": 0,
+      "canPublish": true,
+      "broadRolloutReady": true,
+      "requiresExplicitAcknowledgement": false
+    }
+  },
+  "blockers": [],
+  "notes": [
+    "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided."
+  ],
+  "failureSummary": {
+    "present": true,
+    "primaryReason": "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+    "summaryPath": "D:\\webCode\\个人\\power-ai-skills\\manifest\\release-publish-failure-summary.md",
+    "summaryPathRelative": "manifest/release-publish-failure-summary.md"
+  }
+}

@@ -14,10 +14,12 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
   const automationReportPath = path.join(releaseManifestDir, "automation-report.json");
   const releaseGateReportPath = path.join(releaseManifestDir, "release-gate-report.json");
   const upgradeAdvicePackagePath = path.join(releaseManifestDir, "upgrade-advice-package.json");
+  const releasePublishRecordPath = path.join(releaseManifestDir, "release-publish-record.json");
   const releaseNotesPath = path.join(releaseManifestDir, `release-notes-${context.packageJson.version}.md`);
 
   const versionRecord = fs.existsSync(versionRecordPath) ? readJson(versionRecordPath) : null;
   const releaseGateReport = fs.existsSync(releaseGateReportPath) ? readJson(releaseGateReportPath) : null;
+  const releasePublishRecord = fs.existsSync(releasePublishRecordPath) ? readJson(releasePublishRecordPath) : null;
   const notificationJsonPath = versionRecord?.artifacts?.notificationJsonPath || "";
   const notificationMarkdownPath = versionRecord?.artifacts?.notificationMarkdownPath || "";
   const recordedNotificationOk = Boolean(notificationJsonPath)
@@ -25,6 +27,12 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
     && fs.existsSync(notificationJsonPath)
     && fs.existsSync(notificationMarkdownPath);
   const governanceSummary = versionRecord?.governanceSummary || null;
+  const publishExecutionSummary = versionRecord?.publishExecutionSummary || null;
+  const controlledPublishGatePendingStatuses = new Set(["blocked", "confirmation-required", "acknowledgement-required"]);
+  const controlledPublishSnapshot = publishExecutionSummary || releasePublishRecord;
+  const controlledPublishGatePending = controlledPublishSnapshot
+    ? controlledPublishGatePendingStatuses.has(controlledPublishSnapshot.status)
+    : false;
 
   const consistencyScriptPath = path.join(context.packageRoot, "scripts", "check-release-consistency.mjs");
   const releaseGateScriptPath = path.join(context.packageRoot, "scripts", "check-release-gates.mjs");
@@ -187,6 +195,32 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
       },
       "release",
       "Review manifest/release-gate-report.json and decide whether the remaining governance warnings are acceptable before publication.",
+      "warning"
+    ),
+    createCheck(
+      "PAI-RELEASE-013",
+      "latest controlled publish execution is not waiting on a manual gate",
+      !controlledPublishGatePending,
+      controlledPublishSnapshot ? {
+        executionId: controlledPublishSnapshot.executionId || "",
+        recordedAt: controlledPublishSnapshot.recordedAt || "",
+        status: controlledPublishSnapshot.status || "unknown",
+        plannerStatus: controlledPublishSnapshot.plannerStatus || controlledPublishSnapshot.plannerSummary?.status || "unknown",
+        publishAttempted: Boolean(controlledPublishSnapshot.publishAttempted),
+        publishSucceeded: Boolean(controlledPublishSnapshot.publishSucceeded),
+        failureSummaryPresent: Boolean(controlledPublishSnapshot.failureSummaryPresent ?? controlledPublishSnapshot.failureSummary?.present),
+        failureSummaryPath: controlledPublishSnapshot.failureSummaryPath || controlledPublishSnapshot.failureSummary?.summaryPath || "",
+        failurePrimaryReason: controlledPublishSnapshot.failurePrimaryReason || controlledPublishSnapshot.failureSummary?.primaryReason || "",
+        wouldExecuteCommand: controlledPublishSnapshot.wouldExecuteCommand || "",
+        confirm: Boolean(controlledPublishSnapshot.commandFlags?.confirm),
+        acknowledgeWarnings: Boolean(controlledPublishSnapshot.commandFlags?.acknowledgeWarnings),
+        recordPath: controlledPublishSnapshot.recordPath || versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath
+      } : {
+        status: "not-started",
+        recordPath: path.relative(context.packageRoot, versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath)
+      },
+      "release",
+      "If the latest controlled publish execution is still gated, re-run `npx power-ai-skills execute-release-publish --json` with the required confirmation flags after reviewing manifest/release-publish-record.json and manifest/release-publish-failure-summary.md.",
       "warning"
     )
   ];

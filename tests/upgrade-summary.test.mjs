@@ -391,6 +391,89 @@ function createTempManifestSnapshot(t) {
     "# Upgrade Advice Package\n\n- blocked: false\n",
     "utf8"
   );
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-publish-record.json"),
+    `${JSON.stringify({
+      executionId: "release_publish_20260428121000000",
+      recordedAt: "2026-04-28T12:10:00.000Z",
+      packageName: "@power/power-ai-skills",
+      version,
+      packageRoot: root,
+      projectRoot: root,
+      status: "confirmation-required",
+      executionMode: "manifest-recorded-skeleton",
+      publishAttempted: false,
+      publishSucceeded: false,
+      wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
+      commandFlags: {
+        confirm: false,
+        acknowledgeWarnings: false
+      },
+      targetPublish: {
+        packageName: "@power/power-ai-skills",
+        version,
+        registryUrl: "https://registry.npmjs.org/",
+        access: "public",
+        tag: "latest",
+        publishCommand: "npm publish --registry \"https://registry.npmjs.org/\""
+      },
+      plannerSummary: {
+        status: "eligible",
+        blockerCount: 0,
+        blockers: [],
+        publishReadiness: {
+          releaseGateStatus: "pass",
+          warningGates: 0,
+          blockingIssues: 0,
+          canPublish: true,
+          broadRolloutReady: true,
+          requiresExplicitAcknowledgement: false
+        },
+        artifacts: {
+          releaseGateReportPath: "manifest/release-gate-report.json"
+        }
+      },
+      blockers: [],
+      notes: [
+        "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided."
+      ],
+      manualConfirmation: {
+        mode: "package-maintainer-manual",
+        commands: [
+          "pnpm refresh:release-artifacts",
+          "pnpm release:validate",
+          "pnpm release:check",
+          "pnpm release:generate",
+          "npm publish --registry \"https://registry.npmjs.org/\""
+        ],
+        publishCommand: "npm publish --registry \"https://registry.npmjs.org/\""
+      },
+      recordPath: path.join(manifestRoot, "release-publish-record.json"),
+      recordPathRelative: "manifest/release-publish-record.json",
+      historicalRecordPath: path.join(manifestRoot, "release-publish-records", "release_publish_20260428121000000.json"),
+      historicalRecordPathRelative: "manifest/release-publish-records/release_publish_20260428121000000.json",
+      failureSummaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
+      failureSummaryPathRelative: "manifest/release-publish-failure-summary.md",
+      failureSummary: {
+        present: true,
+        primaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+        summaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
+        summaryPathRelative: "manifest/release-publish-failure-summary.md"
+      }
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  fs.mkdirSync(path.join(manifestRoot, "release-publish-records"), { recursive: true });
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-publish-records", "release_publish_20260428121000000.json"),
+    "{\n  \"status\": \"confirmation-required\"\n}\n",
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-publish-failure-summary.md"),
+    "# Release Publish Failure Summary\n\n- status: `confirmation-required`\n",
+    "utf8"
+  );
   t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
   return manifestRoot;
 }
@@ -700,6 +783,11 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(payload.release.releaseGates.overallStatus, "pass");
   assert.equal(payload.release.upgradeAdvice.consumerCommandCount, 2);
   assert.equal(payload.release.upgradeAdvice.blocked, false);
+  assert.equal(payload.release.publishExecution.status, "confirmation-required");
+  assert.equal(payload.release.publishExecution.publishAttempted, false);
+  assert.equal(payload.release.publishExecution.failureSummaryPresent, true);
+  assert.equal(payload.release.publishExecution.recordPath, path.join(manifestRoot, "release-publish-record.json"));
+  assert.equal(payload.release.publishExecution.failureSummaryPath, path.join(manifestRoot, "release-publish-failure-summary.md"));
   assert.equal(payload.release.changedFileCount >= 1, true);
   assert.equal(payload.reportPath, path.join(manifestRoot, "upgrade-summary.md"));
   assert.equal(payload.jsonPath, path.join(manifestRoot, "upgrade-summary.json"));
@@ -721,4 +809,9 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(savedJson.release.compatibilityMatrix.scenarioCount, 1);
   assert.equal(savedJson.release.releaseGates.overallStatus, "pass");
   assert.equal(savedJson.release.upgradeAdvice.consumerCommandCount, 2);
+  assert.equal(savedJson.release.publishExecution.status, "confirmation-required");
+  assert.equal(savedJson.release.publishExecution.failureSummaryPresent, true);
+  assert.equal(markdown.includes("publish execution status: `confirmation-required`"), true);
+  assert.equal(markdown.includes("publish execution failure summary"), true);
+  assert.equal(payload.recommendedActions.some((item) => item.includes("execute-release-publish --confirm --json")), true);
 });
