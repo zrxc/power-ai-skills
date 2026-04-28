@@ -10,6 +10,7 @@
 import {
   formatGenerateUpgradeSummaryMessage,
   formatPlanReleasePublishMessage,
+  formatPlanReleaseOrchestrationMessage,
   formatExecuteReleasePublishMessage,
   formatGenerateGovernanceSummaryMessage,
   formatShowGovernanceHistoryMessage
@@ -22,6 +23,7 @@ import {
  * @param {Object} params.selectionService - 选择服务
  * @param {Object} params.upgradeSummaryService - 升级摘要服务
  * @param {Object} params.releasePublishPlannerService - 发布规划服务
+ * @param {Object} params.releaseOrchestrationPlannerService - 发布编排规划服务
  * @param {Object} params.releasePublishExecutorService - 发布执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
@@ -32,6 +34,7 @@ export function createReportCommands({
   selectionService,
   upgradeSummaryService,
   releasePublishPlannerService,
+  releaseOrchestrationPlannerService,
   releasePublishExecutorService,
   governanceSummaryService,
   governanceHistoryService
@@ -86,6 +89,12 @@ export function createReportCommands({
     console.log(formatPlanReleasePublishMessage(result));
   }
 
+  function planReleaseOrchestrationCommand() {
+    const result = releaseOrchestrationPlannerService.planReleaseOrchestration();
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanReleaseOrchestrationMessage(result));
+  }
+
   /**
    * 受控执行发布命令骨架 - 执行前必须重新做资格判定和确认闸口
    */
@@ -123,6 +132,7 @@ export function createReportCommands({
   return {
     generateUpgradeSummaryCommand,
     planReleasePublishCommand,
+    planReleaseOrchestrationCommand,
     executeReleasePublishCommand,
     generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand

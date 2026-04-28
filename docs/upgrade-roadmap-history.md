@@ -1877,3 +1877,52 @@ pnpm release:prepare
 结论：
 
 - `P6-4` 已按原阶段定义收口；下一阶段应进入“release 受控执行第一版”，而不是继续停留在 dry-run 资格判定讨论，或直接跳到无人值守自动 publish。
+
+## 1.4.7 / P6-5 release 受控执行第一版
+
+阶段目标：
+
+- 在 `P6-4` 已完成 release publish dry-run planner 的基础上，进入“真实执行但仍保留显式人工确认”的下一层，而不是直接跳到无人值守自动 publish。
+- 让发布动作从“手工照着 planner 输出敲命令”升级为“受控 CLI 执行入口”，仍要求 package root、实时复核和显式确认，不能绕过现有 release 治理闸口。
+- 明确 `plan-release-publish`、实时 artifact 复核、最终 `npm publish` 执行与 publish 结果记录之间的状态边界，避免后续把 dry-run 结果当成已完成发版。
+- 保持现有 `release:prepare`、`release:check`、`upgrade:advice`、`upgrade:payload`、`governance:operations`、package-maintenance `doctor` 与 manifest 产物语义稳定，不在这一阶段引入无人值守定时发版。
+
+已完成：
+
+- 已新增 `src/release-publish-guidance.mjs`，统一承接 planner / executor 的 `nextAction` 和命令建议拼装。
+- 已新增 `execute-release-publish [--confirm] [--acknowledge-warnings] --json` 受控入口，并固定：
+  - 只能在 package-maintenance 模式和 package root 下运行
+  - 每次执行前重新运行最新 planner，而不是复用旧 dry-run 结果
+  - 缺少 `--confirm` 时返回 `confirmation-required`
+  - warn-level release readiness 缺少 `--acknowledge-warnings` 时返回 `acknowledgement-required`
+- 已把 `manifest/release-publish-record.json`、`manifest/release-publish-records/`、`manifest/release-publish-failure-summary.md`、`manifest/version-record.json.publishExecutionSummary` 收口为统一 publish record contract，并补充：
+  - `nextAction`
+  - `realPublishEnabled`
+  - `publishResult`
+  - 成功 / 失败后对 failure summary 的清理或保留规则
+- 已先以 skeleton 方式固化执行 contract，再把真实 publish 接入同一 contract：
+  - 受控闸口通过后会真正执行 `npm publish`
+  - 成功时状态为 `published`
+  - 失败时状态为 `publish-failed`
+  - publish 尝试结果会记录 `exitCode`、stdout/stderr 摘要和错误消息
+- 已把 `doctor`、upgrade summary、CLI 文本输出、refresh-release-artifacts 对 `publishExecutionSummary` 的读取逻辑全部同步到真实 publish 语义。
+- 已同步更新 `docs/command-manual.md`、`docs/maintenance-guide.md`、`docs/release-process.md`、`docs/doctor-error-codes.md`、`docs/upgrade-roadmap.md`，收口：
+  - 受控执行与无人值守自动 publish 的边界
+  - `published / publish-failed` 状态语义
+  - 维护者在真实 publish 前后的操作顺序
+- 已补充自动化测试，覆盖：
+  - planner 的 `nextAction` 输出
+  - executor 的确认闸口 / warn acknowledgement / 真正 publish 成功 / 真正 publish 失败
+  - refresh-release-artifacts 对 publishExecutionSummary 的保真回写
+  - doctor / upgrade summary 对真实 publish 状态的摘要
+- `pnpm ci:check` 已完整通过。
+
+阶段收口判断：
+
+- release 已从“纯手工照命令执行”升级为“有受控 CLI 入口、带显式确认和执行前复核”的第一版真实执行链路。
+- planner、执行前复核、真实 publish 与结果记录之间的职责已经被写清楚，不会再把 dry-run 输出误当成真实发版完成。
+- 当前 record contract、doctor、upgrade summary、release-process 文档和维护入口已经对齐，为后续更进一步的发布编排提供稳定基础。
+
+结论：
+
+- `P6-5` 已按原阶段定义收口；下一阶段应进入“自动发布编排”，讨论如何在不丢失当前人工边界和治理闸口的前提下，编排更完整的 release 自动化，而不是回退到单点执行 contract 的细节修补。

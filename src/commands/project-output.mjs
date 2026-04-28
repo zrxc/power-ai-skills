@@ -218,6 +218,12 @@ export function formatExecuteReleasePublishMessage(result) {
   return `Release publish execution: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, confirm: ${result.commandFlags.confirm}, acknowledgeWarnings: ${result.commandFlags.acknowledgeWarnings}, publishAttempted: ${result.publishAttempted}, record: ${recordLabel}, failure summary: ${failureSummaryLabel}, ${nextActionSummary}. Next command target: \`${result.wouldExecuteCommand}\`.`;
 }
 
+export function formatPlanReleaseOrchestrationMessage(result) {
+  const stageSummary = result.stages.map((item) => `${item.id}:${item.status}`).join(", ") || "none";
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release orchestration plan: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], blockers: ${result.blockers.length}, ${nextActionSummary}. Controlled publish remains anchored on \`execute-release-publish\`; this planner is dry-run only.`;
+}
+
 export function formatGenerateGovernanceSummaryMessage(result) {
   return `Generated governance summary: ${result.reportPath}, status: ${result.status}, overdue reviews: ${result.summary.overdueGovernanceReviews}, pending conversation reviews: ${result.summary.pendingConversationReviews}, pending wrapper proposals: ${result.summary.pendingWrapperProposals}.`;
 }

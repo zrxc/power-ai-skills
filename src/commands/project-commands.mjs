@@ -33,6 +33,7 @@ import { createReportCommands } from "./report-commands.mjs";
  * @param {Object} params.conversationMinerService - 对话挖掘服务
  * @param {Object} params.upgradeSummaryService - 升级摘要服务
  * @param {Object} params.releasePublishPlannerService - 发布规划服务
+ * @param {Object} params.releaseOrchestrationPlannerService - 发布编排规划服务
  * @param {Object} params.releasePublishExecutorService - 发布执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
@@ -52,6 +53,7 @@ export function createProjectCommands({
   conversationMinerService,
   upgradeSummaryService,
   releasePublishPlannerService,
+  releaseOrchestrationPlannerService,
   releasePublishExecutorService,
   governanceSummaryService,
   governanceHistoryService,
@@ -114,6 +116,7 @@ export function createProjectCommands({
     selectionService,
     upgradeSummaryService,
     releasePublishPlannerService,
+    releaseOrchestrationPlannerService,
     releasePublishExecutorService,
     governanceSummaryService,
     governanceHistoryService
@@ -213,6 +216,7 @@ export function createProjectCommands({
     // 报告命令
     generateUpgradeSummaryCommand: reportCommands.generateUpgradeSummaryCommand,
     planReleasePublishCommand: reportCommands.planReleasePublishCommand,
+    planReleaseOrchestrationCommand: reportCommands.planReleaseOrchestrationCommand,
     executeReleasePublishCommand: reportCommands.executeReleasePublishCommand,
     generateGovernanceSummaryCommand: reportCommands.generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand: reportCommands.showGovernanceHistoryCommand

@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（83）
+### project 命令（84）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -103,6 +103,7 @@
 | `plan-wrapper-registrations` | `planWrapperRegistrationsCommand` | `cwd` |
 | `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
 | `plan-release-publish` | `planReleasePublishCommand` | `cwd` |
+| `plan-release-orchestration` | `planReleaseOrchestrationCommand` | `cwd` |
 | `execute-release-publish` | `executeReleasePublishCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
@@ -870,6 +871,18 @@ npx power-ai-skills plan-release-publish --json
 - `targetPublish` 第一版固定从 `package.json` 读取 `name`、`version` 和 `publishConfig.registry`；如果缺少 registry，planner 会直接阻断，而不是猜测发布目标。
 - `manualConfirmation` 只会输出建议顺序：`pnpm refresh:release-artifacts`、`pnpm release:validate`、`pnpm release:check`、`pnpm release:generate` 和最终的 `npm publish` 命令，真实发版仍然需要维护者手动执行。
 - 当 release gate 只有 `warn` 而没有 blocking issue 时，planner 仍可返回 `eligible`，但会在 `manualConfirmation.notes` 里要求显式 acknowledgement，避免把 warning 版本误当成“完全无风险自动发布”。
+
+## 1.4.7 Release orchestration planning
+
+```bash
+npx power-ai-skills plan-release-orchestration --json
+```
+
+- `plan-release-orchestration` 是当前自动发布编排第一版的 dry-run 入口，只会输出编排阶段模型、阻断点、人工确认闸口和建议下一步，不会真正执行任何 release 步骤。
+- 第一版 stage model 固定分为四段：`prepare-release-artifacts`、`plan-controlled-publish`、`execute-controlled-publish`、`post-publish-follow-up`。
+- 这个 planner 会复用当前 `plan-release-publish` 的证据和 `publishExecutionSummary`，而不是另起一套 release 状态模型。
+- 如果最新真实 publish 已成功，编排状态会进入 `published-awaiting-follow-up`；如果最新真实 publish 已失败，则会显式回到 `blocked` 并要求先复核 `release-publish-record.json`。
+- 当前第一版的编排 contract 仍是 `dry-run-plan-only`，真实执行仍锚定在 `execute-release-publish`。
 
 ## 1.4.7 Release publish execution skeleton
 

@@ -10,6 +10,7 @@ import { createProjectBaselineService } from "../project-baseline/index.mjs";
 import { createProjectScanService } from "../project-scan/index.mjs";
 import { createPromotionTraceService } from "../promotion-trace/index.mjs";
 import { createReleasePublishExecutorService } from "../release-publish-executor.mjs";
+import { createReleaseOrchestrationPlannerService } from "../release-orchestration-planner.mjs";
 import { createReleasePublishPlannerService } from "../release-publish-planner.mjs";
 import { createRenderingService } from "../rendering/index.mjs";
 import { createSelectionService, parseCliArgs, resolveProjectRoot } from "../selection/index.mjs";
@@ -90,6 +91,11 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     context,
     projectRoot
   });
+  const releaseOrchestrationPlannerService = createReleaseOrchestrationPlannerService({
+    context,
+    projectRoot,
+    releasePublishPlannerService
+  });
   const releasePublishExecutorService = createReleasePublishExecutorService({
     context,
     projectRoot,
@@ -138,6 +144,7 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     projectBaselineService,
     upgradeSummaryService,
     releasePublishPlannerService,
+    releaseOrchestrationPlannerService,
     releasePublishExecutorService,
     governanceSummaryService,
     governanceHistoryService,
