@@ -119,6 +119,7 @@ test("planReleaseOrchestration returns a ready dry-run stage model for an eligib
   const result = service.planReleaseOrchestration();
 
   assert.equal(result.status, "ready-for-controlled-publish");
+  assert.equal(result.orchestrationContract.executionMode, "dry-run-plan-recorded");
   assert.equal(result.stages.length, 4);
   assert.equal(result.stages[0].id, "prepare-release-artifacts");
   assert.equal(result.stages[0].status, "completed");
@@ -128,7 +129,16 @@ test("planReleaseOrchestration returns a ready dry-run stage model for an eligib
   assert.equal(result.stages[2].status, "ready");
   assert.equal(result.stages[2].humanGate, true);
   assert.equal(result.nextAction.command, "npx power-ai-skills execute-release-publish --confirm --json");
-  assert.equal(result.orchestrationContract.executionMode, "dry-run-plan-only");
+  assert.equal(result.orchestrationManifestArtifacts.recordPathRelative, "manifest/release-orchestration-record.json");
+  assert.equal(fs.existsSync(path.join(manifestDir, "release-orchestration-record.json")), true);
+  assert.equal(fs.existsSync(result.orchestrationManifestArtifacts.historicalRecordPath), true);
+  const orchestrationRecord = JSON.parse(fs.readFileSync(path.join(manifestDir, "release-orchestration-record.json"), "utf8"));
+  assert.equal(orchestrationRecord.status, "ready-for-controlled-publish");
+  assert.equal(orchestrationRecord.executionMode, "dry-run-plan-recorded");
+  const versionRecord = JSON.parse(fs.readFileSync(path.join(manifestDir, "version-record.json"), "utf8"));
+  assert.equal(versionRecord.artifacts.releaseOrchestrationRecordPath, path.join(manifestDir, "release-orchestration-record.json"));
+  assert.equal(versionRecord.releaseOrchestrationSummary.status, "ready-for-controlled-publish");
+  assert.equal(versionRecord.releaseOrchestrationSummary.recordPath, path.join(manifestDir, "release-orchestration-record.json"));
   assert.match(formatPlanReleaseOrchestrationMessage(result), /ready-for-controlled-publish/);
 });
 
@@ -146,6 +156,7 @@ test("planReleaseOrchestration blocks when required release artifacts are missin
   assert.equal(result.blockers.some((item) => item.code === "automation-report-missing"), true);
   assert.equal(result.nextAction.kind, "refresh-release-artifacts");
   assert.equal(result.nextAction.command, "pnpm refresh:release-artifacts");
+  assert.equal(fs.existsSync(path.join(manifestDir, "release-orchestration-record.json")), true);
 });
 
 test("planReleaseOrchestration treats a failed real publish as blocked follow-up work", (t) => {

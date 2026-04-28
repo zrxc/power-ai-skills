@@ -331,8 +331,13 @@ export function collectReleaseSection(context, doctorReport) {
   const releasePublishRecord = readJsonIfExists(
     versionRecord?.artifacts?.releasePublishRecordPath || path.join(manifestRoot, "release-publish-record.json")
   );
+  const releaseOrchestrationRecord = readJsonIfExists(
+    versionRecord?.artifacts?.releaseOrchestrationRecordPath || path.join(manifestRoot, "release-orchestration-record.json")
+  );
   const publishExecutionSummary = versionRecord?.publishExecutionSummary || null;
+  const releaseOrchestrationSummary = versionRecord?.releaseOrchestrationSummary || null;
   const publishExecutionSnapshot = publishExecutionSummary || releasePublishRecord;
+  const releaseOrchestrationSnapshot = releaseOrchestrationSummary || releaseOrchestrationRecord;
   const releaseGroup = (doctorReport.checkGroups || []).find((group) => group.name === "release");
 
   return {
@@ -426,6 +431,29 @@ export function collectReleaseSection(context, doctorReport) {
       historyPath: publishExecutionSnapshot.historicalRecordPath || publishExecutionSnapshot.historyPath || "",
       failureSummaryPath: publishExecutionSnapshot.failureSummaryPath || publishExecutionSnapshot.failureSummary?.summaryPath || versionRecord?.artifacts?.releasePublishFailureSummaryPath || ""
     } : null,
+    orchestration: releaseOrchestrationSnapshot ? {
+      executionId: releaseOrchestrationSnapshot.executionId || "",
+      recordedAt: releaseOrchestrationSnapshot.recordedAt || "",
+      status: releaseOrchestrationSnapshot.status || "unknown",
+      executionMode: releaseOrchestrationSnapshot.executionMode || "",
+      stageModelVersion: releaseOrchestrationSnapshot.stageModelVersion || 1,
+      blockerCount: releaseOrchestrationSnapshot.blockerCount || (releaseOrchestrationSnapshot.blockers || []).length || 0,
+      humanGateCount: releaseOrchestrationSnapshot.humanGateCount || (releaseOrchestrationSnapshot.humanGates || []).length || 0,
+      stageCount: releaseOrchestrationSnapshot.stageCount || (releaseOrchestrationSnapshot.stages || []).length || 0,
+      stageStatuses: releaseOrchestrationSnapshot.stageStatuses || (releaseOrchestrationSnapshot.stages || []).map((stage) => ({
+        id: stage.id || "",
+        kind: stage.kind || "",
+        status: stage.status || "unknown",
+        humanGate: Boolean(stage.humanGate)
+      })),
+      releasePublishPlanStatus: releaseOrchestrationSnapshot.releasePublishPlanStatus || releaseOrchestrationSnapshot.evidence?.releasePublishPlanStatus || "unknown",
+      latestPublishExecutionStatus: releaseOrchestrationSnapshot.latestPublishExecutionStatus || releaseOrchestrationSnapshot.evidence?.latestPublishExecutionStatus || "not-started",
+      nextAction: releaseOrchestrationSnapshot.nextAction || null,
+      recordPath: releaseOrchestrationSnapshot.recordPath || versionRecord?.artifacts?.releaseOrchestrationRecordPath || path.join(manifestRoot, "release-orchestration-record.json"),
+      historyPath: releaseOrchestrationSnapshot.historicalRecordPath || "",
+      publishRecordPath: releaseOrchestrationSnapshot.publishRecordPath || releaseOrchestrationSnapshot.orchestrationContract?.publishRecordPath || versionRecord?.artifacts?.releasePublishRecordPath || path.join(manifestRoot, "release-publish-record.json"),
+      versionRecordPath: releaseOrchestrationSnapshot.versionRecordPath || releaseOrchestrationSnapshot.orchestrationContract?.versionRecordPath || path.join(manifestRoot, "version-record.json")
+    } : null,
     consumerVerification: automationReport?.consumerVerification || { skipped: true, reason: "not available" },
     notification: notificationPayload ? {
       title: notificationPayload.title || "",
@@ -444,6 +472,8 @@ export function collectReleaseSection(context, doctorReport) {
       releasePublishRecordPath: path.join(manifestRoot, "release-publish-record.json"),
       releasePublishRecordsRoot: path.join(manifestRoot, "release-publish-records"),
       releasePublishFailureSummaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
+      releaseOrchestrationRecordPath: path.join(manifestRoot, "release-orchestration-record.json"),
+      releaseOrchestrationRecordsRoot: path.join(manifestRoot, "release-orchestration-records"),
       doctorReportPath: doctorReport.reportPath,
       doctorJsonPath: doctorReport.jsonPath
     }

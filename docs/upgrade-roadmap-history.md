@@ -1926,3 +1926,44 @@ pnpm release:prepare
 结论：
 
 - `P6-5` 已按原阶段定义收口；下一阶段应进入“自动发布编排”，讨论如何在不丢失当前人工边界和治理闸口的前提下，编排更完整的 release 自动化，而不是回退到单点执行 contract 的细节修补。
+
+## 1.4.7 / P6-6 自动发布编排第一版
+
+阶段目标：
+
+- 在 `P6-5` 已完成受控 release publish 执行链路的基础上，开始规划“自动发布编排”这一更高层能力，而不是继续停留在单次执行命令 contract。
+- 把当前已经存在的 `release:prepare`、`plan-release-publish`、`execute-release-publish`、consumer compatibility、release gates、governance summary 和 notification 产物串成一条可编排的发布流水线，但仍保留治理闸口与人工确认边界。
+- 明确“受控执行单点命令”与“多步骤发布编排”的职责边界，避免后续为了追求自动化而重新打散现有 planner / executor / publish record contract。
+- 保持现有 package-maintenance `doctor`、upgrade summary、release artifacts 与 record contract 语义稳定，不在这一阶段直接引入无人值守定时发版。
+
+已完成：
+
+- 已设计自动发布编排第一版的 stage model，明确 `prepare / plan / publish / post-publish` 的阶段划分与状态流转。
+  - 当前已固定四段：`prepare-release-artifacts`、`plan-controlled-publish`、`execute-controlled-publish`、`post-publish-follow-up`
+  - 当前已明确主状态：`blocked`、`ready-for-controlled-publish`、`published-awaiting-follow-up`
+- 已增加编排级 dry-run / plan 入口，至少输出步骤清单、阻断原因、人工确认闸口和建议下一步。
+  - 已完成 `plan-release-orchestration [--json]`
+  - 已落盘 `manifest/release-orchestration-record.json` 与历史记录目录
+- 已明确编排级 record contract 与现有 `release-publish-record.json`、`version-record.json.publishExecutionSummary` 的关系，避免状态重复或语义冲突。
+  - 编排层权威快照：`manifest/release-orchestration-record.json`
+  - 版本记录回填：`manifest/version-record.json.releaseOrchestrationSummary`
+  - 真实 publish 权威记录仍是：`manifest/release-publish-record.json` / `manifest/version-record.json.publishExecutionSummary`
+- 已在维护文档里固定“受控单次 publish”与“多步骤自动发布编排”的边界，避免后续把编排入口误读成无人值守自动发版。
+  - 已同步 `docs/command-manual.md`
+  - 已同步 `docs/release-process.md`
+  - 已同步 `docs/maintenance-guide.md`
+- 已增加编排驱动的受控串行执行入口，在不越过真实 publish 人工闸口的前提下推进 pre-publish 步骤。
+  - 已完成 `execute-release-orchestration [--json]`
+  - 当前会自动顺序运行 `refresh-release-artifacts`、`release:validate`、`release:check`、`release:generate`
+  - 当前会在到达 `execute-controlled-publish` 人工闸口前停止，不会自动触发真实 publish
+
+阶段收口判断：
+
+- 发布流程不再只是分散的手工脚本和单点命令，而是具备清晰编排模型、可读 plan 输出和稳定的人工确认落点。
+- `release:prepare`、planner、真实 publish、结果记录、通知 follow-up 之间的顺序与职责已经被写清楚，不会再因为进入编排阶段而打散现有 record contract。
+- 编排层已经能稳定复用现有 release artifacts、doctor、upgrade summary、version record 和 publish record 语义，而不是另起一套发布状态模型。
+- 当前已收口的 package / release 治理边界、warn acknowledgement 和真实 publish 人工闸口在本阶段保持稳定，没有为了编排提前滑向无人值守自动发版。
+
+结论：
+
+- `P6-6` 已按原阶段定义收口；下一阶段应先明确是否正式立项“无人值守发布治理”，或改为别的后续主题，而不是继续把已完成的编排阶段挂在当前路线图中。

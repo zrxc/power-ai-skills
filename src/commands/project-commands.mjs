@@ -35,6 +35,7 @@ import { createReportCommands } from "./report-commands.mjs";
  * @param {Object} params.releasePublishPlannerService - 发布规划服务
  * @param {Object} params.releaseOrchestrationPlannerService - 发布编排规划服务
  * @param {Object} params.releasePublishExecutorService - 发布执行服务
+ * @param {Object} params.releaseOrchestrationExecutorService - 发布编排执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @param {Object} params.promotionTraceService - 晋升追踪服务
@@ -55,6 +56,7 @@ export function createProjectCommands({
   releasePublishPlannerService,
   releaseOrchestrationPlannerService,
   releasePublishExecutorService,
+  releaseOrchestrationExecutorService,
   governanceSummaryService,
   governanceHistoryService,
   promotionTraceService,
@@ -118,6 +120,7 @@ export function createProjectCommands({
     releasePublishPlannerService,
     releaseOrchestrationPlannerService,
     releasePublishExecutorService,
+    releaseOrchestrationExecutorService,
     governanceSummaryService,
     governanceHistoryService
   });
@@ -217,6 +220,7 @@ export function createProjectCommands({
     generateUpgradeSummaryCommand: reportCommands.generateUpgradeSummaryCommand,
     planReleasePublishCommand: reportCommands.planReleasePublishCommand,
     planReleaseOrchestrationCommand: reportCommands.planReleaseOrchestrationCommand,
+    executeReleaseOrchestrationCommand: reportCommands.executeReleaseOrchestrationCommand,
     executeReleasePublishCommand: reportCommands.executeReleasePublishCommand,
     generateGovernanceSummaryCommand: reportCommands.generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand: reportCommands.showGovernanceHistoryCommand

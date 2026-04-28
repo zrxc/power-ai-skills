@@ -69,8 +69,13 @@
 - 在仓库根目录执行 `npx power-ai-skills doctor`，会进入 `package-maintenance` 模式，只检查发布产物，不检查消费项目 `.power-ai/`。
 - `pnpm refresh:release-artifacts` 会统一刷新当前版本的 `skills-manifest.json`、`release-notes-<version>.md`、`impact-report.json`、`automation-report.json`、通知载荷以及 `manifest/version-record.json`。
 - `manifest/version-record.json` 是当前版本发布产物的正式记录文件，后续校验和排障都以它为准。
+- `plan-release-orchestration` 现在会把编排层 dry-run 结论落到 `manifest/release-orchestration-record.json`、`manifest/release-orchestration-records/`，并回填 `manifest/version-record.json.releaseOrchestrationSummary`。
+- `execute-release-orchestration` 会在同一份 contract 上继续写入“已自动跑完 pre-publish 步骤，但尚未进入真实 publish”的受控执行快照。
+- 这份 orchestration record 只描述多步骤发布编排的阶段状态、阻断点、人工闸口和 `nextAction`；它不是“真实 publish 已完成”的声明文件。
 - `plan-release-publish` 和 `execute-release-publish` 现在组成完整的受控发布入口：先用 planner 看当前版本是否 `eligible`，再用 executor 重新复核并在确认闸口满足后执行真实 `npm publish`。
 - `execute-release-publish` 现在会把真实 publish 结果继续写回 `manifest/release-publish-record.json`、`manifest/version-record.json.publishExecutionSummary` 和 upgrade summary；成功时状态为 `published`，失败时状态为 `publish-failed`。
+- `manifest/release-publish-record.json` 继续是单次真实受控 publish 的权威记录；如果需要判断“到底有没有真的发出去”，优先看它，而不是 orchestration record。
+- `doctor` package-maintenance 与 `generate-upgrade-summary` 现在会同时消费 orchestration snapshot 和 publish execution snapshot，方便把“编排层结论”和“真实执行状态”放在一起看。
 - 即使已经接入真实 publish，这一层仍不是无人值守自动发版：维护者仍需要显式运行命令，并在 warn-level 情况下显式给出 `--acknowledge-warnings`。
 - `scripts/shared.mjs` 现在统一承接仓库维护侧的 `npm pack` 定位与 JSON 解析 helper；如果继续扩发布边界脚本或 smoke 测试，优先复用这里，不要在脚本和测试里各自再写一套 pack 调用逻辑。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
@@ -91,13 +96,29 @@ node --test ./tests/package-boundary-smoke.test.mjs
 npx power-ai-skills doctor
 pnpm clean:runtime
 pnpm refresh:release-artifacts
+npx power-ai-skills plan-release-orchestration --json
+npx power-ai-skills execute-release-orchestration --json
 npx power-ai-skills plan-release-publish --json
 npx power-ai-skills execute-release-publish --confirm --json
+npx power-ai-skills generate-upgrade-summary --json
 node --test ./tests/package-boundary-smoke.test.mjs
 pnpm check:release-consistency -- --require-release-notes --require-impact-report --require-automation-report --require-notification-payload
 pnpm release:consumer-inputs
 pnpm release:prepare
 ```
+
+排障口径：
+
+- 编排层卡住时：
+  - 先看 `manifest/release-orchestration-record.json`
+  - 再看 `manifest/version-record.json.releaseOrchestrationSummary`
+  - 如果状态是 `prepare-failed`，优先看 orchestration record 里的 `commandResults`
+- 真实 publish 卡住时：
+  - 先看 `manifest/release-publish-record.json`
+  - 再看 `manifest/release-publish-failure-summary.md`
+- 需要统一视图时：
+  - 运行 `npx power-ai-skills generate-upgrade-summary --json`
+  - 或 `npx power-ai-skills doctor`
 
 ## 消费项目维护
 

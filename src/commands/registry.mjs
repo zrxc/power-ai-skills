@@ -52,6 +52,7 @@ const commandDefinitions = [
   { name: "generate-upgrade-summary", scope: "project", method: "generateUpgradeSummaryCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "plan-release-publish", scope: "project", method: "planReleasePublishCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "plan-release-orchestration", scope: "project", method: "planReleaseOrchestrationCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
+  { name: "execute-release-orchestration", scope: "project", method: "executeReleaseOrchestrationCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "execute-release-publish", scope: "project", method: "executeReleasePublishCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "generate-governance-summary", scope: "project", method: "generateGovernanceSummaryCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "show-evolution-policy", scope: "project", method: "showEvolutionPolicyCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },

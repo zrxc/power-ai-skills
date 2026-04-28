@@ -76,6 +76,12 @@ export function buildRecommendedActions({ doctorReport, projectScan, conversatio
     for (const followUp of release.followUps || []) actions.push(followUp);
     for (const action of release.risk?.recommendedActions || []) actions.push(action);
     for (const action of release.releaseGates?.recommendedActions || []) actions.push(action);
+    if (release.orchestration?.status === "blocked") {
+      actions.push("Resolve the latest release orchestration blockers recorded in `manifest/release-orchestration-record.json` before advancing the controlled publish flow.");
+    }
+    if (release.orchestration?.status === "published-awaiting-follow-up") {
+      actions.push("Latest release orchestration snapshot shows publish completed; refresh follow-up summaries before broad rollout.");
+    }
     if (release.upgradeAdvice?.blocked) {
       actions.push("Review blocking upgrade advice checks before asking consumers to broadly adopt the current release.");
     }
@@ -274,6 +280,13 @@ export function buildUpgradeSummaryMarkdown(payload) {
         lines.push(`- publish execution failure summary: \`${payload.release.publishExecution.failureSummaryPath}\``);
         lines.push(`- publish execution reason: ${payload.release.publishExecution.failurePrimaryReason || "unknown"}`);
       }
+    }
+    if (payload.release.orchestration) {
+      lines.push(`- release orchestration status: \`${payload.release.orchestration.status}\``);
+      lines.push(`- release orchestration stages: ${payload.release.orchestration.stageCount}`);
+      lines.push(`- release orchestration blockers: ${payload.release.orchestration.blockerCount}`);
+      lines.push(`- release orchestration human gates: ${payload.release.orchestration.humanGateCount}`);
+      lines.push(`- release orchestration record: \`${payload.release.orchestration.recordPath}\``);
     }
     if (payload.release.consumerVerification?.skipped) {
       lines.push(`- consumer verification: skipped (${payload.release.consumerVerification.reason || "no reason"})`);

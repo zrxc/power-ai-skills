@@ -264,6 +264,10 @@ const resolveProjectRootCwdCases = [
     argv: ["node", "power-ai-skills", "plan-release-orchestration", "--json"]
   },
   {
+    title: "resolveProjectRoot keeps cwd for execute-release-orchestration",
+    argv: ["node", "power-ai-skills", "execute-release-orchestration", "--json"]
+  },
+  {
     title: "resolveProjectRoot keeps cwd for execute-release-publish",
     argv: ["node", "power-ai-skills", "execute-release-publish", "--confirm", "--json"]
   },

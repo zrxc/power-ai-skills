@@ -4,6 +4,24 @@
 
 当前包版本以 `package.json` 为准；发布产物版本记录统一写入 `manifest/version-record.json`。
 
+当前 release 维护侧有两类正式 record：
+
+- `manifest/release-orchestration-record.json`
+  - 记录多步骤发布编排的 dry-run 结论
+  - 关注点是 stage model、blockers、human gates、evidence 和 `nextAction`
+  - 不声明真实 publish 已执行
+- `manifest/release-publish-record.json`
+  - 记录单次真实受控 publish 执行结果
+  - 关注点是确认闸口、真实 publish 是否尝试、是否成功、失败摘要和 `nextAction`
+  - 是真实发包状态的权威记录
+
+`manifest/version-record.json` 会回填这两类快照：
+
+- `releaseOrchestrationSummary`
+- `publishExecutionSummary`
+
+后续 `doctor` package-maintenance 与 `generate-upgrade-summary` 都优先读取这里的快照，而不是重新各自推导一套 release 状态。
+
 ## 中心仓库发布
 
 1. 修改 skill、脚本、模板或文档。
@@ -112,7 +130,34 @@ node ./scripts/verify-consumer.mjs <project-path>
 npx power-ai-skills plan-release-publish --json
 ```
 
-20. 再运行一次受控 executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
+20. 在进入真实 publish 前，先运行编排层受控串行执行，把 pre-publish 步骤统一推进到人工 publish 闸口前：
+
+```bash
+npx power-ai-skills execute-release-orchestration --json
+```
+
+- 这一步会刷新：
+  - `manifest/release-orchestration-record.json`
+  - `manifest/release-orchestration-records/`
+  - `manifest/version-record.json.releaseOrchestrationSummary`
+- 它会自动顺序执行：
+  - `pnpm refresh:release-artifacts`
+  - `pnpm release:validate`
+  - `pnpm release:check`
+  - `pnpm release:generate`
+- 如果当前状态是：
+  - `prepare-failed`：先按 orchestration record 里的失败步骤和 `nextAction` 处理，不进入真实 publish
+  - `blocked`：说明 pre-publish 步骤虽然跑完，但最新 orchestration planner 仍然阻断，先处理 blocker
+  - `ready-for-controlled-publish`：说明已经安全推进到真实 publish 人工闸口前，可以继续进入下一步受控 publish executor
+  - `published-awaiting-follow-up`：说明最近一次真实 publish 已完成，应先做 follow-up，而不是重复发版
+
+21. 如需只读确认当前编排层状态，也可以单独再看一次 dry-run：
+
+```bash
+npx power-ai-skills plan-release-orchestration --json
+```
+
+22. 再运行一次受控 publish executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
 
 ```bash
 npx power-ai-skills execute-release-publish --confirm --json
@@ -126,6 +171,40 @@ npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --j
 
 - 当前 executor 会在 controlled gate 满足后直接执行真实 publish；成功时返回 `published`，失败时返回 `publish-failed`。
 - 因此完成这一步后，不需要再额外手工补一次 `pnpm publish`；是否真正发包以 `manifest/release-publish-record.json` 中的最终状态为准。
+- 这一步会刷新：
+  - `manifest/release-publish-record.json`
+  - `manifest/release-publish-records/`
+  - `manifest/version-record.json.publishExecutionSummary`
+  - 失败时额外写出 `manifest/release-publish-failure-summary.md`
+
+23. 真实 publish 结束后，刷新维护视图并确认 follow-up：
+
+```bash
+npx power-ai-skills generate-upgrade-summary --json
+npx power-ai-skills doctor
+```
+
+- 如果最新 orchestration snapshot 已进入 `published-awaiting-follow-up`，重点查看：
+  - `manifest/release-orchestration-record.json`
+  - `manifest/release-publish-record.json`
+  - `manifest/upgrade-summary.md`
+- 这一步的目标不是再次发包，而是确认 post-publish follow-up、通知和治理摘要都已经对齐当前版本。
+
+## 维护者快速判读
+
+- 想知道“当前编排层建议我做什么”：
+  - 看 `manifest/release-orchestration-record.json`
+  - 或看 `manifest/version-record.json.releaseOrchestrationSummary`
+- 想知道“刚才到底有没有真的发出去”：
+  - 看 `manifest/release-publish-record.json`
+  - 或看 `manifest/version-record.json.publishExecutionSummary`
+- 想知道“为什么现在不能继续发”：
+  - 编排层 blocker 看 `release-orchestration-record.json.blockers`
+  - 单次 publish 失败看 `release-publish-record.json.blockers`
+  - 真实 publish 失败摘要看 `manifest/release-publish-failure-summary.md`
+- 想把两层状态放在一张表里看：
+  - 运行 `npx power-ai-skills generate-upgrade-summary --json`
+  - 或运行 `npx power-ai-skills doctor` 进入 `package-maintenance` 模式
 
 ## release:prepare 当前包含的动作
 

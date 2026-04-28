@@ -15,11 +15,13 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
   const releaseGateReportPath = path.join(releaseManifestDir, "release-gate-report.json");
   const upgradeAdvicePackagePath = path.join(releaseManifestDir, "upgrade-advice-package.json");
   const releasePublishRecordPath = path.join(releaseManifestDir, "release-publish-record.json");
+  const releaseOrchestrationRecordPath = path.join(releaseManifestDir, "release-orchestration-record.json");
   const releaseNotesPath = path.join(releaseManifestDir, `release-notes-${context.packageJson.version}.md`);
 
   const versionRecord = fs.existsSync(versionRecordPath) ? readJson(versionRecordPath) : null;
   const releaseGateReport = fs.existsSync(releaseGateReportPath) ? readJson(releaseGateReportPath) : null;
   const releasePublishRecord = fs.existsSync(releasePublishRecordPath) ? readJson(releasePublishRecordPath) : null;
+  const releaseOrchestrationRecord = fs.existsSync(releaseOrchestrationRecordPath) ? readJson(releaseOrchestrationRecordPath) : null;
   const notificationJsonPath = versionRecord?.artifacts?.notificationJsonPath || "";
   const notificationMarkdownPath = versionRecord?.artifacts?.notificationMarkdownPath || "";
   const recordedNotificationOk = Boolean(notificationJsonPath)
@@ -28,6 +30,7 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
     && fs.existsSync(notificationMarkdownPath);
   const governanceSummary = versionRecord?.governanceSummary || null;
   const publishExecutionSummary = versionRecord?.publishExecutionSummary || null;
+  const releaseOrchestrationSummary = versionRecord?.releaseOrchestrationSummary || null;
   const controlledPublishGatePendingStatuses = new Set(["blocked", "confirmation-required", "acknowledgement-required", "publish-failed"]);
   const controlledPublishSnapshot = publishExecutionSummary || releasePublishRecord;
   const controlledPublishGatePending = controlledPublishSnapshot
@@ -215,10 +218,19 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
         wouldExecuteCommand: controlledPublishSnapshot.wouldExecuteCommand || "",
         confirm: Boolean(controlledPublishSnapshot.commandFlags?.confirm),
         acknowledgeWarnings: Boolean(controlledPublishSnapshot.commandFlags?.acknowledgeWarnings),
-        recordPath: controlledPublishSnapshot.recordPath || versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath
+        recordPath: controlledPublishSnapshot.recordPath || versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath,
+        releaseOrchestrationStatus: releaseOrchestrationSummary?.status || releaseOrchestrationRecord?.status || "unknown",
+        releaseOrchestrationRecordPath: releaseOrchestrationSummary?.recordPath || versionRecord?.artifacts?.releaseOrchestrationRecordPath || releaseOrchestrationRecordPath,
+        releaseOrchestrationNextAction: releaseOrchestrationSummary?.nextAction || releaseOrchestrationRecord?.nextAction || null
       } : {
         status: "not-started",
-        recordPath: path.relative(context.packageRoot, versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath)
+        recordPath: path.relative(context.packageRoot, versionRecord?.artifacts?.releasePublishRecordPath || releasePublishRecordPath),
+        releaseOrchestrationStatus: releaseOrchestrationSummary?.status || releaseOrchestrationRecord?.status || "unknown",
+        releaseOrchestrationRecordPath: path.relative(
+          context.packageRoot,
+          versionRecord?.artifacts?.releaseOrchestrationRecordPath || releaseOrchestrationRecordPath
+        ),
+        releaseOrchestrationNextAction: releaseOrchestrationSummary?.nextAction || releaseOrchestrationRecord?.nextAction || null
       },
       "release",
       "If the latest controlled publish execution is still gated, re-run `npx power-ai-skills execute-release-publish --json` with the required confirmation flags after reviewing manifest/release-publish-record.json and manifest/release-publish-failure-summary.md.",

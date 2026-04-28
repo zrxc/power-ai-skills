@@ -221,7 +221,22 @@ export function formatExecuteReleasePublishMessage(result) {
 export function formatPlanReleaseOrchestrationMessage(result) {
   const stageSummary = result.stages.map((item) => `${item.id}:${item.status}`).join(", ") || "none";
   const nextActionSummary = formatNextActionSummary(result.nextAction);
-  return `Release orchestration plan: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], blockers: ${result.blockers.length}, ${nextActionSummary}. Controlled publish remains anchored on \`execute-release-publish\`; this planner is dry-run only.`;
+  const recordLabel = result.orchestrationContract?.orchestrationRecordPathRelative
+    || result.orchestrationManifestArtifacts?.recordPathRelative
+    || result.releaseOrchestrationSummary?.recordPathRelative
+    || "manifest/release-orchestration-record.json";
+  return `Release orchestration plan: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], blockers: ${result.blockers.length}, record: ${recordLabel}, ${nextActionSummary}. Controlled publish remains anchored on \`execute-release-publish\`; this planner records dry-run orchestration snapshots only.`;
+}
+
+export function formatExecuteReleaseOrchestrationMessage(result) {
+  const stageSummary = result.stages.map((item) => `${item.id}:${item.status}`).join(", ") || "none";
+  const recordLabel = result.orchestrationContract?.orchestrationRecordPathRelative
+    || result.orchestrationManifestArtifacts?.recordPathRelative
+    || result.releaseOrchestrationSummary?.recordPathRelative
+    || "manifest/release-orchestration-record.json";
+  const executedCommandCount = result.commandResults?.length || 0;
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release orchestration execution: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], commands executed: ${executedCommandCount}, record: ${recordLabel}, ${nextActionSummary}. This executor runs pre-publish orchestration steps only and stops before the real publish human gate.`;
 }
 
 export function formatGenerateGovernanceSummaryMessage(result) {

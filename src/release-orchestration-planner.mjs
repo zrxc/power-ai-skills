@@ -1,4 +1,5 @@
 import path from "node:path";
+import { persistReleaseOrchestrationArtifacts } from "./release-orchestration-record.mjs";
 
 function normalizeText(value = "") {
   return String(value || "").trim();
@@ -238,7 +239,7 @@ export function createReleaseOrchestrationPlannerService({
         : [])
     ];
 
-    return {
+    const planResult = {
       packageRoot,
       manifestRoot: releaseManifestDir,
       status,
@@ -268,6 +269,7 @@ export function createReleaseOrchestrationPlannerService({
       orchestrationContract: {
         executionMode: "dry-run-plan-only",
         stageModelVersion: 1,
+        orchestrationRecordPath: path.join(releaseManifestDir, "release-orchestration-record.json"),
         publishRecordPath: latestPublishExecution?.recordPath || path.join(releaseManifestDir, "release-publish-record.json"),
         versionRecordPath: path.join(releaseManifestDir, "version-record.json"),
         notes: [
@@ -276,9 +278,35 @@ export function createReleaseOrchestrationPlannerService({
         ]
       }
     };
+
+    const persisted = persistReleaseOrchestrationArtifacts({
+      releaseManifestDir,
+      packageRoot,
+      projectRoot,
+      result: planResult
+    });
+
+    return {
+      ...planResult,
+      orchestrationExecutionId: persisted.executionId,
+      orchestrationRecordedAt: persisted.recordedAt,
+      orchestrationManifestArtifacts: persisted.manifestArtifacts,
+      releaseOrchestrationSummary: persisted.snapshot,
+      orchestrationContract: {
+        ...planResult.orchestrationContract,
+        executionMode: "dry-run-plan-recorded",
+        orchestrationRecordPath: persisted.manifestArtifacts.recordPath,
+        orchestrationRecordPathRelative: persisted.manifestArtifacts.recordPathRelative,
+        orchestrationHistoryPath: persisted.manifestArtifacts.historicalRecordPath,
+        orchestrationHistoryPathRelative: persisted.manifestArtifacts.historicalRecordPathRelative
+      }
+    };
   }
 
   return {
-    planReleaseOrchestration
+    planReleaseOrchestration,
+    getReleaseManifestDir() {
+      return releaseManifestDir;
+    }
   };
 }

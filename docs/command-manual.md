@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（84）
+### project 命令（85）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -104,6 +104,7 @@
 | `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
 | `plan-release-publish` | `planReleasePublishCommand` | `cwd` |
 | `plan-release-orchestration` | `planReleaseOrchestrationCommand` | `cwd` |
+| `execute-release-orchestration` | `executeReleaseOrchestrationCommand` | `cwd` |
 | `execute-release-publish` | `executeReleasePublishCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
@@ -183,7 +184,10 @@ pnpm clean:release-artifacts
 
 说明：
 - `pnpm refresh:release-artifacts` 会更新当前版本产物，并维护 `manifest/version-record.json`。
-- `manifest/version-record.json` 现在除了 release artifact 路径和 `governanceSummary` 之外，也会复用最新的 controlled publish execution 快照：包括 `releasePublishRecordPath`、可选的 `releasePublishFailureSummaryPath` 以及 `publishExecutionSummary`，供 `doctor` package-maintenance 和 `generate-upgrade-summary` 统一读取。
+- `manifest/version-record.json` 现在除了 release artifact 路径和 `governanceSummary` 之外，也会复用两类 release 执行快照：
+  - controlled publish execution：`releasePublishRecordPath`、可选的 `releasePublishFailureSummaryPath` 以及 `publishExecutionSummary`
+  - release orchestration planning：`releaseOrchestrationRecordPath`、可选的 `releaseOrchestrationRecordsRoot` 以及 `releaseOrchestrationSummary`
+- `doctor` package-maintenance 与 `generate-upgrade-summary` 会统一优先读取 `version-record.json` 里的这些快照，而不是分别拼装一套独立的 release 状态。
 - `pnpm clean:release-artifacts` 会保留最近 3 组通知载荷，把更旧记录归档到 `manifest/archive/notifications/`。
 
 查看工具注册表：
@@ -816,6 +820,7 @@ npx power-ai-skills generate-upgrade-summary --json
 - 在消费项目中，摘要默认写到 `.power-ai/reports/upgrade-summary.md` 和 `.power-ai/reports/upgrade-summary.json`，重点汇总 `doctor`、`project-scan`、`conversation-miner` 和 `wrapper promotion audit`。
 - 在仓库根目录运行并进入 `package-maintenance` 模式时，摘要会写到 `manifest/upgrade-summary.md` 和 `manifest/upgrade-summary.json`，并额外汇总 `impact-report.json`、`upgrade-risk-report.json`、`automation-report.json`、`version-record.json` 与最新 notification payload。
 - 如果已经运行过 `execute-release-publish`，package-maintenance 模式下的升级摘要还会带出最新的 `manifest/release-publish-record.json` 状态，以及对应的 `manifest/release-publish-failure-summary.md` 路径，方便维护者直接看到最近一次受控执行卡在哪个闸口。
+- 如果已经运行过 `plan-release-orchestration`，同一份升级摘要还会带出最新的 `manifest/release-orchestration-record.json` 摘要，包括 orchestration status、stage count、blocker count 和人工闸口数量，方便把“编排层 dry-run 结论”和“单次 publish 执行状态”放在同一个 release 摘要里看。
 - 命令会复用并刷新 `doctor` 报告与 `wrapper-promotion-audit` 报告，可作为团队升级治理的单份入口报告。
 
 ## 1.4.4 Project baseline check
@@ -882,7 +887,29 @@ npx power-ai-skills plan-release-orchestration --json
 - 第一版 stage model 固定分为四段：`prepare-release-artifacts`、`plan-controlled-publish`、`execute-controlled-publish`、`post-publish-follow-up`。
 - 这个 planner 会复用当前 `plan-release-publish` 的证据和 `publishExecutionSummary`，而不是另起一套 release 状态模型。
 - 如果最新真实 publish 已成功，编排状态会进入 `published-awaiting-follow-up`；如果最新真实 publish 已失败，则会显式回到 `blocked` 并要求先复核 `release-publish-record.json`。
-- 当前第一版的编排 contract 仍是 `dry-run-plan-only`，真实执行仍锚定在 `execute-release-publish`。
+- 每次运行都会刷新 `manifest/release-orchestration-record.json`，并追加一份带时间戳的历史记录到 `manifest/release-orchestration-records/`；这份 record 会沉淀当前 orchestration status、stage model、blockers、human gates、evidence 和 `nextAction`。
+- planner 还会把最新 snapshot 回填到 `manifest/version-record.json.releaseOrchestrationSummary`，并把 `releaseOrchestrationRecordPath` / `releaseOrchestrationRecordsRoot` 写回 artifact metadata，供 `doctor` package-maintenance 和 `generate-upgrade-summary` 统一消费。
+- 编排级 record contract 与受控 publish record contract 的边界固定如下：
+  - `manifest/release-orchestration-record.json` / `version-record.json.releaseOrchestrationSummary` 只描述多步骤 orchestration 的 dry-run 结论、阶段状态和下一步建议，不声明真实 publish 已执行。
+  - `manifest/release-publish-record.json` / `version-record.json.publishExecutionSummary` 才是单次真实受控 publish 执行的权威记录，负责声明确认闸口、真实 publish 是否尝试、是否成功以及失败摘要。
+  - orchestration planner 可以引用最近一次 publish execution snapshot 作为 evidence，但不会覆盖或重写 publish executor 的状态语义。
+- 当前第一版的编排 contract 已经从“仅 CLI 输出”升级为“dry-run-plan-recorded”；真实执行仍锚定在 `execute-release-publish`，不会因为新增 orchestration record 而变成无人值守自动发版。
+
+## 1.4.7 Release orchestration executor
+
+```bash
+npx power-ai-skills execute-release-orchestration --json
+```
+
+- `execute-release-orchestration` 是编排层第一版受控串行执行入口，会自动顺序执行：
+  - `pnpm refresh:release-artifacts`
+  - `pnpm release:validate`
+  - `pnpm release:check`
+  - `pnpm release:generate`
+- 每次执行前后都会复用最新 orchestration planner，因此结果仍然落回同一份 `manifest/release-orchestration-record.json` / `version-record.json.releaseOrchestrationSummary` contract。
+- 这条链路只会把流程推进到 `execute-controlled-publish` 人工闸口前，不会自动调用 `execute-release-publish`，也不会自动触发真实 `npm publish`。
+- 如果 prepare 阶段某个命令失败，状态会返回 `prepare-failed`，并把失败步骤摘要写进 orchestration record；后续应先复核该步骤输出，再重新运行 executor。
+- 如果最新 orchestration 状态已经是 `published-awaiting-follow-up`，executor 不会重复跑 pre-publish 命令，而是直接要求进入 post-publish follow-up。
 
 ## 1.4.7 Release publish execution skeleton
 

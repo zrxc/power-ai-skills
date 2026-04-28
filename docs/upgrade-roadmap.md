@@ -13,51 +13,37 @@
 
 ## 当前阶段
 
-### P6-6 自动发布编排第一版
-阶段目标：
-- 在 `P6-5` 已完成受控 release publish 执行链路的基础上，开始规划“自动发布编排”这一更高层能力，而不是继续停留在单次执行命令 contract。
-- 把当前已经存在的 `release:prepare`、`plan-release-publish`、`execute-release-publish`、consumer compatibility、release gates、governance summary 和 notification 产物串成一条可编排的发布流水线，但仍保留治理闸口与人工确认边界。
-- 明确“受控执行单点命令”与“多步骤发布编排”的职责边界，避免后续为了追求自动化而重新打散现有 planner / executor / publish record contract。
-- 保持现有 package-maintenance `doctor`、upgrade summary、release artifacts 与 record contract 语义稳定，不在这一阶段直接引入无人值守定时发版。
+### P6-7 下一阶段壳子（待定义）
+阶段状态：
+- `P6-6` 已正式迁移到 `docs/upgrade-roadmap-history.md`。
+- 当前文档只保留新的活动阶段壳子，避免继续停留在已经收口的编排阶段内容。
+- 下一轮进入时，应先确认 `P6-7` 的真实主题，再把完整阶段定义补回本文。
 
-本阶段只做：
-- 设计自动发布编排第一版的入口 contract，至少明确：
-  - 编排入口命令或脚本的职责边界
-  - 编排前置输入与依赖产物
-  - 哪些步骤可以自动串行，哪些步骤仍需显式人工确认
-- 固定“编排状态”与“单次 publish 执行状态”的关系，至少区分：
-  - release 材料刷新与校验
-  - planner 资格判定
-  - 真实 publish 执行
-  - 发布后记录 / 通知 / follow-up
-- 为自动发布编排增加最小 dry-run / plan 能力，至少能够输出：
-  - 将要执行的步骤列表
-  - 当前阻断点
-  - 人工确认闸口所在位置
-  - 建议继续动作
-- 让编排结果可以复用当前 doctor / upgrade summary / version record 语义，而不是另起一套发布状态模型。
+阶段目标（待补）：
+- 待补：明确下一阶段要解决的发布自动化治理问题，以及它与 `P6-6` 编排层 contract 的承接关系。
+- 待补：明确是否进入“无人值守发布治理”，还是转向别的后续主题。
+- 待补：明确人工确认闸口、治理记录、失败回退和现有 record contract 的复用边界。
 
-本阶段不做：
-- 不做无人值守定时发版
-- 不绕过 `release:prepare`、release gates、consumer compatibility、package-maintenance doctor 或 warn-level acknowledgement
-- 不自动决定版本号升级策略
-- 不把 wrapper / shared skill / project-local 的高风险治理动作混进发布编排主流程
+本阶段只做（待补）：
+- 待补：下一阶段正式启动时，在这里补齐范围、完成标准和可执行清单。
+- 待补：优先基于 `P6-6` 已沉淀的 planner / executor / orchestration / publish record contract 定义后续方向。
+
+本阶段不做（待补）：
+- 待补：在阶段目标正式写清前，不预设新的自动写入、自动发布或定时任务行为。
+- 待补：不在当前壳子里继续堆叠已经收口阶段的实现细节。
 
 ## 未完成项
 
-- [ ] 设计自动发布编排第一版的 stage model，明确 prepare / plan / publish / post-publish 的阶段划分与状态流转。
-- [ ] 增加编排级 dry-run / plan 入口，至少输出步骤清单、阻断原因、人工确认闸口和建议下一步。
-- [ ] 明确编排级 record contract 与现有 `release-publish-record.json`、`version-record.json.publishExecutionSummary` 的关系，避免状态重复或语义冲突。
-- [ ] 在维护文档里固定“受控单次 publish”与“多步骤自动发布编排”的边界，避免后续把编排入口误读成无人值守自动发版。
+- [ ] 明确 `P6-7` 是否正式立项为“无人值守发布治理”，还是改为别的后续阶段主题。
+- [ ] 补齐下一阶段的目标、范围边界、人工闸口、record contract 复用策略和完成标准。
+- [ ] 如确认开新阶段，再把未完成项细化为可执行清单。
 
-## 完成标准
+## 完成标准（待补）
 
-- 发布流程不再只是分散的手工脚本和单点命令，而是具备清晰编排模型、可读 plan 输出和稳定的人工确认落点。
-- `release:prepare`、planner、真实 publish、结果记录、通知 follow-up 之间的顺序与职责被写清楚，不会再因为进入编排阶段而打散现有 record contract。
-- 本阶段结束后，可以继续讨论更高层的自动化执行方式，但不需要重新梳理编排状态模型、确认闸口和 record contract。
+- 待补：下一阶段正式立项后，在这里补齐收口判断。
 
 ## 下一次进入本文档时的动作
 
-- 如果上面还有未勾选项：继续只做“自动发布编排第一版”，不要提前跳到无人值守定时发版。
-- 优先复用现有 planner / executor / release artifacts / publish record contract 设计编排层，不要推倒重建发布状态模型。
-- 如果上面全部勾选：把本阶段迁移到 `docs/upgrade-roadmap-history.md`，再决定是否需要立新的“无人值守发布治理”阶段。
+- 先确认 `P6-7` 的真实主题，再补齐完整阶段定义。
+- 优先复用现有 planner / executor / release artifacts / orchestration / publish record contract，不要推倒重建发布状态模型。
+- 如果下一阶段最终不叫“无人值守发布治理”，直接在当前壳子上改名并补全内容即可。

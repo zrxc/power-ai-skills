@@ -97,6 +97,7 @@ function createTempManifestSnapshot(t) {
         upgradeAdvicePackagePath: path.join(manifestRoot, "upgrade-advice-package.json"),
         upgradeAdvicePackageMarkdownPath: path.join(manifestRoot, "upgrade-advice-package.md"),
         automationReportPath: path.join(manifestRoot, "automation-report.json"),
+        releaseOrchestrationRecordPath: path.join(manifestRoot, "release-orchestration-record.json"),
         notificationJsonPath: latestNotificationJsonPath,
         notificationMarkdownPath: path.join(notificationsRoot, latestNotificationMarkdown),
         releaseGateReportPath: path.join(manifestRoot, "release-gate-report.json"),
@@ -115,6 +116,36 @@ function createTempManifestSnapshot(t) {
         matchedPromotionRelations: 1,
         totalPromotionRelations: 2,
         recentGovernanceActivityCount: 6
+      },
+      releaseOrchestrationSummary: {
+        executionId: "release_orchestration_20260428120500000",
+        recordedAt: "2026-04-28T12:05:00.000Z",
+        status: "published-awaiting-follow-up",
+        executionMode: "dry-run-plan-recorded",
+        stageModelVersion: 1,
+        blockerCount: 0,
+        blockers: [],
+        stageCount: 4,
+        stageStatuses: [
+          { id: "prepare-release-artifacts", kind: "prepare", status: "completed", humanGate: false },
+          { id: "plan-controlled-publish", kind: "plan", status: "completed", humanGate: false },
+          { id: "execute-controlled-publish", kind: "publish", status: "completed", humanGate: true },
+          { id: "post-publish-follow-up", kind: "post-publish", status: "ready", humanGate: false }
+        ],
+        humanGateCount: 1,
+        nextAction: {
+          kind: "post-publish-follow-up",
+          command: "npx power-ai-skills generate-upgrade-summary --json",
+          reason: "Controlled publish has completed; refresh release-facing summaries and review follow-up artifacts before broad rollout."
+        },
+        releasePublishPlanStatus: "eligible",
+        latestPublishExecutionStatus: "published",
+        publishRecordPath: path.join(manifestRoot, "release-publish-record.json"),
+        versionRecordPath: path.join(manifestRoot, "version-record.json"),
+        recordPath: path.join(manifestRoot, "release-orchestration-record.json"),
+        recordPathRelative: "manifest/release-orchestration-record.json",
+        historicalRecordPath: path.join(manifestRoot, "release-orchestration-records", "release_orchestration_20260428120500000.json"),
+        historicalRecordPathRelative: "manifest/release-orchestration-records/release_orchestration_20260428120500000.json"
       }
     }, null, 2)}\n`,
     "utf8"
@@ -296,6 +327,55 @@ function createTempManifestSnapshot(t) {
         summaryPath: "",
         summaryPathRelative: ""
       }
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(manifestRoot, "release-orchestration-record.json"),
+    `${JSON.stringify({
+      executionId: "release_orchestration_20260428120500000",
+      recordedAt: "2026-04-28T12:05:00.000Z",
+      packageName: "@power/power-ai-skills",
+      version,
+      packageRoot: root,
+      projectRoot: root,
+      status: "published-awaiting-follow-up",
+      executionMode: "dry-run-plan-recorded",
+      stageModelVersion: 1,
+      blockers: [],
+      stages: [
+        { id: "prepare-release-artifacts", kind: "prepare", status: "completed", humanGate: false },
+        { id: "plan-controlled-publish", kind: "plan", status: "completed", humanGate: false },
+        { id: "execute-controlled-publish", kind: "publish", status: "completed", humanGate: true },
+        { id: "post-publish-follow-up", kind: "post-publish", status: "ready", humanGate: false }
+      ],
+      humanGates: [
+        {
+          stageId: "execute-controlled-publish",
+          title: "Run controlled publish execution",
+          summary: "Controlled publish already completed successfully for the current release snapshot."
+        }
+      ],
+      nextAction: {
+        kind: "post-publish-follow-up",
+        command: "npx power-ai-skills generate-upgrade-summary --json",
+        reason: "Controlled publish has completed; refresh release-facing summaries and review follow-up artifacts before broad rollout."
+      },
+      evidence: {
+        releasePublishPlanStatus: "eligible",
+        latestPublishExecutionStatus: "published"
+      },
+      orchestrationContract: {
+        executionMode: "dry-run-plan-recorded",
+        stageModelVersion: 1,
+        orchestrationRecordPath: path.join(manifestRoot, "release-orchestration-record.json"),
+        publishRecordPath: path.join(manifestRoot, "release-publish-record.json"),
+        versionRecordPath: path.join(manifestRoot, "version-record.json")
+      },
+      recordPath: path.join(manifestRoot, "release-orchestration-record.json"),
+      recordPathRelative: "manifest/release-orchestration-record.json",
+      historicalRecordPath: path.join(manifestRoot, "release-orchestration-records", "release_orchestration_20260428120500000.json"),
+      historicalRecordPathRelative: "manifest/release-orchestration-records/release_orchestration_20260428120500000.json"
     }, null, 2)}\n`,
     "utf8"
   );
@@ -1117,6 +1197,10 @@ test("doctor reports release governance when run in package root", { concurrency
   assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-012")?.severity, "warning");
   assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-013")?.ok, true);
   assert.equal(payload.checks.find((check) => check.code === "PAI-RELEASE-013")?.severity, "warning");
+  assert.equal(
+    payload.checks.find((check) => check.code === "PAI-RELEASE-013")?.detail.releaseOrchestrationStatus,
+    "published-awaiting-follow-up"
+  );
 });
 
 test("doctor package-maintenance surfaces release governance warnings without failing", { concurrency: false }, (t) => {
@@ -1225,6 +1309,8 @@ test("doctor package-maintenance surfaces controlled publish gate warnings witho
   assert.equal(controlledPublishCheck.detail.realPublishEnabled, false);
   assert.equal(controlledPublishCheck.detail.failureSummaryPresent, true);
   assert.equal(controlledPublishCheck.detail.failureSummaryPath, path.join(manifestRoot, "release-publish-failure-summary.md"));
+  assert.equal(controlledPublishCheck.detail.releaseOrchestrationStatus, "published-awaiting-follow-up");
+  assert.equal(controlledPublishCheck.detail.releaseOrchestrationRecordPath, path.join(manifestRoot, "release-orchestration-record.json"));
 });
 
 test("doctor reports release governance failures when version record drifts", { concurrency: false }, (t) => {
