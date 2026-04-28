@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（81）
+### project 命令（82）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -102,6 +102,7 @@
 | `generate-wrapper-registry-governance` | `generateWrapperRegistryGovernanceCommand` | `cwd` |
 | `plan-wrapper-registrations` | `planWrapperRegistrationsCommand` | `cwd` |
 | `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
+| `plan-release-publish` | `planReleasePublishCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
 | `validate-evolution-policy` | `validateEvolutionPolicyCommand` | `cwd` |
@@ -850,6 +851,19 @@ npx power-ai-skills plan-wrapper-registrations --tool my-new-tool --json
 - 这个命令适合放在 `finalize-wrapper-promotion` 之后、`register-wrapper-promotion` 之前，帮助维护者先筛出真正可以人工注册的 proposal。
 - 如果 proposal 与内置 wrapper 重名，默认会以 `blocked` + `conflict-existing-wrapper-entry` 返回；只有显式允许 overwrite 时，planner 才会把该 proposal 作为覆盖候选继续输出。
 - 指定 `--tool <name>` 时只评估单个 proposal；返回里的 `manualConfirmation.command` 会直接给出后续人工注册命令。
+
+## 1.4.7 Release publish planning
+
+```bash
+npx power-ai-skills plan-release-publish --json
+```
+
+- `plan-release-publish` 只在仓库根目录的 `package-maintenance` 模式下可用，用来对当前版本做发布资格 dry-run，不会执行真实 `npm publish`。
+- 资格判定会同时读取 `manifest/automation-report.json`、`manifest/version-record.json`、`manifest/release-gate-report.json`、`manifest/governance-operations-report.json`、`manifest/upgrade-advice-package.json` 和最新 notification payload。
+- 返回结果会显式区分 `eligible` / `blocked`，并给出 `blockers`、`targetPublish`、artifact evidence、版本比对结果以及建议的人工确认链路。
+- `targetPublish` 第一版固定从 `package.json` 读取 `name`、`version` 和 `publishConfig.registry`；如果缺少 registry，planner 会直接阻断，而不是猜测发布目标。
+- `manualConfirmation` 只会输出建议顺序：`pnpm refresh:release-artifacts`、`pnpm release:validate`、`pnpm release:check`、`pnpm release:generate` 和最终的 `npm publish` 命令，真实发版仍然需要维护者手动执行。
+- 当 release gate 只有 `warn` 而没有 blocking issue 时，planner 仍可返回 `eligible`，但会在 `manualConfirmation.notes` 里要求显式 acknowledgement，避免把 warning 版本误当成“完全无风险自动发布”。
 
 ## 1.4.4 Conversation miner strategy template
 

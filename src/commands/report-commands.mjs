@@ -9,6 +9,7 @@
 
 import {
   formatGenerateUpgradeSummaryMessage,
+  formatPlanReleasePublishMessage,
   formatGenerateGovernanceSummaryMessage,
   formatShowGovernanceHistoryMessage
 } from "./project-output.mjs";
@@ -19,6 +20,7 @@ import {
  * @param {Object} params.cliArgs - CLI 参数对象
  * @param {Object} params.selectionService - 选择服务
  * @param {Object} params.upgradeSummaryService - 升级摘要服务
+ * @param {Object} params.releasePublishPlannerService - 发布规划服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @returns {Object} 报告命令对象
@@ -27,6 +29,7 @@ export function createReportCommands({
   cliArgs,
   selectionService,
   upgradeSummaryService,
+  releasePublishPlannerService,
   governanceSummaryService,
   governanceHistoryService
 }) {
@@ -72,6 +75,15 @@ export function createReportCommands({
   }
 
   /**
+   * 发布计划命令 - 评估当前版本是否具备手动发布资格
+   */
+  function planReleasePublishCommand() {
+    const result = releasePublishPlannerService.planReleasePublish();
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanReleasePublishMessage(result));
+  }
+
+  /**
    * 生成治理摘要命令 - 汇总项目治理状态信息
    */
   function generateGovernanceSummaryCommand() {
@@ -95,6 +107,7 @@ export function createReportCommands({
 
   return {
     generateUpgradeSummaryCommand,
+    planReleasePublishCommand,
     generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand
   };

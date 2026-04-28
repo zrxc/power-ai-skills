@@ -4,7 +4,7 @@
 
 使用规则：
 - `docs/upgrade-roadmap.md` 只保留当前活动阶段和未完成项
-- 当前阶段未完成前，不在这里继续堆叠下一个阶段内容
+- 当前阶段未完成前，不在这里继续堆下一个阶段内容
 - 当前阶段全部完成后，将整段迁移到 `docs/upgrade-roadmap-history.md`
 - 下一次只把新的活动阶段写回本文，保证每次开发都能直接看到“现在要做什么”
 
@@ -13,57 +13,64 @@
 
 ## 当前阶段
 
-### P6-3 wrapper 自动注册 dry-run 第一版
+### P6-5 release 受控执行第一版
 阶段目标：
-- 在 `P6-2` 已完成 `shared skill` 自动正式晋升 dry-run planner 的基础上，开始第三条链路：wrapper 自动注册。
-- 先补“资格判定 + dry-run / plan 输出 + 人工确认落点”，保持真实 wrapper registry 写入仍然人工执行，不直接绕过治理闸口。
-- 明确 wrapper promotion proposal、materialized artifact、finalized status 与真实 registry 落点之间的状态边界，避免后续把 wrapper draft、registry 变更和发布动作揉成一条黑盒流程。
-- 保持现有 wrapper promotion lifecycle、`list-wrapper-promotions` / `show-wrapper-promotion-timeline` / `generate-wrapper-registry-governance`、doctor / governance summary / release gates 的治理语义稳定，不在这一阶段直接开启真实 registry 注册。
+- 在 `P6-4` 已完成 release publish dry-run planner 的基础上，开始进入“真实执行但仍保留显式人工确认”的下一层，而不是直接跳到无人值守自动 publish。
+- 让发布动作从“手工照着 planner 输出敲命令”升级为“受控 CLI 执行入口”，但仍要求 package root、实时复核和显式确认，不能绕过现有 release 治理闸口。
+- 明确 `plan-release-publish`、实时 artifact 复核、最终 `npm publish` 执行与 publish 结果记录之间的状态边界，避免后续把 dry-run 结果当成已完成发版。
+- 保持现有 `release:prepare`、`release:check`、`upgrade:advice`、`upgrade:payload`、`governance:operations`、package-maintenance `doctor` 与 manifest 产物语义稳定，不在这一阶段引入无人值守定时发版。
 
 本阶段只做：
-
-- 基于现有 wrapper promotion proposal、timeline / lifecycle 状态、follow-up checklist 和 registration status，定义 wrapper 自动注册的资格判定来源。
-- 增加 wrapper registration 的 dry-run / plan 输出，至少能告诉用户：哪些 wrapper proposal 可进入注册候选、为什么、目标 registry 落点在哪、哪些被阻断。
-- 明确真实 wrapper registry 的目标落点与建议写入动作，避免把 proposal 状态变更误当成 registry 注册完成。
-- 保持人工确认边界，第一版只允许输出建议执行动作，不直接修改真实 registry。
+- 增加一个受控 release publish 执行入口，至少要求：
+  - 只能在 package-maintenance 模式和 package root 下运行
+  - 执行前重新校验 release publish planner 或等价资格判定
+  - 只有显式 `--confirm` / `--yes` 一类确认参数时才允许进入真实 publish
+- 在真实 publish 前固定最后一跳校验边界，至少区分：
+  - planner 资格判定
+  - refresh / validate / check / generate 的复核步骤
+  - 最终真实 publish
+- 为真实 publish 增加最小结果沉淀，至少记录：
+  - 执行时间
+  - 目标 registry / package / version
+  - 执行前 planner 摘要
+  - success / failure 状态与错误摘要
+- 保持 warning 语义可见：如果 release gate 为 `warn`，执行层仍需显式 acknowledgement，不能把 planner 的 `eligible` 直接等价成“无条件自动发版”。
 
 当前链路现状：
-
-- 当前人工边界：
-  - wrapper proposal 先进入 `.power-ai/proposals/wrapper-promotions/<tool>/`
-  - `materialize-wrapper-promotion` / `apply-wrapper-promotion` / `finalize-wrapper-promotion` 已覆盖 proposal 到代码改动、follow-up 与 finalize 状态
-  - `register-wrapper-promotion` 仍是人工显式动作，registry 写入没有被 evolution / proposal apply 自动接管
-  - `generate-wrapper-registry-governance`、doctor、release gates 已能暴露 pending / stalled wrapper proposal
-- 目标自动化边界：
-  - 先自动判断某个 wrapper promotion proposal 是否具备真实 registry 注册资格
-  - 再给出 dry-run 计划、目标 registry 落点和人工确认命令/步骤
-  - 真实 registry 写入仍保持人工确认，不在本阶段自动执行
+- 当前已具备：
+  - `plan-release-publish --json`，可输出 `eligible / blocked`、目标 registry、evidence 与人工确认命令
+  - `release:prepare`、`release:check`、`upgrade:payload`、`governance:operations`、`upgrade:advice` 已能生成和校验发版前治理材料
+  - `manifest/version-record.json`、release notes、notification payload、risk / advice / governance report 已可作为发版前证据
+- 当前缺口：
+  - 真实 publish 仍完全依赖维护者手工拼接和执行命令
+  - publish 成败还没有统一的 manifest 记录或治理回写
+  - planner 与真实执行之间还缺一层“执行前再确认”的受控闸口
 - 当前主要风险：
-  - 把未完成 follow-up 或未 finalization 的 wrapper proposal 过早推进到 registry
-  - 自动选错 registry 写入位置、状态字段或归档边界，污染对外命令入口
+  - planner 通过后，人工执行时使用了已过期的 artifact 快照
+  - 不同维护者手工执行步骤不一致，导致发布证据与真实动作脱节
+  - 没有统一的 publish record，后续难以回溯“是否真的发过、何时发的、向哪里发的”
 
 本阶段不做：
-
-- 不直接写入真实 wrapper registry
-- 不自动执行 `register-wrapper-promotion`
-- 不自动修改 release 产物或 npm 发布面
-- 不把 release 自动发版一起并进来
+- 不做无人值守自动 publish 或定时发版
+- 不自动修改正式版本号或跳过现有 release checks
+- 不绕过 `release:prepare`、`release:check`、package-maintenance doctor 或 planner 复核
+- 不把 shared skill / wrapper 的高风险自动化动作重新并回这一阶段
 
 ## 未完成项
 
-- [x] 定义 wrapper proposal / lifecycle -> registry 注册候选的资格判定来源，至少覆盖 proposal 状态、materialization / application / finalization / registration 状态、follow-up checklist 和目标 registry 落点来源。
-- [x] 增加 wrapper registration 的 dry-run / plan contract，至少输出 `eligible / blocked`、阻断原因、建议目标 registry 落点和人工确认落点。
-- [x] 明确 wrapper registry 正式映射规则，至少回答“toolName / commandName 从哪来、何时允许覆盖已有 wrapper、何时必须先 finalize 再 register”。
-- [x] 在路线图和维护说明里固定 wrapper registration planner 与真实注册边界，避免后续直接跳过 dry-run 去写 registry。
+- [ ] 设计 release 受控执行 contract，至少明确执行命令、显式确认参数、执行前复核步骤和失败返回结构。
+- [ ] 增加真实 publish 前的二次资格校验，避免直接复用过期 dry-run 结果去执行发布。
+- [ ] 为 publish 结果增加 manifest / governance 记录，至少沉淀目标 registry、package、version、执行时间、状态与错误摘要。
+- [ ] 在路线图和维护说明里固定“受控执行”与“无人值守自动 publish”的边界，避免后续把这一阶段误扩成全自动发版。
 
 ## 完成标准
 
-- wrapper 自动注册不再停留在模糊设想，而是有清晰的资格判定来源和 dry-run contract。
-- wrapper proposal、真实 registry 和人工确认边界的职责被写清楚，不会再把 finalized proposal 误当成已注册 wrapper。
-- 本阶段结束后，可以进入 wrapper 自动注册的真实实现，而不必重新讨论目标 registry、阻断条件和人工边界。
+- release 从“纯手工照命令执行”升级为“有受控 CLI 入口、带显式确认和执行前复核”的第一版真实执行链路。
+- planner、执行前复核、真实 publish 与结果记录之间的职责被写清楚，不会再把 dry-run 输出误当成真实发版完成。
+- 本阶段结束后，可以讨论更进一步的 release 自动化，但不需要重新梳理确认边界、执行前闸口和 publish record contract。
 
 ## 下一次进入本文档时的动作
 
-- 如果上面还有未勾选项：继续只做 wrapper 自动注册 dry-run 第一版，不要提前跳到 release 自动发版。
-- 先把 wrapper 的资格判定来源、目标 registry 映射和 dry-run 输出定下来，再决定是否补 CLI 命令。
-- 如果上面全部勾选：把本阶段迁移到 `docs/upgrade-roadmap-history.md`，再进入 release 自动发版的 dry-run 规划 / 实现阶段。
+- 如果上面还有未勾选项：继续只做 release 受控执行第一版，不要提前跳到无人值守自动 publish。
+- 优先补执行 contract、二次资格校验和 publish record，再决定是否引入更高风险的自动发布能力。
+- 如果上面全部勾选：把本阶段迁移到 `docs/upgrade-roadmap-history.md`，再决定是否需要立新的“自动发布编排”阶段。

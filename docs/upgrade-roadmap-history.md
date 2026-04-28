@@ -1775,3 +1775,105 @@ pnpm release:prepare
 结论：
 
 - `P6-2` 已按原阶段定义收口；下一阶段应进入 wrapper 自动注册的 dry-run 规划 / 实现阶段，而不是继续回到 shared skill 资格判定讨论。
+
+## 1.4.7 / P6-3 wrapper 自动注册 dry-run 第一版
+
+阶段目标：
+
+- 在 `P6-2` 已完成 `shared skill` 自动正式晋升 dry-run planner 的基础上，开始第三条链路：wrapper 自动注册。
+- 先补“资格判定 + dry-run / plan 输出 + 人工确认落点”，保持真实 wrapper registry 写入仍然人工执行，不直接绕过治理闸口。
+- 明确 wrapper promotion proposal、materialized artifact、finalized status 与真实 registry 落点之间的状态边界，避免后续把 wrapper draft、registry 变更和发布动作揉成一条黑盒流程。
+- 保持现有 wrapper promotion lifecycle、`list-wrapper-promotions` / `show-wrapper-promotion-timeline` / `generate-wrapper-registry-governance`、doctor / governance summary / release gates 的治理语义稳定，不在这一阶段直接开启真实 registry 注册。
+
+已完成：
+
+- 已新增 `src/conversation-miner/wrapper-registration-planner.mjs`，把 wrapper promotion proposal 的注册资格判定从 lifecycle / audit 流程中拆出，单独承接：
+  - proposal 状态来源
+  - materialization / application / finalization / registration 状态来源
+  - follow-up checklist 与 pending follow-up 来源
+  - registration artifact 存在性与 bundle 内容来源
+  - 内置 wrapper registry 冲突判断来源
+- 已新增 CLI 入口 `plan-wrapper-registrations [--tool <tool-name>] [--json]`，用于输出：
+  - `eligible / blocked`
+  - 阻断原因
+  - 建议目标 registry 落点
+  - 建议写入 entry
+  - `append-new-wrapper-entry` / `conflict-existing-wrapper-entry` / `overwrite-existing-wrapper-entry` 动作
+  - 人工确认命令 `npx power-ai-skills register-wrapper-promotion --tool <tool-name>`
+- 已固定 wrapper registry 第一版映射规则：
+  - 真实落点固定为 `src/conversation-miner/wrappers.mjs`
+  - `toolName` 取 proposal `toolName`
+  - `displayName` 取 proposal `displayName`
+  - `integrationStyle` 取 proposal `integrationStyle`
+  - `commandName` 优先取 materialized bundle 中的 `artifacts.commandName`，缺失时退回 `<tool>-capture-session` 派生规则
+  - 如命中内置 wrapper，同名 proposal 默认阻断；只有显式允许 overwrite 时才进入覆盖候选
+- 已保持人工边界稳定：planner 只做 dry-run / plan，不直接写入 `src/conversation-miner/wrappers.mjs`，也不自动执行 `register-wrapper-promotion`。
+- `docs/command-manual.md`、`docs/upgrade-roadmap.md` 已同步收口 wrapper registration planner 的职责边界和人工确认边界。
+- 已补充自动化测试，覆盖：
+  - eligible wrapper proposal
+  - 未 finalize proposal 的阻断
+  - 命中内置 wrapper 的冲突阻断
+  - 显式允许 overwrite 后的覆盖候选
+  - 新命令的 `project root` 解析策略
+
+阶段收口判断：
+
+- wrapper 自动注册已经不再停留在模糊设想，而是具备清晰的资格判定来源和 dry-run contract。
+- wrapper proposal、真实 registry 和人工确认边界的职责已经被写清楚，不会再把 finalized proposal 误当成已正式注册的 wrapper。
+- `project-local -> manual`、`shared skill -> skills/`、`wrapper -> registry` 三条链路现在都具备最小 dry-run 模板，可为后续 release 自动化继续复用。
+- 当前已收口的 wrapper promotion lifecycle、governance summary、doctor、release gates 与 package/release 边界在本阶段保持稳定，没有为了 planner 提前打破人工边界。
+
+结论：
+
+- `P6-3` 已按原阶段定义收口；下一阶段应进入 release 自动发版的 dry-run 规划 / 实现阶段，而不是继续停留在 wrapper 注册资格判定讨论。
+
+## 1.4.7 / P6-4 release 自动发版 dry-run 第一版
+
+阶段目标：
+
+- 在 `P6-3` 已完成 wrapper 自动注册 dry-run planner 的基础上，开始第四条链路：release 自动发版。
+- 先补“资格判定 + dry-run / plan 输出 + 人工确认落点”，保持真实发版动作仍然人工执行，不直接绕过 package / release 治理闸口。
+- 明确 release governance artifact、automation report、release gates、version record、notification payload 与真实 `npm publish` / 私服发布动作之间的状态边界，避免后续把“已生成发布材料”误当成“已正式发版”。
+- 保持现有 `release:prepare`、`release:check`、`upgrade:advice`、`upgrade:payload`、`governance:operations`、package-maintenance `doctor` 与 manifest 产物语义稳定，不在这一阶段直接开启真实发布。
+
+已完成：
+
+- 已新增 `src/release-publish-planner.mjs`，把 release publish dry-run 资格判定从手工发布步骤中抽出，单独承接：
+  - `automation-report.json`
+  - `version-record.json`
+  - `release-gate-report.json`
+  - `governance-operations-report.json`
+  - `upgrade-advice-package.json`
+  - notification payload
+  - `package.json publishConfig.registry`
+- 已新增 CLI 入口 `plan-release-publish [--json]`，用于输出：
+  - `eligible / blocked`
+  - 阻断原因
+  - 建议目标发布落点 `targetPublish`
+  - artifact evidence
+  - 建议人工确认步骤与 `npm publish` 命令
+- 已固定 release publish 第一版映射规则：
+  - `packageName` 取 `package.json name`
+  - `version` 取 `package.json version`
+  - `registryUrl` 取 `package.json publishConfig.registry`
+  - `publishCommand` 优先生成为 `npm publish --registry "<registry>"`
+  - release gate 允许 `pass` / `warn`，但 `warn` 仍要求显式 acknowledgement
+  - planner 默认要求 version record、notification payload 与当前 `package.json version` 一致
+- 已保持人工边界稳定：planner 只做 dry-run / plan，不直接执行真实 `npm publish`，也不自动刷新版本号或绕过现有 release checks。
+- `docs/command-manual.md`、`docs/upgrade-roadmap.md` 已同步收口 release publish planner 的职责边界和人工确认边界。
+- 已补充自动化测试，覆盖：
+  - eligible release snapshot
+  - version mismatch / release gate fail / blocked advice 的阻断
+  - `warn` 但要求显式 acknowledgement 的可发布场景
+  - 新命令的 `project root` 解析策略
+
+阶段收口判断：
+
+- release 自动发版已经不再停留在模糊设想，而是具备清晰的资格判定来源和 dry-run contract。
+- release artifact、目标 registry、真实 publish 与人工确认边界的职责已经被写清楚，不会再把 planner 输出误当成真实发版完成。
+- `project-local -> manual`、`shared skill -> skills/`、`wrapper -> registry`、`release -> publish-plan` 四条链路现在都具备最小 dry-run 模板。
+- 当前已收口的 governance summary、doctor、release gates 与 package/release 边界在本阶段保持稳定，没有为了 planner 提前打破人工边界。
+
+结论：
+
+- `P6-4` 已按原阶段定义收口；下一阶段应进入“release 受控执行第一版”，而不是继续停留在 dry-run 资格判定讨论，或直接跳到无人值守自动 publish。

@@ -32,6 +32,7 @@ import { createReportCommands } from "./report-commands.mjs";
  * @param {Object} params.projectScanService - 项目扫描服务
  * @param {Object} params.conversationMinerService - 对话挖掘服务
  * @param {Object} params.upgradeSummaryService - 升级摘要服务
+ * @param {Object} params.releasePublishPlannerService - 发布规划服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @param {Object} params.promotionTraceService - 晋升追踪服务
@@ -49,6 +50,7 @@ export function createProjectCommands({
   projectScanService,
   conversationMinerService,
   upgradeSummaryService,
+  releasePublishPlannerService,
   governanceSummaryService,
   governanceHistoryService,
   promotionTraceService,
@@ -109,6 +111,7 @@ export function createProjectCommands({
     cliArgs,
     selectionService,
     upgradeSummaryService,
+    releasePublishPlannerService,
     governanceSummaryService,
     governanceHistoryService
   });
@@ -206,6 +209,7 @@ export function createProjectCommands({
 
     // 报告命令
     generateUpgradeSummaryCommand: reportCommands.generateUpgradeSummaryCommand,
+    planReleasePublishCommand: reportCommands.planReleasePublishCommand,
     generateGovernanceSummaryCommand: reportCommands.generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand: reportCommands.showGovernanceHistoryCommand
   };

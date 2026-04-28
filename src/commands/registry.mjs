@@ -50,6 +50,7 @@ const commandDefinitions = [
   { name: "generate-wrapper-registry-governance", scope: "project", method: "generateWrapperRegistryGovernanceCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "plan-wrapper-registrations", scope: "project", method: "planWrapperRegistrationsCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "generate-upgrade-summary", scope: "project", method: "generateUpgradeSummaryCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
+  { name: "plan-release-publish", scope: "project", method: "planReleasePublishCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "generate-governance-summary", scope: "project", method: "generateGovernanceSummaryCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "show-evolution-policy", scope: "project", method: "showEvolutionPolicyCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "validate-evolution-policy", scope: "project", method: "validateEvolutionPolicyCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },

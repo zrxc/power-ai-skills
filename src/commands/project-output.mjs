@@ -177,6 +177,11 @@ export function formatGenerateUpgradeSummaryMessage(result) {
   return `Generated upgrade summary: ${result.reportPath}, mode: ${result.mode}, status: ${result.status}, actions: ${result.recommendedActions.length}.`;
 }
 
+export function formatPlanReleasePublishMessage(result) {
+  const registryLabel = result.targetPublish.registryUrl || "missing";
+  return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}. Keep publish manual with \`${result.manualConfirmation.publishCommand}\` after \`${result.manualConfirmation.refreshArtifactsCommand}\`, \`${result.manualConfirmation.releaseCheckCommand}\`, and \`${result.manualConfirmation.releaseGenerateCommand}\`.`;
+}
+
 export function formatGenerateGovernanceSummaryMessage(result) {
   return `Generated governance summary: ${result.reportPath}, status: ${result.status}, overdue reviews: ${result.summary.overdueGovernanceReviews}, pending conversation reviews: ${result.summary.pendingConversationReviews}, pending wrapper proposals: ${result.summary.pendingWrapperProposals}.`;
 }
