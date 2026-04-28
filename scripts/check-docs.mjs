@@ -96,11 +96,11 @@ for (const relativePath of filesToScan) {
 const requiredDocSnippets = [
   {
     relativePath: "docs/maintenance-guide.md",
-    snippets: ["plan-release-publish", "execute-release-publish", "realPublishEnabled: false"]
+    snippets: ["plan-release-publish", "execute-release-publish", "published"]
   },
   {
     relativePath: "docs/release-process.md",
-    snippets: ["execute-release-publish --confirm --json", "ready-to-execute", "realPublishEnabled: false"]
+    snippets: ["execute-release-publish --confirm --json", "published", "publish-failed"]
   }
 ];
 

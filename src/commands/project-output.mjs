@@ -194,8 +194,11 @@ function formatNextActionSummary(nextAction) {
   if (nextAction.command) {
     return `next action: \`${nextAction.command}\``;
   }
+  if (nextAction.kind === "publish-complete") {
+    return `next action: ${nextAction.reason}`;
+  }
   if (nextAction.kind === "controlled-gate-satisfied" && nextAction.manualPublishCommand) {
-    return `next action: controlled gate satisfied; manual publish remains separate as \`${nextAction.manualPublishCommand}\``;
+    return `next action: ${nextAction.reason}`;
   }
   return `next action: ${nextAction.reason}`;
 }
@@ -204,7 +207,7 @@ export function formatPlanReleasePublishMessage(result) {
   const registryLabel = result.targetPublish.registryUrl || "missing";
   const latestExecutionSummary = formatLatestControlledExecutionSummary(result.evidence?.publishExecutionSummary || null);
   const nextActionSummary = formatNextActionSummary(result.nextAction);
-  return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}, ${latestExecutionSummary}, ${nextActionSummary}. Keep publish manual with \`${result.manualConfirmation.publishCommand}\` after \`${result.manualConfirmation.refreshArtifactsCommand}\`, \`${result.manualConfirmation.releaseCheckCommand}\`, and \`${result.manualConfirmation.releaseGenerateCommand}\`.`;
+  return `Release publish plan: ${result.targetPublish.packageName}@${result.targetPublish.version}, status: ${result.status}, registry: ${registryLabel}, blockers: ${result.blockers.length}, ${latestExecutionSummary}, ${nextActionSummary}. Refresh evidence with \`${result.manualConfirmation.refreshArtifactsCommand}\`, validate with \`${result.manualConfirmation.releaseCheckCommand}\` and \`${result.manualConfirmation.releaseGenerateCommand}\`, then advance through the controlled executor.`;
 }
 
 export function formatExecuteReleasePublishMessage(result) {

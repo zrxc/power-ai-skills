@@ -103,9 +103,13 @@ function buildTargetPublish({ packageJson }) {
   const tag = normalizeText(packageJson.publishConfig?.tag || "latest");
   const packageName = normalizeText(packageJson.name);
   const version = normalizeText(packageJson.version);
-  const publishCommand = registryUrl
-    ? `npm publish --registry "${registryUrl}"`
-    : "npm publish";
+  const publishArgs = ["publish"];
+  if (registryUrl) publishArgs.push("--registry", registryUrl);
+  if (access) publishArgs.push("--access", access);
+  if (tag && tag !== "latest") publishArgs.push("--tag", tag);
+  const publishCommand = publishArgs
+    .map((item) => /\s/.test(item) ? `"${item}"` : item)
+    .join(" ");
 
   return {
     packageName,
@@ -113,8 +117,9 @@ function buildTargetPublish({ packageJson }) {
     registryUrl,
     access,
     tag,
+    publishArgs,
     publishCommand,
-    commandTemplate: "npm publish --registry <registry-url>",
+    commandTemplate: "npm publish [--registry <registry-url>] [--access <access>] [--tag <tag>]",
     mappingSources: {
       packageName: "package.json name",
       version: "package.json version",

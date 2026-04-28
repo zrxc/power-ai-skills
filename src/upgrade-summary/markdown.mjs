@@ -91,6 +91,9 @@ export function buildRecommendedActions({ doctorReport, projectScan, conversatio
     if (release.publishExecution?.status === "acknowledgement-required") {
       actions.push("If the warn-level release snapshot is acceptable, re-run `npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json` after manual review.");
     }
+    if (release.publishExecution?.status === "publish-failed") {
+      actions.push("Review the latest controlled publish failure recorded in `manifest/release-publish-record.json` before retrying the same version publish.");
+    }
   }
 
   return [...new Set(actions)];

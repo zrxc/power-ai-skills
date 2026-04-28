@@ -400,11 +400,11 @@ function createTempManifestSnapshot(t) {
       version,
       packageRoot: root,
       projectRoot: root,
-      status: "confirmation-required",
-      executionMode: "manifest-recorded-skeleton",
-      realPublishEnabled: false,
-      publishAttempted: false,
-      publishSucceeded: false,
+      status: "published",
+      executionMode: "manifest-recorded-publish",
+      realPublishEnabled: true,
+      publishAttempted: true,
+      publishSucceeded: true,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
       commandFlags: {
         confirm: false,
@@ -436,7 +436,7 @@ function createTempManifestSnapshot(t) {
       },
       blockers: [],
       notes: [
-        "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided."
+        "Secondary eligibility check passed and the real npm publish command completed successfully."
       ],
       manualConfirmation: {
         mode: "package-maintainer-manual",
@@ -453,13 +453,13 @@ function createTempManifestSnapshot(t) {
       recordPathRelative: "manifest/release-publish-record.json",
       historicalRecordPath: path.join(manifestRoot, "release-publish-records", "release_publish_20260428121000000.json"),
       historicalRecordPathRelative: "manifest/release-publish-records/release_publish_20260428121000000.json",
-      failureSummaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
-      failureSummaryPathRelative: "manifest/release-publish-failure-summary.md",
+      failureSummaryPath: "",
+      failureSummaryPathRelative: "",
       failureSummary: {
-        present: true,
-        primaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
-        summaryPath: path.join(manifestRoot, "release-publish-failure-summary.md"),
-        summaryPathRelative: "manifest/release-publish-failure-summary.md"
+        present: false,
+        primaryReason: "",
+        summaryPath: "",
+        summaryPathRelative: ""
       }
     }, null, 2)}\n`,
     "utf8"
@@ -784,12 +784,12 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(payload.release.releaseGates.overallStatus, "pass");
   assert.equal(payload.release.upgradeAdvice.consumerCommandCount, 2);
   assert.equal(payload.release.upgradeAdvice.blocked, false);
-  assert.equal(payload.release.publishExecution.status, "confirmation-required");
-  assert.equal(payload.release.publishExecution.realPublishEnabled, false);
-  assert.equal(payload.release.publishExecution.publishAttempted, false);
-  assert.equal(payload.release.publishExecution.failureSummaryPresent, true);
+  assert.equal(payload.release.publishExecution.status, "published");
+  assert.equal(payload.release.publishExecution.realPublishEnabled, true);
+  assert.equal(payload.release.publishExecution.publishAttempted, true);
+  assert.equal(payload.release.publishExecution.failureSummaryPresent, false);
   assert.equal(payload.release.publishExecution.recordPath, path.join(manifestRoot, "release-publish-record.json"));
-  assert.equal(payload.release.publishExecution.failureSummaryPath, path.join(manifestRoot, "release-publish-failure-summary.md"));
+  assert.equal(payload.release.publishExecution.failureSummaryPath, "");
   assert.equal(payload.release.changedFileCount >= 1, true);
   assert.equal(payload.reportPath, path.join(manifestRoot, "upgrade-summary.md"));
   assert.equal(payload.jsonPath, path.join(manifestRoot, "upgrade-summary.json"));
@@ -811,11 +811,10 @@ test("generate-upgrade-summary writes package-maintenance release summary artifa
   assert.equal(savedJson.release.compatibilityMatrix.scenarioCount, 1);
   assert.equal(savedJson.release.releaseGates.overallStatus, "pass");
   assert.equal(savedJson.release.upgradeAdvice.consumerCommandCount, 2);
-  assert.equal(savedJson.release.publishExecution.status, "confirmation-required");
-  assert.equal(savedJson.release.publishExecution.realPublishEnabled, false);
-  assert.equal(savedJson.release.publishExecution.failureSummaryPresent, true);
-  assert.equal(markdown.includes("publish execution status: `confirmation-required`"), true);
-  assert.equal(markdown.includes("real publish enabled: false"), true);
-  assert.equal(markdown.includes("publish execution failure summary"), true);
-  assert.equal(payload.recommendedActions.some((item) => item.includes("execute-release-publish --confirm --json")), true);
+  assert.equal(savedJson.release.publishExecution.status, "published");
+  assert.equal(savedJson.release.publishExecution.realPublishEnabled, true);
+  assert.equal(savedJson.release.publishExecution.failureSummaryPresent, false);
+  assert.equal(markdown.includes("publish execution status: `published`"), true);
+  assert.equal(markdown.includes("real publish enabled: true"), true);
+  assert.equal(markdown.includes("publish execution failure summary"), false);
 });

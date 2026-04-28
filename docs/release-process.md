@@ -124,14 +124,8 @@ npx power-ai-skills execute-release-publish --confirm --json
 npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json
 ```
 
-- 当前 executor 仍是受控 skeleton；即使返回 `ready-to-execute`，record 里也会保留 `realPublishEnabled: false`，表示真实 `npm publish` 还没有在 CLI 内自动执行。
-- 因此 `ready-to-execute` 只代表这一轮 controlled gate 已满足，不代表包已经发布。
-
-21. 发布到私有 npm：
-
-```bash
-pnpm publish --registry http://192.168.140.17:8081/nexus/repository/npm-private/
-```
+- 当前 executor 会在 controlled gate 满足后直接执行真实 publish；成功时返回 `published`，失败时返回 `publish-failed`。
+- 因此完成这一步后，不需要再额外手工补一次 `pnpm publish`；是否真正发包以 `manifest/release-publish-record.json` 中的最终状态为准。
 
 ## release:prepare 当前包含的动作
 

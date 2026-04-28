@@ -92,6 +92,25 @@ function createExecutor(context) {
   });
 }
 
+function createMockPublishRunner({
+  ok = true,
+  exitCode = 0,
+  stdout = "published",
+  stderr = "",
+  errorMessage = ""
+} = {}) {
+  return () => ({
+    command: process.platform === "win32" ? "npm.cmd" : "npm",
+    args: ["publish", "--registry", "http://192.168.140.17:8081/nexus/repository/npm-private/"],
+    ok,
+    exitCode,
+    stdout,
+    stderr,
+    errorMessage,
+    signal: ""
+  });
+}
+
 test("executeReleasePublish requires explicit confirmation before any publish attempt", (t) => {
   const context = createRuntimeContext(import.meta.url);
   const tempRoot = createTempManifestRoot(t);
@@ -106,7 +125,7 @@ test("executeReleasePublish requires explicit confirmation before any publish at
   const result = executor.executeReleasePublish();
 
   assert.equal(result.status, "confirmation-required");
-  assert.equal(result.realPublishEnabled, false);
+  assert.equal(result.realPublishEnabled, true);
   assert.equal(result.publishAttempted, false);
   assert.equal(result.commandFlags.confirm, false);
   assert.equal(result.planner.status, "eligible");
@@ -126,10 +145,60 @@ test("executeReleasePublish requires explicit confirmation before any publish at
   assert.equal(versionRecord.artifacts.releasePublishRecordPath, result.executionRecordPath);
   assert.equal(versionRecord.artifacts.releasePublishFailureSummaryPath, result.failureSummaryPath);
   assert.equal(versionRecord.publishExecutionSummary.status, "confirmation-required");
-  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, false);
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, true);
   assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, true);
   assert.equal(versionRecord.publishExecutionSummary.nextAction.command, "npx power-ai-skills execute-release-publish --confirm --json");
   assert.match(formatExecuteReleasePublishMessage(result), /next action: `npx power-ai-skills execute-release-publish --confirm --json`/);
+});
+
+test("executeReleasePublish performs real publish when confirmation gates pass", (t) => {
+  const context = createRuntimeContext(import.meta.url);
+  const tempRoot = createTempManifestRoot(t);
+  const manifestDir = path.join(tempRoot, "manifest");
+  withReleaseManifestEnv(t, manifestDir);
+  createReleaseSnapshot(manifestDir, {
+    packageName: context.packageJson.name,
+    version: context.packageJson.version
+  });
+
+  const releasePublishPlannerService = createReleasePublishPlannerService({
+    context,
+    projectRoot: context.packageRoot
+  });
+  const executor = createReleasePublishExecutorService({
+    context,
+    projectRoot: context.packageRoot,
+    releasePublishPlannerService,
+    publishRunner: createMockPublishRunner()
+  });
+  const result = executor.executeReleasePublish({
+    confirm: true
+  });
+
+  assert.equal(result.status, "published");
+  assert.equal(result.realPublishEnabled, true);
+  assert.equal(result.publishAttempted, true);
+  assert.equal(result.publishSucceeded, true);
+  assert.equal(result.publishResult.ok, true);
+  assert.equal(result.failureSummaryPathRelative, "");
+  assert.equal(result.nextAction.kind, "publish-complete");
+  assert.equal(result.nextAction.command, "");
+
+  const record = readJson(result.executionRecordPath);
+  assert.equal(record.status, "published");
+  assert.equal(record.realPublishEnabled, true);
+  assert.equal(record.publishAttempted, true);
+  assert.equal(record.publishSucceeded, true);
+  assert.equal(record.publishResult.ok, true);
+  assert.equal(record.failureSummary.present, false);
+
+  const versionRecord = readJson(path.join(manifestDir, "version-record.json"));
+  assert.equal(versionRecord.publishExecutionSummary.status, "published");
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, true);
+  assert.equal(versionRecord.publishExecutionSummary.publishAttempted, true);
+  assert.equal(versionRecord.publishExecutionSummary.publishSucceeded, true);
+  assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, false);
+  assert.match(formatExecuteReleasePublishMessage(result), /publish command completed successfully/i);
 });
 
 test("executeReleasePublish performs a fresh planner re-check before confirmation", (t) => {
@@ -198,7 +267,7 @@ test("executeReleasePublish performs a fresh planner re-check before confirmatio
   assert.equal(record.plannerSummary.status, "blocked");
   const versionRecord = readJson(path.join(manifestDir, "version-record.json"));
   assert.equal(versionRecord.publishExecutionSummary.status, "blocked");
-  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, false);
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, true);
   assert.equal(versionRecord.publishExecutionSummary.plannerStatus, "blocked");
   assert.equal(versionRecord.publishExecutionSummary.nextAction.kind, "resolve-blockers");
 });
@@ -259,7 +328,7 @@ test("executeReleasePublish requires explicit warning acknowledgement for warn-l
   assert.match(fs.readFileSync(result.failureSummaryPath, "utf8"), /acknowledge/i);
   const versionRecord = readJson(path.join(manifestDir, "version-record.json"));
   assert.equal(versionRecord.publishExecutionSummary.status, "acknowledgement-required");
-  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, false);
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, true);
   assert.equal(versionRecord.publishExecutionSummary.requiresExplicitAcknowledgement, true);
   assert.equal(
     versionRecord.publishExecutionSummary.nextAction.command,
@@ -267,7 +336,7 @@ test("executeReleasePublish requires explicit warning acknowledgement for warn-l
   );
 });
 
-test("executeReleasePublish reaches ready-to-execute skeleton after confirmation and warning acknowledgement", (t) => {
+test("executeReleasePublish records publish failure after confirmation and warning acknowledgement", (t) => {
   const context = createRuntimeContext(import.meta.url);
   const tempRoot = createTempManifestRoot(t);
   const manifestDir = path.join(tempRoot, "manifest");
@@ -308,37 +377,56 @@ test("executeReleasePublish reaches ready-to-execute skeleton after confirmation
   });
   fs.writeFileSync(path.join(manifestDir, "release-publish-failure-summary.md"), "stale failure summary", "utf8");
 
-  const executor = createExecutor(context);
+  const releasePublishPlannerService = createReleasePublishPlannerService({
+    context,
+    projectRoot: context.packageRoot
+  });
+  const executor = createReleasePublishExecutorService({
+    context,
+    projectRoot: context.packageRoot,
+    releasePublishPlannerService,
+    publishRunner: createMockPublishRunner({
+      ok: false,
+      exitCode: 1,
+      stderr: "mock registry rejected publish"
+    })
+  });
   const result = executor.executeReleasePublish({
     confirm: true,
     acknowledgeWarnings: true
   });
 
-  assert.equal(result.status, "ready-to-execute");
-  assert.equal(result.realPublishEnabled, false);
-  assert.equal(result.publishAttempted, false);
+  assert.equal(result.status, "publish-failed");
+  assert.equal(result.realPublishEnabled, true);
+  assert.equal(result.publishAttempted, true);
+  assert.equal(result.publishSucceeded, false);
   assert.equal(result.commandFlags.acknowledgeWarnings, true);
-  assert.match(result.notes[1], /not enabled/i);
-  assert.equal(result.nextAction.kind, "controlled-gate-satisfied");
+  assert.match(result.notes[1], /stderr\/stdout summary/i);
+  assert.equal(result.nextAction.kind, "review-publish-failure");
   assert.equal(result.nextAction.command, "");
   assert.equal(fs.existsSync(result.executionRecordPath), true);
   assert.equal(fs.existsSync(result.executionRecordHistoryPath), true);
-  assert.equal(result.failureSummaryPathRelative, "");
-  assert.equal(fs.existsSync(path.join(manifestDir, "release-publish-failure-summary.md")), false);
+  assert.equal(result.failureSummaryPathRelative, "manifest/release-publish-failure-summary.md");
+  assert.equal(fs.existsSync(path.join(manifestDir, "release-publish-failure-summary.md")), true);
 
   const record = readJson(result.executionRecordPath);
-  assert.equal(record.status, "ready-to-execute");
-  assert.equal(record.realPublishEnabled, false);
-  assert.equal(record.failureSummary.present, false);
-  assert.equal(record.failureSummaryPath, "");
+  assert.equal(record.status, "publish-failed");
+  assert.equal(record.realPublishEnabled, true);
+  assert.equal(record.publishAttempted, true);
+  assert.equal(record.publishSucceeded, false);
+  assert.equal(record.publishResult.ok, false);
+  assert.equal(record.failureSummary.present, true);
+  assert.match(record.blockers[0].message, /registry rejected publish/i);
   const versionRecord = readJson(path.join(manifestDir, "version-record.json"));
-  assert.equal(versionRecord.publishExecutionSummary.status, "ready-to-execute");
-  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, false);
-  assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, false);
-  assert.equal(versionRecord.artifacts.releasePublishFailureSummaryPath, "");
-  assert.equal(versionRecord.publishExecutionSummary.nextAction.kind, "controlled-gate-satisfied");
+  assert.equal(versionRecord.publishExecutionSummary.status, "publish-failed");
+  assert.equal(versionRecord.publishExecutionSummary.realPublishEnabled, true);
+  assert.equal(versionRecord.publishExecutionSummary.publishAttempted, true);
+  assert.equal(versionRecord.publishExecutionSummary.publishSucceeded, false);
+  assert.equal(versionRecord.publishExecutionSummary.failureSummaryPresent, true);
+  assert.equal(versionRecord.artifacts.releasePublishFailureSummaryPath, path.join(manifestDir, "release-publish-failure-summary.md"));
+  assert.equal(versionRecord.publishExecutionSummary.nextAction.kind, "review-publish-failure");
   assert.match(
     formatExecuteReleasePublishMessage(result),
-    /controlled gate satisfied; manual publish remains separate as `npm publish/
+    /publish-failed/
   );
 });

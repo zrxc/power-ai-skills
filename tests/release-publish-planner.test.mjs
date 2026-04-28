@@ -283,14 +283,14 @@ test("planReleasePublish reuses publishExecutionSummary from version-record evid
     publishExecutionSummary: {
       executionId: "release_publish_20260428123000000",
       recordedAt: "2026-04-28T12:30:00.000Z",
-      status: "confirmation-required",
-      executionMode: "manifest-recorded-skeleton",
-      realPublishEnabled: false,
-      publishAttempted: false,
-      publishSucceeded: false,
+      status: "published",
+      executionMode: "manifest-recorded-publish",
+      realPublishEnabled: true,
+      publishAttempted: true,
+      publishSucceeded: true,
       wouldExecuteCommand: "npm publish --registry \"https://registry.npmjs.org/\"",
       commandFlags: {
-        confirm: false,
+        confirm: true,
         acknowledgeWarnings: false
       },
       plannerStatus: "eligible",
@@ -298,30 +298,30 @@ test("planReleasePublish reuses publishExecutionSummary from version-record evid
       plannerBlockers: [],
       releaseGateStatus: "pass",
       requiresExplicitAcknowledgement: false,
-      failureSummaryPresent: true,
-      failurePrimaryReason: "Planner re-check passed, but real publish remains disabled until explicit confirmation is provided.",
+      failureSummaryPresent: false,
+      failurePrimaryReason: "",
       recordPath: path.join(manifestDir, "release-publish-record.json"),
       recordPathRelative: "manifest/release-publish-record.json",
       historicalRecordPath: path.join(manifestDir, "release-publish-records", "release_publish_20260428123000000.json"),
       historicalRecordPathRelative: "manifest/release-publish-records/release_publish_20260428123000000.json",
-      failureSummaryPath: path.join(manifestDir, "release-publish-failure-summary.md"),
-      failureSummaryPathRelative: "manifest/release-publish-failure-summary.md"
+      failureSummaryPath: "",
+      failureSummaryPathRelative: ""
     }
   });
 
   const result = service.planReleasePublish();
 
   assert.equal(result.status, "eligible");
-  assert.equal(result.evidence.publishExecutionSummary.status, "confirmation-required");
-  assert.equal(result.evidence.publishExecutionSummary.realPublishEnabled, false);
-  assert.equal(result.evidence.publishExecutionSummary.failureSummaryPresent, true);
+  assert.equal(result.evidence.publishExecutionSummary.status, "published");
+  assert.equal(result.evidence.publishExecutionSummary.realPublishEnabled, true);
+  assert.equal(result.evidence.publishExecutionSummary.failureSummaryPresent, false);
   assert.equal(
     result.evidence.publishExecutionSummary.recordPath,
     path.join(manifestDir, "release-publish-record.json")
   );
   assert.match(
     formatPlanReleasePublishMessage(result),
-    /latest controlled execution: confirmation-required \(record: manifest\/release-publish-record\.json, failure summary: manifest\/release-publish-failure-summary\.md\), next action: `npx power-ai-skills execute-release-publish --confirm --json`\./
+    /latest controlled execution: published \(record: manifest\/release-publish-record\.json\), next action: `npx power-ai-skills execute-release-publish --confirm --json`\./
   );
 });
 

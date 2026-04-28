@@ -28,7 +28,7 @@ export function collectReleaseArtifactChecks({ context, releaseManifestDir, crea
     && fs.existsSync(notificationMarkdownPath);
   const governanceSummary = versionRecord?.governanceSummary || null;
   const publishExecutionSummary = versionRecord?.publishExecutionSummary || null;
-  const controlledPublishGatePendingStatuses = new Set(["blocked", "confirmation-required", "acknowledgement-required"]);
+  const controlledPublishGatePendingStatuses = new Set(["blocked", "confirmation-required", "acknowledgement-required", "publish-failed"]);
   const controlledPublishSnapshot = publishExecutionSummary || releasePublishRecord;
   const controlledPublishGatePending = controlledPublishSnapshot
     ? controlledPublishGatePendingStatuses.has(controlledPublishSnapshot.status)

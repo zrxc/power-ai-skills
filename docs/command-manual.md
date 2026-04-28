@@ -879,15 +879,15 @@ npx power-ai-skills execute-release-publish --confirm --json
 npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --json
 ```
 
-- `execute-release-publish` 当前还是受控骨架，不会真正执行 `npm publish`；这一层的目标是先固定命令 contract、二次资格校验和确认闸口。
+- `execute-release-publish` 现在已经接入真实 `npm publish`，但仍然保持受控入口：每次执行前必须重新做资格判定，并通过显式确认闸口。
 - 命令每次都会重新运行最新的 release planner，而不是直接复用上一次 `plan-release-publish` 的结果，避免拿过期 artifact 快照去做真实发布决策。
 - 如果 planner 已经 `blocked`，执行命令会直接返回 `blocked`；如果 planner 通过但没有 `--confirm`，则返回 `confirmation-required`。
 - 如果 release gate 是 `warn`，即使 planner 仍然 `eligible`，执行层也会要求显式 `--acknowledge-warnings`，否则返回 `acknowledgement-required`。
-- 当前第一版通过所有二次校验后只会返回 `ready-to-execute`，并给出 would-run 的 publish 命令；真实 `npm publish` 还没有在这一层启用。
-- 对应的 record 和 `publishExecutionSummary` 现在会显式带出 `realPublishEnabled: false`，用于声明“受控闸口已通过”与“CLI 已自动执行真实 publish”仍是两件事。
+- 当所有二次校验通过时，命令会直接执行真实 publish，并最终返回 `published` 或 `publish-failed`；`ready-to-execute` 不再作为最终成功态对外暴露。
+- 对应的 record 和 `publishExecutionSummary` 现在会显式带出 `realPublishEnabled: true`，用于声明当前 executor 已具备真实 publish 能力。
 - 每次执行都会刷新 `manifest/release-publish-record.json`，并追加一份带时间戳的历史记录到 `manifest/release-publish-records/`，至少沉淀 package、version、target registry、执行时间、planner 摘要与最终状态。
-- 执行结果、最新 record 快照和 `manifest/version-record.json.publishExecutionSummary` 现在都会带一份 `nextAction`：例如缺少确认时会直接给出 `execute-release-publish --confirm --json`，warn-level 情况会直接给出 `--confirm --acknowledge-warnings`，而 `ready-to-execute` 只会说明 controlled gate 已满足、真实 `npm publish` 仍保持手动分离。
-- 当状态不是 `ready-to-execute` 时，还会额外写出 `manifest/release-publish-failure-summary.md`，把当前失败原因和下一步人工动作固定下来；如果后续执行恢复到 `ready-to-execute`，这份失败摘要会被清理。
+- 执行结果、最新 record 快照和 `manifest/version-record.json.publishExecutionSummary` 现在都会带一份 `nextAction`：例如缺少确认时会直接给出 `execute-release-publish --confirm --json`，warn-level 情况会直接给出 `--confirm --acknowledge-warnings`，而 publish 成功后会明确说明真实 publish 已完成。
+- 当状态不是 `published` 时，还会额外写出 `manifest/release-publish-failure-summary.md`，把当前失败原因和下一步人工动作固定下来；如果后续执行成功，这份失败摘要会被清理。
 
 ## 1.4.4 Conversation miner strategy template
 

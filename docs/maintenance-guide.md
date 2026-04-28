@@ -69,9 +69,9 @@
 - 在仓库根目录执行 `npx power-ai-skills doctor`，会进入 `package-maintenance` 模式，只检查发布产物，不检查消费项目 `.power-ai/`。
 - `pnpm refresh:release-artifacts` 会统一刷新当前版本的 `skills-manifest.json`、`release-notes-<version>.md`、`impact-report.json`、`automation-report.json`、通知载荷以及 `manifest/version-record.json`。
 - `manifest/version-record.json` 是当前版本发布产物的正式记录文件，后续校验和排障都以它为准。
-- `plan-release-publish` 和 `execute-release-publish` 现在组成受控发布入口：先用 planner 看当前版本是否 `eligible`，再用 executor 重新复核并穿过确认闸口，最后才允许维护者单独手工执行真实 `npm publish`。
-- `execute-release-publish` 当前仍保持 skeleton 边界；即使返回 `ready-to-execute`，`manifest/release-publish-record.json`、`manifest/version-record.json.publishExecutionSummary` 和 upgrade summary 里也会明确记录 `realPublishEnabled: false`，表示真实 publish 仍未在 CLI 内启用。
-- 在边界正式放开前，不要把 `ready-to-execute` 解读成“已经发版”或“CLI 可以自动发版”；它只表示当前这一轮的受控复核、显式确认和 warning acknowledgement 都已满足。
+- `plan-release-publish` 和 `execute-release-publish` 现在组成完整的受控发布入口：先用 planner 看当前版本是否 `eligible`，再用 executor 重新复核并在确认闸口满足后执行真实 `npm publish`。
+- `execute-release-publish` 现在会把真实 publish 结果继续写回 `manifest/release-publish-record.json`、`manifest/version-record.json.publishExecutionSummary` 和 upgrade summary；成功时状态为 `published`，失败时状态为 `publish-failed`。
+- 即使已经接入真实 publish，这一层仍不是无人值守自动发版：维护者仍需要显式运行命令，并在 warn-level 情况下显式给出 `--acknowledge-warnings`。
 - `scripts/shared.mjs` 现在统一承接仓库维护侧的 `npm pack` 定位与 JSON 解析 helper；如果继续扩发布边界脚本或 smoke 测试，优先复用这里，不要在脚本和测试里各自再写一套 pack 调用逻辑。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
 - 如只想单独归档旧通知，可执行 `pnpm clean:release-artifacts`。

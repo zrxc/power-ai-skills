@@ -62,8 +62,8 @@
 - [x] 增加真实 publish 前的二次资格校验，避免直接复用过期 dry-run 结果去执行发布。
 - [x] 为 publish 结果增加 manifest / governance 记录，至少沉淀目标 registry、package、version、执行时间、状态与错误摘要。
 - [x] 在路线图和维护说明里固定“受控执行”与“无人值守自动 publish”的边界，避免后续把这一阶段误扩成全自动发版。
-- [ ] 在明确允许前继续保持 `execute-release-publish` 为受控 skeleton；等边界放开后，再把 `ready-to-execute` 接到真实 `npm publish`，并把真实 publish 结果继续落进同一份 record contract。
-  当前 contract 已额外固定 `realPublishEnabled: false`，用于在 record / version record / upgrade summary 里显式声明“真实 publish 尚未启用”。
+- [x] 在明确允许前继续保持 `execute-release-publish` 为受控 skeleton；等边界放开后，再把 `ready-to-execute` 接到真实 `npm publish`，并把真实 publish 结果继续落进同一份 record contract。
+  当前 contract 已切到 `realPublishEnabled: true`，真实 publish 成功与失败结果都会沉淀到 record / version record / upgrade summary。
 
 ## 完成标准
 

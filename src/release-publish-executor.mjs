@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureDir, readJson, writeJson } from "./shared/fs.mjs";
+import { spawnSync } from "node:child_process";
+import { ensureDir, readJson, safeTrim, writeJson } from "./shared/fs.mjs";
 import { buildExecutorNextAction } from "./release-publish-guidance.mjs";
 
 function normalizeText(value = "") {
@@ -26,6 +27,67 @@ function buildExecutionStamp(recordedAt = new Date().toISOString()) {
 
 function getReleaseManifestDir(packageRoot) {
   return path.resolve(process.env.POWER_AI_RELEASE_MANIFEST_DIR || path.join(packageRoot, "manifest"));
+}
+
+function truncateOutput(value = "", maxLength = 4000) {
+  const text = safeTrim(value);
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}\n...[truncated ${text.length - maxLength} chars]`;
+}
+
+function getNpmCommand() {
+  return process.platform === "win32" ? "npm.cmd" : "npm";
+}
+
+function runReleasePublishCommand({ packageRoot, targetPublish }) {
+  const args = Array.isArray(targetPublish.publishArgs) && targetPublish.publishArgs.length > 0
+    ? targetPublish.publishArgs
+    : ["publish"];
+  const command = getNpmCommand();
+  const result = spawnSync(command, args, {
+    cwd: packageRoot,
+    encoding: "utf8"
+  });
+
+  return {
+    command,
+    args,
+    exitCode: typeof result.status === "number" ? result.status : (result.error ? 1 : 0),
+    signal: normalizeText(result.signal),
+    stdout: result.stdout || "",
+    stderr: result.stderr || "",
+    errorMessage: result.error?.message || "",
+    ok: result.status === 0 && !result.error
+  };
+}
+
+function buildPublishAttemptSummary(publishAttempt = {}) {
+  return {
+    command: normalizeText(publishAttempt.command),
+    args: Array.isArray(publishAttempt.args) ? publishAttempt.args : [],
+    exitCode: typeof publishAttempt.exitCode === "number" ? publishAttempt.exitCode : null,
+    signal: normalizeText(publishAttempt.signal),
+    stdout: truncateOutput(publishAttempt.stdout),
+    stderr: truncateOutput(publishAttempt.stderr),
+    errorMessage: truncateOutput(publishAttempt.errorMessage),
+    ok: Boolean(publishAttempt.ok)
+  };
+}
+
+function buildPublishFailureMessage(publishAttempt = {}, targetPublish) {
+  const commandLabel = normalizeText(targetPublish?.publishCommand) || "npm publish";
+  const detail = truncateOutput(
+    publishAttempt.errorMessage
+    || publishAttempt.stderr
+    || publishAttempt.stdout
+    || ""
+  );
+  const exitCodeLabel = typeof publishAttempt.exitCode === "number"
+    ? `exit code ${publishAttempt.exitCode}`
+    : "unknown exit code";
+  return detail
+    ? `Real publish command failed for \`${commandLabel}\` with ${exitCodeLabel}: ${detail}`
+    : `Real publish command failed for \`${commandLabel}\` with ${exitCodeLabel}.`;
 }
 
 function buildFailureSummaryMarkdown(record) {
@@ -91,10 +153,11 @@ function buildExecutionRecord({
     executionMode: result.executionMode,
     realPublishEnabled: result.realPublishEnabled,
     publishAttempted: result.publishAttempted,
-    publishSucceeded: false,
+    publishSucceeded: result.publishSucceeded,
     wouldExecuteCommand: result.wouldExecuteCommand,
     commandFlags: result.commandFlags,
     targetPublish: result.targetPublish,
+    publishResult: result.publishResult || null,
     plannerSummary: {
       status: result.planner.status,
       blockerCount: result.planner.blockers.length,
@@ -124,6 +187,7 @@ function buildPublishExecutionSnapshot(record, manifestArtifacts) {
     publishAttempted: Boolean(record.publishAttempted),
     publishSucceeded: Boolean(record.publishSucceeded),
     wouldExecuteCommand: record.wouldExecuteCommand || "",
+    publishResult: record.publishResult || null,
     commandFlags: {
       confirm: Boolean(record.commandFlags?.confirm),
       acknowledgeWarnings: Boolean(record.commandFlags?.acknowledgeWarnings)
@@ -226,7 +290,8 @@ function persistExecutionArtifacts({
 export function createReleasePublishExecutorService({
   context,
   projectRoot,
-  releasePublishPlannerService
+  releasePublishPlannerService,
+  publishRunner = runReleasePublishCommand
 }) {
   const packageRoot = context.packageRoot;
   const releaseManifestDir = getReleaseManifestDir(packageRoot);
@@ -248,9 +313,11 @@ export function createReleasePublishExecutorService({
       planner: plannerResult,
       targetPublish: plannerResult.targetPublish,
       manualConfirmation: plannerResult.manualConfirmation,
-      executionMode: "manifest-recorded-skeleton",
-      realPublishEnabled: false,
+      executionMode: "manifest-recorded-publish",
+      realPublishEnabled: true,
       publishAttempted: false,
+      publishSucceeded: false,
+      publishResult: null,
       wouldExecuteCommand: plannerResult.targetPublish.publishCommand
     };
 
@@ -258,8 +325,11 @@ export function createReleasePublishExecutorService({
     let blockers = [];
     let notes = [
       "Secondary eligibility check passed and confirmation gates are satisfied.",
-      "Real npm publish is intentionally not enabled in this skeleton yet."
+      "Real npm publish has not been attempted yet for this execution."
     ];
+    let publishAttempted = false;
+    let publishSucceeded = false;
+    let publishResult = null;
 
     if (plannerResult.status === "blocked") {
       status = "blocked";
@@ -286,6 +356,36 @@ export function createReleasePublishExecutorService({
         "Planner re-check passed with warning-level release readiness.",
         "This execution skeleton will not advance until warnings are explicitly acknowledged."
       ];
+    } else {
+      publishAttempted = true;
+      const rawPublishResult = publishRunner({
+        packageRoot,
+        targetPublish: plannerResult.targetPublish,
+        commandFlags,
+        projectRoot
+      });
+      publishResult = buildPublishAttemptSummary(rawPublishResult);
+      publishSucceeded = Boolean(publishResult.ok);
+
+      if (publishSucceeded) {
+        status = "published";
+        notes = [
+          "Secondary eligibility check passed and the real npm publish command completed successfully.",
+          `Publish command completed: ${plannerResult.targetPublish.publishCommand}`
+        ];
+      } else {
+        status = "publish-failed";
+        blockers = [
+          {
+            code: "publish-command-failed",
+            message: buildPublishFailureMessage(publishResult, plannerResult.targetPublish)
+          }
+        ];
+        notes = [
+          "Secondary eligibility check passed and the real npm publish command was attempted.",
+          "Review the recorded publish stderr/stdout summary before retrying this version."
+        ];
+      }
     }
 
     const recordedAt = new Date().toISOString();
@@ -295,6 +395,9 @@ export function createReleasePublishExecutorService({
       recordedAt,
       status,
       blockers,
+      publishAttempted,
+      publishSucceeded,
+      publishResult,
       notes,
       nextAction: buildExecutorNextAction({
         status,
@@ -307,7 +410,7 @@ export function createReleasePublishExecutorService({
       packageRoot,
       result
     });
-    const failureSummaryMarkdown = status === "ready-to-execute"
+    const failureSummaryMarkdown = status === "published"
       ? ""
       : buildFailureSummaryMarkdown({
         ...record,

@@ -74,7 +74,25 @@ export function buildExecutorNextAction({ status, targetPublish }) {
     return {
       kind: "controlled-gate-satisfied",
       command: "",
-      reason: "The controlled execution gate is satisfied for this run; real npm publish remains a separate manual step.",
+      reason: "The controlled execution gate is satisfied and the real npm publish command completed successfully for this run.",
+      manualPublishCommand: normalizeText(targetPublish?.publishCommand)
+    };
+  }
+
+  if (status === "published") {
+    return {
+      kind: "publish-complete",
+      command: "",
+      reason: "The controlled execution gate is satisfied and the real npm publish command completed successfully for this run.",
+      manualPublishCommand: normalizeText(targetPublish?.publishCommand)
+    };
+  }
+
+  if (status === "publish-failed") {
+    return {
+      kind: "review-publish-failure",
+      command: "",
+      reason: "The controlled execution reached the real npm publish step, but the publish command failed and must be reviewed before retrying.",
       manualPublishCommand: normalizeText(targetPublish?.publishCommand)
     };
   }
