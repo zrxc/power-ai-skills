@@ -166,6 +166,13 @@ export function formatGenerateWrapperRegistryGovernanceMessage(result) {
   return `Generated wrapper registry governance: ${result.reportPath}, registered wrappers: ${result.summary.registeredWrapperCount}, proposals: ${result.summary.proposalCount}, ready: ${result.summary.readyForRegistration}, stalled: ${result.summary.stalledProposalCount}.`;
 }
 
+export function formatPlanWrapperRegistrationsMessage(result) {
+  const eligibleNames = result.candidates.filter((item) => item.status === "eligible").map((item) => item.toolName).join(", ") || "none";
+  const blockedNames = result.candidates.filter((item) => item.status === "blocked").map((item) => item.toolName).join(", ") || "none";
+  const requestedSuffix = result.requestedToolName ? `, tool: ${result.requestedToolName}` : "";
+  return `Wrapper registration plan${requestedSuffix}, target registry: ${result.summary.targetRegistryPath}, eligible: ${result.summary.eligibleCount} [${eligibleNames}], blocked: ${result.summary.blockedCount} [${blockedNames}]. Register an eligible proposal with \`${result.manualConfirmation.commandTemplate}\`.`;
+}
+
 export function formatGenerateUpgradeSummaryMessage(result) {
   return `Generated upgrade summary: ${result.reportPath}, mode: ${result.mode}, status: ${result.status}, actions: ${result.recommendedActions.length}.`;
 }

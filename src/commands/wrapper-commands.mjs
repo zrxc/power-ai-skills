@@ -24,6 +24,7 @@ import {
   formatGenerateWrapperRegistryGovernanceMessage,
   formatListWrapperPromotionsMessage,
   formatMaterializeWrapperPromotionMessage,
+  formatPlanWrapperRegistrationsMessage,
   formatRegisterWrapperPromotionMessage,
   formatRestoreWrapperPromotionMessage,
   formatReviewWrapperPromotionMessage,
@@ -162,6 +163,14 @@ export function createWrapperCommands({
     console.log(formatGenerateWrapperRegistryGovernanceMessage(result));
   }
 
+  function planWrapperRegistrationsCommand() {
+    const result = conversationMinerService.planWrapperRegistrations({
+      toolName: getWrapperPromotionToolName()
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanWrapperRegistrationsMessage(result));
+  }
+
   /**
    * 审查包装器晋升命令
    */
@@ -261,6 +270,7 @@ export function createWrapperCommands({
     showWrapperPromotionTimelineCommand,
     generateWrapperPromotionAuditCommand,
     generateWrapperRegistryGovernanceCommand,
+    planWrapperRegistrationsCommand,
     reviewWrapperPromotionCommand,
     materializeWrapperPromotionCommand,
     applyWrapperPromotionCommand,

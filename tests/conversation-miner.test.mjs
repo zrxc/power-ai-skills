@@ -2467,6 +2467,198 @@ test("register-wrapper-promotion rejects proposals that are not finalized", (t) 
   assert.equal(result.stderr.includes("must be finalized"), true);
 });
 
+test("plan-wrapper-registrations returns eligible and blocked proposals without registering wrappers", (t) => {
+  const { projectRoot } = createConversationProject(t);
+  installWrapperPromotionApplySourceFiles(projectRoot);
+
+  assert.equal(runCli(projectRoot, "scaffold-wrapper-promotion", [
+    "--tool",
+    "my-ready-tool",
+    "--display-name",
+    "My Ready Tool",
+    "--style",
+    "terminal"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "review-wrapper-promotion", [
+    "--tool",
+    "my-ready-tool",
+    "--status",
+    "accepted"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "materialize-wrapper-promotion", [
+    "--tool",
+    "my-ready-tool"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "apply-wrapper-promotion", [
+    "--tool",
+    "my-ready-tool"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "finalize-wrapper-promotion", [
+    "--tool",
+    "my-ready-tool"
+  ]).status, 0);
+
+  assert.equal(runCli(projectRoot, "scaffold-wrapper-promotion", [
+    "--tool",
+    "my-not-finalized-tool",
+    "--display-name",
+    "My Not Finalized Tool",
+    "--style",
+    "terminal"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "review-wrapper-promotion", [
+    "--tool",
+    "my-not-finalized-tool",
+    "--status",
+    "accepted"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "materialize-wrapper-promotion", [
+    "--tool",
+    "my-not-finalized-tool"
+  ]).status, 0);
+  assert.equal(runCli(projectRoot, "apply-wrapper-promotion", [
+    "--tool",
+    "my-not-finalized-tool"
+  ]).status, 0);
+
+  const codexPromotionRoot = path.join(projectRoot, ".power-ai", "proposals", "wrapper-promotions", "codex");
+  fs.mkdirSync(path.join(codexPromotionRoot, "registration-artifacts"), { recursive: true });
+  writeFile(path.join(codexPromotionRoot, "README.md"), "# Codex\n");
+  writeFile(path.join(codexPromotionRoot, "registration-artifacts", "wrapper-registration.bundle.json"), "{}\n");
+  writeFile(path.join(codexPromotionRoot, "registration-artifacts", "wrapper-registration.patch.md"), "# patch\n");
+  writeFile(path.join(codexPromotionRoot, "wrapper-promotion.json"), `${JSON.stringify({
+    toolName: "codex",
+    displayName: "Codex",
+    integrationStyle: "terminal",
+    generatedAt: "2026-01-01T00:00:00.000Z",
+    status: "accepted",
+    reviewedAt: "2026-01-01T00:05:00.000Z",
+    reviewNote: "",
+    reviewHistory: [],
+    materializationStatus: "generated",
+    materializedAt: "2026-01-01T00:10:00.000Z",
+    applicationStatus: "applied",
+    appliedAt: "2026-01-01T00:20:00.000Z",
+    appliedFiles: [],
+    followUpStatus: "finalized",
+    testsScaffoldedAt: "2026-01-01T00:25:00.000Z",
+    testScaffoldFiles: ["tests/conversation-miner.test.mjs"],
+    docsGeneratedAt: "2026-01-01T00:26:00.000Z",
+    docScaffoldFiles: ["docs/command-manual.md"],
+    finalizedAt: "2026-01-01T00:30:00.000Z",
+    finalizationNote: "",
+    registrationStatus: "not-registered",
+    registeredAt: "",
+    registrationNote: "",
+    archiveStatus: "active",
+    archivedAt: "",
+    archiveNote: "",
+    restoredAt: "",
+    restorationNote: "",
+    postApplyChecklistPath: "",
+    pendingFollowUps: [],
+    currentEntry: {
+      mode: "terminal-first",
+      command: ".power-ai/adapters/custom-tool-capture.example.ps1 -ToolName codex -ResponseText $response -Auto"
+    },
+    targetFiles: [
+      "src/conversation-miner/wrappers.mjs"
+    ]
+  }, null, 2)}\n`);
+
+  const result = runCli(projectRoot, "plan-wrapper-registrations", ["--json"]);
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(result.stdout);
+
+  assert.equal(payload.summary.proposalCount, 3);
+  assert.equal(payload.summary.evaluatedProposalCount, 3);
+  assert.equal(payload.summary.eligibleCount, 1);
+  assert.equal(payload.summary.blockedCount, 2);
+  assert.equal(payload.summary.targetRegistryPath, "src/conversation-miner/wrappers.mjs");
+  assert.equal(payload.summary.overwriteCandidateCount, 0);
+  assert.equal(payload.manualConfirmation.commandTemplate, "npx power-ai-skills register-wrapper-promotion --tool <tool-name>");
+
+  const readyCandidate = payload.candidates.find((item) => item.toolName === "my-ready-tool");
+  assert.ok(readyCandidate);
+  assert.equal(readyCandidate.status, "eligible");
+  assert.equal(readyCandidate.blockers.length, 0);
+  assert.equal(readyCandidate.targetRegistry.relativePath, "src/conversation-miner/wrappers.mjs");
+  assert.equal(readyCandidate.targetRegistry.action, "append-new-wrapper-entry");
+  assert.equal(readyCandidate.targetRegistry.entry.toolName, "my-ready-tool");
+  assert.equal(readyCandidate.targetRegistry.entry.commandName, "my-ready-tool-capture-session");
+  assert.equal(
+    readyCandidate.targetRegistry.mappingSources.commandName,
+    "registration-artifacts.bundle.artifacts.commandName"
+  );
+  assert.equal(
+    readyCandidate.manualConfirmation.command,
+    "npx power-ai-skills register-wrapper-promotion --tool my-ready-tool"
+  );
+  assert.equal(
+    readyCandidate.manualConfirmation.notes[0],
+    "Planned wrapper registry target: src/conversation-miner/wrappers.mjs (append-new-wrapper-entry)."
+  );
+  assert.equal(readyCandidate.evidence.registrationArtifacts.exists, true);
+  assert.equal(readyCandidate.evidence.registrationArtifacts.bundleContainsArtifacts, true);
+  assert.equal(readyCandidate.evidence.registrationArtifacts.commandName, "my-ready-tool-capture-session");
+
+  const notFinalizedCandidate = payload.candidates.find((item) => item.toolName === "my-not-finalized-tool");
+  assert.ok(notFinalizedCandidate);
+  assert.equal(notFinalizedCandidate.status, "blocked");
+  assert.equal(
+    notFinalizedCandidate.blockers.some((item) => item.code === "follow-up-not-finalized"),
+    true
+  );
+
+  const existingWrapperCandidate = payload.candidates.find((item) => item.toolName === "codex");
+  assert.ok(existingWrapperCandidate);
+  assert.equal(existingWrapperCandidate.status, "blocked");
+  assert.equal(existingWrapperCandidate.targetRegistry.action, "conflict-existing-wrapper-entry");
+  assert.equal(existingWrapperCandidate.targetRegistry.entry.commandName, "codex-capture-session");
+  assert.equal(
+    existingWrapperCandidate.blockers.some((item) => item.code === "wrapper-already-exists-in-registry"),
+    true
+  );
+  assert.equal(existingWrapperCandidate.evidence.existingRegistryWrapper.toolName, "codex");
+  assert.equal(existingWrapperCandidate.evidence.allowExistingWrapperOverwrite, false);
+
+  const singleResult = runCli(projectRoot, "plan-wrapper-registrations", [
+    "--tool",
+    "my-ready-tool",
+    "--json"
+  ]);
+  assert.equal(singleResult.status, 0, singleResult.stderr);
+  const singlePayload = JSON.parse(singleResult.stdout);
+  assert.equal(singlePayload.summary.evaluatedProposalCount, 1);
+  assert.equal(singlePayload.candidates[0].toolName, "my-ready-tool");
+
+  const codexProposalPath = path.join(codexPromotionRoot, "wrapper-promotion.json");
+  const codexProposal = JSON.parse(fs.readFileSync(codexProposalPath, "utf8"));
+  codexProposal.allowExistingWrapperOverwrite = true;
+  writeFile(codexProposalPath, `${JSON.stringify(codexProposal, null, 2)}\n`);
+
+  const overwriteResult = runCli(projectRoot, "plan-wrapper-registrations", [
+    "--tool",
+    "codex",
+    "--json"
+  ]);
+  assert.equal(overwriteResult.status, 0, overwriteResult.stderr);
+  const overwritePayload = JSON.parse(overwriteResult.stdout);
+  assert.equal(overwritePayload.summary.eligibleCount, 1);
+  assert.equal(overwritePayload.summary.overwriteCandidateCount, 1);
+  assert.equal(overwritePayload.candidates[0].status, "eligible");
+  assert.equal(overwritePayload.candidates[0].targetRegistry.action, "overwrite-existing-wrapper-entry");
+  assert.equal(overwritePayload.candidates[0].evidence.allowExistingWrapperOverwrite, true);
+  assert.equal(
+    overwritePayload.candidates[0].manualConfirmation.notes[0],
+    "Planned wrapper registry target: src/conversation-miner/wrappers.mjs (overwrite-existing-wrapper-entry)."
+  );
+
+  const proposalPath = path.join(projectRoot, ".power-ai", "proposals", "wrapper-promotions", "my-ready-tool", "wrapper-promotion.json");
+  const proposal = JSON.parse(fs.readFileSync(proposalPath, "utf8"));
+  assert.equal(proposal.registrationStatus, "not-registered");
+});
+
 test("archive-wrapper-promotion moves registered proposals out of active proposal root", (t) => {
   const { projectRoot } = createConversationProject(t);
   installWrapperPromotionApplySourceFiles(projectRoot);

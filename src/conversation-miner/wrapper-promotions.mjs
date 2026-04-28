@@ -20,6 +20,7 @@ import { sanitizeWrapperToolName, buildWrapperPromotionReadme, buildWrapperPromo
 import { createWrapperAuditService } from "./wrapper-audit.mjs";
 import { createWrapperApplyService } from "./wrapper-apply.mjs";
 import { createWrapperLifecycleService } from "./wrapper-lifecycle.mjs";
+import { planWrapperRegistrations } from "./wrapper-registration-planner.mjs";
 
 /**
  * 创建包装器升级服务
@@ -229,6 +230,7 @@ export function createWrapperPromotionService({ projectRoot, ensureConversationR
           toolName: proposal.toolName,
           displayName: proposal.displayName,
           integrationStyle: proposal.integrationStyle,
+          generatedAt: proposal.generatedAt || "",
           status: proposal.status || "draft",
           reviewedAt: proposal.reviewedAt || "",
           materializationStatus: proposal.materializationStatus || "not-generated",
@@ -237,12 +239,15 @@ export function createWrapperPromotionService({ projectRoot, ensureConversationR
           appliedAt: proposal.appliedAt || "",
           followUpStatus: proposal.followUpStatus || "not-started",
           docsGeneratedAt: proposal.docsGeneratedAt || "",
+          testScaffoldFiles: proposal.testScaffoldFiles || [],
+          docScaffoldFiles: proposal.docScaffoldFiles || [],
           finalizedAt: proposal.finalizedAt || "",
           registrationStatus: proposal.registrationStatus || "not-registered",
           registeredAt: proposal.registeredAt || "",
           archiveStatus: proposal.archiveStatus || (archived ? "archived" : "active"),
           archivedAt: proposal.archivedAt || "",
           restoredAt: proposal.restoredAt || "",
+          allowExistingWrapperOverwrite: Boolean(proposal.allowExistingWrapperOverwrite),
           pendingFollowUps: proposal.pendingFollowUps || [],
           promotionRoot: path.join(root, entry.name),
           archived
@@ -256,6 +261,15 @@ export function createWrapperPromotionService({ projectRoot, ensureConversationR
       count: proposals.length,
       proposals
     };
+  }
+
+  function planWrapperRegistrationsCommand({ toolName = "", criteria = {} } = {}) {
+    const listing = listWrapperPromotions({ includeArchived: false });
+    return planWrapperRegistrations({
+      proposals: listing.proposals,
+      toolName,
+      criteria
+    });
   }
 
   // ========== 创建子模块服务 ==========
@@ -305,6 +319,7 @@ export function createWrapperPromotionService({ projectRoot, ensureConversationR
     // 脚手架和列表
     scaffoldWrapperPromotion,
     listWrapperPromotions,
+    planWrapperRegistrations: planWrapperRegistrationsCommand,
 
     // 审计功能
     getWrapperPromotionTimeline: auditService.getWrapperPromotionTimeline.bind(auditService),

@@ -163,6 +163,7 @@ export function createProjectCommands({
     showWrapperPromotionTimelineCommand: conversationCommands.showWrapperPromotionTimelineCommand,
     generateWrapperPromotionAuditCommand: conversationCommands.generateWrapperPromotionAuditCommand,
     generateWrapperRegistryGovernanceCommand: conversationCommands.generateWrapperRegistryGovernanceCommand,
+    planWrapperRegistrationsCommand: conversationCommands.planWrapperRegistrationsCommand,
     reviewWrapperPromotionCommand: conversationCommands.reviewWrapperPromotionCommand,
     materializeWrapperPromotionCommand: conversationCommands.materializeWrapperPromotionCommand,
     applyWrapperPromotionCommand: conversationCommands.applyWrapperPromotionCommand,

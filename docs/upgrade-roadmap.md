@@ -51,10 +51,10 @@
 
 ## 未完成项
 
-- [ ] 定义 wrapper proposal / lifecycle -> registry 注册候选的资格判定来源，至少覆盖 proposal 状态、materialization / application / finalization / registration 状态、follow-up checklist 和目标 registry 落点来源。
-- [ ] 增加 wrapper registration 的 dry-run / plan contract，至少输出 `eligible / blocked`、阻断原因、建议目标 registry 落点和人工确认落点。
-- [ ] 明确 wrapper registry 正式映射规则，至少回答“toolName / commandName 从哪来、何时允许覆盖已有 wrapper、何时必须先 finalize 再 register”。
-- [ ] 在路线图和维护说明里固定 wrapper registration planner 与真实注册边界，避免后续直接跳过 dry-run 去写 registry。
+- [x] 定义 wrapper proposal / lifecycle -> registry 注册候选的资格判定来源，至少覆盖 proposal 状态、materialization / application / finalization / registration 状态、follow-up checklist 和目标 registry 落点来源。
+- [x] 增加 wrapper registration 的 dry-run / plan contract，至少输出 `eligible / blocked`、阻断原因、建议目标 registry 落点和人工确认落点。
+- [x] 明确 wrapper registry 正式映射规则，至少回答“toolName / commandName 从哪来、何时允许覆盖已有 wrapper、何时必须先 finalize 再 register”。
+- [x] 在路线图和维护说明里固定 wrapper registration planner 与真实注册边界，避免后续直接跳过 dry-run 去写 registry。
 
 ## 完成标准
 

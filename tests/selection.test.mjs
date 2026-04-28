@@ -248,6 +248,10 @@ const resolveProjectRootCwdCases = [
     argv: ["node", "power-ai-skills", "generate-wrapper-registry-governance"]
   },
   {
+    title: "resolveProjectRoot keeps cwd for plan-wrapper-registrations",
+    argv: ["node", "power-ai-skills", "plan-wrapper-registrations", "--tool", "my-new-tool"]
+  },
+  {
     title: "resolveProjectRoot keeps cwd for generate-upgrade-summary",
     argv: ["node", "power-ai-skills", "generate-upgrade-summary"]
   },

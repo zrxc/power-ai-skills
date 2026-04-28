@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（80）
+### project 命令（81）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -100,6 +100,7 @@
 | `show-wrapper-promotion-timeline` | `showWrapperPromotionTimelineCommand` | `cwd` |
 | `generate-wrapper-promotion-audit` | `generateWrapperPromotionAuditCommand` | `cwd` |
 | `generate-wrapper-registry-governance` | `generateWrapperRegistryGovernanceCommand` | `cwd` |
+| `plan-wrapper-registrations` | `planWrapperRegistrationsCommand` | `cwd` |
 | `generate-upgrade-summary` | `generateUpgradeSummaryCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
@@ -835,6 +836,21 @@ npx power-ai-skills generate-wrapper-registry-governance --stale-days 7 --json
 - 当前视图会列出已注册 wrapper、活动 proposal、归档 proposal、已 finalized 但未 register 的 proposal、仍有 pending follow-up 的 proposal，以及超过 `--stale-days` 仍停留在中间态的 proposal。
 - `--stale-days` 默认是 `14`，用于判断 proposal 是否长期停留在 `needs-review`、`in-progress` 或 `pending-follow-ups` 状态。
 
+## 1.4.4 Wrapper registration planning
+
+```bash
+npx power-ai-skills plan-wrapper-registrations --json
+npx power-ai-skills plan-wrapper-registrations --tool my-new-tool --json
+```
+
+- `plan-wrapper-registrations` 会对当前 active wrapper promotion proposal 做注册资格 dry-run，不会修改内置 wrapper registry，也不会回写 proposal 状态。
+- 结果会按 `eligible` / `blocked` 分类，并返回 `blockers`、registration artifacts、测试/文档样板、是否与内置 wrapper 重名等证据字段。
+- 结果里的 `targetRegistry` 会显式给出建议 registry 落点、建议 entry、`append` / `overwrite` / `conflict` 动作，以及 `toolName` / `displayName` / `integrationStyle` / `commandName` 的映射来源。
+- 当前第一版固定把真实 wrapper registry 落点规划到 `src/conversation-miner/wrappers.mjs`；`commandName` 优先读取已 materialize 的 bundle，缺失时退回 `<tool>-capture-session` 派生规则。
+- 这个命令适合放在 `finalize-wrapper-promotion` 之后、`register-wrapper-promotion` 之前，帮助维护者先筛出真正可以人工注册的 proposal。
+- 如果 proposal 与内置 wrapper 重名，默认会以 `blocked` + `conflict-existing-wrapper-entry` 返回；只有显式允许 overwrite 时，planner 才会把该 proposal 作为覆盖候选继续输出。
+- 指定 `--tool <name>` 时只评估单个 proposal；返回里的 `manualConfirmation.command` 会直接给出后续人工注册命令。
+
 ## 1.4.4 Conversation miner strategy template
 
 ```bash
@@ -1000,6 +1016,7 @@ npx power-ai-skills register-wrapper-promotion --tool my-new-tool --note "offici
 ```
 
 - 这个命令只允许对已经 `finalized` 的 proposal 执行，表示该 wrapper 已正式纳入支持矩阵。
+- 正式 register 之前，推荐先运行 `plan-wrapper-registrations --tool my-new-tool --json`，提前发现未 finalize、缺少 registration artifacts、缺少测试/文档样板或与内置 wrapper 冲突等阻塞项。
 - register 后 proposal 会写入 `registrationStatus`、`registeredAt`、`registrationNote`，并在 proposal 目录下生成 `registration-record.json`。
 - `doctor` 会对 `finalized` 但尚未 register 的 proposal 提示 `ready for registration`；对已 `registered` 的 proposal 不再继续提示 wrapper promotion warning。
 

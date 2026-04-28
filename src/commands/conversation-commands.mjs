@@ -169,6 +169,7 @@ export function createConversationCommands({
     showWrapperPromotionTimelineCommand: wrapperCommands.showWrapperPromotionTimelineCommand,
     generateWrapperPromotionAuditCommand: wrapperCommands.generateWrapperPromotionAuditCommand,
     generateWrapperRegistryGovernanceCommand: wrapperCommands.generateWrapperRegistryGovernanceCommand,
+    planWrapperRegistrationsCommand: wrapperCommands.planWrapperRegistrationsCommand,
     reviewWrapperPromotionCommand: wrapperCommands.reviewWrapperPromotionCommand,
     materializeWrapperPromotionCommand: wrapperCommands.materializeWrapperPromotionCommand,
     applyWrapperPromotionCommand: wrapperCommands.applyWrapperPromotionCommand,
