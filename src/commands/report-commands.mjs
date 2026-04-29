@@ -11,8 +11,11 @@ import {
   formatGenerateUpgradeSummaryMessage,
   formatPlanReleasePublishMessage,
   formatPlanReleaseOrchestrationMessage,
+  formatAuthorizeReleaseUnattendedGovernanceMessage,
+  formatPlanReleaseUnattendedGovernanceMessage,
   formatExecuteReleaseOrchestrationMessage,
   formatExecuteReleasePublishMessage,
+  formatExecuteReleaseUnattendedGovernanceMessage,
   formatGenerateGovernanceSummaryMessage,
   formatShowGovernanceHistoryMessage
 } from "./project-output.mjs";
@@ -27,6 +30,8 @@ import {
  * @param {Object} params.releaseOrchestrationPlannerService - 发布编排规划服务
  * @param {Object} params.releasePublishExecutorService - 发布执行服务
  * @param {Object} params.releaseOrchestrationExecutorService - 发布编排执行服务
+ * @param {Object} params.releaseUnattendedAuthorizationService - 无人值守治理授权服务
+ * @param {Object} params.releaseUnattendedGovernancePlannerService - 无人值守治理规划服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @returns {Object} 报告命令对象
@@ -39,6 +44,9 @@ export function createReportCommands({
   releaseOrchestrationPlannerService,
   releasePublishExecutorService,
   releaseOrchestrationExecutorService,
+  releaseUnattendedAuthorizationService,
+  releaseUnattendedGovernancePlannerService,
+  releaseUnattendedGovernanceExecutorService,
   governanceSummaryService,
   governanceHistoryService
 }) {
@@ -98,6 +106,24 @@ export function createReportCommands({
     console.log(formatPlanReleaseOrchestrationMessage(result));
   }
 
+  function authorizeReleaseUnattendedGovernanceCommand() {
+    const result = releaseUnattendedAuthorizationService.authorizeReleaseUnattendedGovernance({
+      actorId: getSingleOption("--authorized-by"),
+      actorName: getSingleOption("--display-name"),
+      reason: getSingleOption("--reason"),
+      expiresAt: getSingleOption("--expires-at"),
+      maxExecutionCount: getNumericOption("--max-execution-count") || 1
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatAuthorizeReleaseUnattendedGovernanceMessage(result));
+  }
+
+  function planReleaseUnattendedGovernanceCommand() {
+    const result = releaseUnattendedGovernancePlannerService.planReleaseUnattendedGovernance();
+    if (printJsonAndExit(result)) return;
+    console.log(formatPlanReleaseUnattendedGovernanceMessage(result));
+  }
+
   function executeReleaseOrchestrationCommand() {
     const result = releaseOrchestrationExecutorService.executeReleaseOrchestration();
     if (printJsonAndExit(result)) return;
@@ -114,6 +140,12 @@ export function createReportCommands({
     });
     if (printJsonAndExit(result)) return;
     console.log(formatExecuteReleasePublishMessage(result));
+  }
+
+  function executeReleaseUnattendedGovernanceCommand() {
+    const result = releaseUnattendedGovernanceExecutorService.executeReleaseUnattendedGovernance();
+    if (printJsonAndExit(result)) return;
+    console.log(formatExecuteReleaseUnattendedGovernanceMessage(result));
   }
 
   /**
@@ -142,8 +174,11 @@ export function createReportCommands({
     generateUpgradeSummaryCommand,
     planReleasePublishCommand,
     planReleaseOrchestrationCommand,
+    authorizeReleaseUnattendedGovernanceCommand,
+    planReleaseUnattendedGovernanceCommand,
     executeReleaseOrchestrationCommand,
     executeReleasePublishCommand,
+    executeReleaseUnattendedGovernanceCommand,
     generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand
   };

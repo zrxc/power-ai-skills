@@ -36,6 +36,9 @@ import { createReportCommands } from "./report-commands.mjs";
  * @param {Object} params.releaseOrchestrationPlannerService - 发布编排规划服务
  * @param {Object} params.releasePublishExecutorService - 发布执行服务
  * @param {Object} params.releaseOrchestrationExecutorService - 发布编排执行服务
+ * @param {Object} params.releaseUnattendedAuthorizationService - 无人值守治理授权服务
+ * @param {Object} params.releaseUnattendedGovernancePlannerService - 无人值守治理规划服务
+ * @param {Object} params.releaseUnattendedGovernanceExecutorService - 无人值守治理执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @param {Object} params.promotionTraceService - 晋升追踪服务
@@ -57,6 +60,9 @@ export function createProjectCommands({
   releaseOrchestrationPlannerService,
   releasePublishExecutorService,
   releaseOrchestrationExecutorService,
+  releaseUnattendedAuthorizationService,
+  releaseUnattendedGovernancePlannerService,
+  releaseUnattendedGovernanceExecutorService,
   governanceSummaryService,
   governanceHistoryService,
   promotionTraceService,
@@ -121,6 +127,9 @@ export function createProjectCommands({
     releaseOrchestrationPlannerService,
     releasePublishExecutorService,
     releaseOrchestrationExecutorService,
+    releaseUnattendedAuthorizationService,
+    releaseUnattendedGovernancePlannerService,
+    releaseUnattendedGovernanceExecutorService,
     governanceSummaryService,
     governanceHistoryService
   });
@@ -220,8 +229,11 @@ export function createProjectCommands({
     generateUpgradeSummaryCommand: reportCommands.generateUpgradeSummaryCommand,
     planReleasePublishCommand: reportCommands.planReleasePublishCommand,
     planReleaseOrchestrationCommand: reportCommands.planReleaseOrchestrationCommand,
+    authorizeReleaseUnattendedGovernanceCommand: reportCommands.authorizeReleaseUnattendedGovernanceCommand,
+    planReleaseUnattendedGovernanceCommand: reportCommands.planReleaseUnattendedGovernanceCommand,
     executeReleaseOrchestrationCommand: reportCommands.executeReleaseOrchestrationCommand,
     executeReleasePublishCommand: reportCommands.executeReleasePublishCommand,
+    executeReleaseUnattendedGovernanceCommand: reportCommands.executeReleaseUnattendedGovernanceCommand,
     generateGovernanceSummaryCommand: reportCommands.generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand: reportCommands.showGovernanceHistoryCommand
   };

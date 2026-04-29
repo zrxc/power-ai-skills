@@ -74,9 +74,16 @@
 - 这份 orchestration record 只描述多步骤发布编排的阶段状态、阻断点、人工闸口和 `nextAction`；它不是“真实 publish 已完成”的声明文件。
 - `plan-release-publish` 和 `execute-release-publish` 现在组成完整的受控发布入口：先用 planner 看当前版本是否 `eligible`，再用 executor 重新复核并在确认闸口满足后执行真实 `npm publish`。
 - `execute-release-publish` 现在会把真实 publish 结果继续写回 `manifest/release-publish-record.json`、`manifest/version-record.json.publishExecutionSummary` 和 upgrade summary；成功时状态为 `published`，失败时状态为 `publish-failed`。
+- `authorize-release-unattended-governance` 现在会把当前无人值守授权写入 `manifest/release-unattended-authorization.json`、`manifest/release-unattended-authorizations/`，并回填 `manifest/version-record.json.releaseUnattendedAuthorizationSummary`。
+- `execute-release-unattended-governance` 现在已经是可用的治理执行入口，但它不是独立的第二套 publish 实现；它会先跑治理 planner，只有在状态为 `authorized-ready` 时才继续代理调用 `execute-release-publish`。
 - `manifest/release-publish-record.json` 继续是单次真实受控 publish 的权威记录；如果需要判断“到底有没有真的发出去”，优先看它，而不是 orchestration record。
 - `doctor` package-maintenance 与 `generate-upgrade-summary` 现在会同时消费 orchestration snapshot 和 publish execution snapshot，方便把“编排层结论”和“真实执行状态”放在一起看。
 - 即使已经接入真实 publish，这一层仍不是无人值守自动发版：维护者仍需要显式运行命令，并在 warn-level 情况下显式给出 `--acknowledge-warnings`。
+- 当前维护口径固定区分三层状态：
+  - `ready-for-controlled-publish`：只表示编排层已经推进到真实 publish 人工闸口前
+  - 无人值守治理授权候选：当前由 `manifest/release-unattended-authorization.json` / `releaseUnattendedAuthorizationSummary` 声明；它只表示“当前版本在特定证据和约束下被允许进入无人值守候选窗口”，不表示真实 publish 已执行
+  - `published / publish-failed`：只由 `manifest/release-publish-record.json` / `publishExecutionSummary` 声明，才是“真实 publish 已执行”的权威语义
+- 当前仓库还没有把无人值守治理接成默认自动执行入口；即使 `execute-release-unattended-governance` 已可用，它也仍然要求维护者显式运行命令。在这层真正接入 cron、CI 或 webhook 自动触发前，不要把治理 record、授权 record 或 orchestration ready 状态误读成“已经自动发版”。
 - `scripts/shared.mjs` 现在统一承接仓库维护侧的 `npm pack` 定位与 JSON 解析 helper；如果继续扩发布边界脚本或 smoke 测试，优先复用这里，不要在脚本和测试里各自再写一套 pack 调用逻辑。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
 - 如只想单独归档旧通知，可执行 `pnpm clean:release-artifacts`。
@@ -98,6 +105,8 @@ pnpm clean:runtime
 pnpm refresh:release-artifacts
 npx power-ai-skills plan-release-orchestration --json
 npx power-ai-skills execute-release-orchestration --json
+npx power-ai-skills authorize-release-unattended-governance --authorized-by <maintainer> --json
+npx power-ai-skills execute-release-unattended-governance --json
 npx power-ai-skills plan-release-publish --json
 npx power-ai-skills execute-release-publish --confirm --json
 npx power-ai-skills generate-upgrade-summary --json
@@ -113,9 +122,16 @@ pnpm release:prepare
   - 先看 `manifest/release-orchestration-record.json`
   - 再看 `manifest/version-record.json.releaseOrchestrationSummary`
   - 如果状态是 `prepare-failed`，优先看 orchestration record 里的 `commandResults`
+- 编排层是 `ready-for-controlled-publish` 时：
+  - 只说明可以继续进入 `execute-release-publish`
+  - 不说明已经获得无人值守授权，也不说明已经真实发版
 - 真实 publish 卡住时：
   - 先看 `manifest/release-publish-record.json`
   - 再看 `manifest/release-publish-failure-summary.md`
+- 需要判断当前无人值守治理授权时：
+  - 先看 `manifest/release-unattended-authorization.json`
+  - 再看 `manifest/version-record.json.releaseUnattendedAuthorizationSummary`
+  - `execute-release-unattended-governance` 只有在治理状态 `authorized-ready` 时才会继续代理真实 publish；即使有授权，也仍以 `manifest/release-publish-record.json` 判断是否真的发出去
 - 需要统一视图时：
   - 运行 `npx power-ai-skills generate-upgrade-summary --json`
   - 或 `npx power-ai-skills doctor`

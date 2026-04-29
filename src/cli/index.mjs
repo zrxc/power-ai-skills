@@ -13,6 +13,9 @@ import { createReleasePublishExecutorService } from "../release-publish-executor
 import { createReleaseOrchestrationExecutorService } from "../release-orchestration-executor.mjs";
 import { createReleaseOrchestrationPlannerService } from "../release-orchestration-planner.mjs";
 import { createReleasePublishPlannerService } from "../release-publish-planner.mjs";
+import { createReleaseUnattendedAuthorizationService } from "../release-unattended-authorization-service.mjs";
+import { createReleaseUnattendedGovernanceExecutorService } from "../release-unattended-governance-executor.mjs";
+import { createReleaseUnattendedGovernancePlannerService } from "../release-unattended-governance-planner.mjs";
 import { createRenderingService } from "../rendering/index.mjs";
 import { createSelectionService, parseCliArgs, resolveProjectRoot } from "../selection/index.mjs";
 import { createTeamPolicyService } from "../team-policy/index.mjs";
@@ -107,6 +110,24 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     projectRoot,
     releaseOrchestrationPlannerService
   });
+  const releaseUnattendedGovernancePlannerService = createReleaseUnattendedGovernancePlannerService({
+    context,
+    projectRoot,
+    releasePublishPlannerService,
+    releaseOrchestrationPlannerService
+  });
+  const releaseUnattendedAuthorizationService = createReleaseUnattendedAuthorizationService({
+    context,
+    projectRoot,
+    releasePublishPlannerService,
+    releaseUnattendedGovernancePlannerService
+  });
+  const releaseUnattendedGovernanceExecutorService = createReleaseUnattendedGovernanceExecutorService({
+    context,
+    projectRoot,
+    releaseUnattendedGovernancePlannerService,
+    releasePublishExecutorService
+  });
   const governanceSummaryService = createGovernanceSummaryService({
     context,
     projectRoot,
@@ -153,6 +174,9 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     releaseOrchestrationPlannerService,
     releasePublishExecutorService,
     releaseOrchestrationExecutorService,
+    releaseUnattendedAuthorizationService,
+    releaseUnattendedGovernancePlannerService,
+    releaseUnattendedGovernanceExecutorService,
     governanceSummaryService,
     governanceHistoryService,
     evolutionService

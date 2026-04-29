@@ -228,6 +228,30 @@ export function formatPlanReleaseOrchestrationMessage(result) {
   return `Release orchestration plan: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], blockers: ${result.blockers.length}, record: ${recordLabel}, ${nextActionSummary}. Controlled publish remains anchored on \`execute-release-publish\`; this planner records dry-run orchestration snapshots only.`;
 }
 
+export function formatAuthorizeReleaseUnattendedGovernanceMessage(result) {
+  const authorizationLabel = result.authorization?.recordPathRelative || "manifest/release-unattended-authorization.json";
+  const supersededSuffix = result.supersededAuthorization?.authorizationId
+    ? `, superseded: ${result.supersededAuthorization.authorizationId}`
+    : "";
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  if (result.status !== "authorized") {
+    return `Release unattended authorization request: governance status ${result.governanceStatus}, status: ${result.status}, blockers: ${result.blockers.length}, ${nextActionSummary}. No authorization record was created.`;
+  }
+  return `Release unattended authorization created: ${result.authorization.packageName}@${result.authorization.version}, authorization: ${result.authorization.authorizationId}, record: ${authorizationLabel}, expiresAt: ${result.authorization.expiresAt}${supersededSuffix}, ${nextActionSummary}. This record authorizes unattended candidacy only; real publish still runs through the unattended governance executor.`;
+}
+
+export function formatPlanReleaseUnattendedGovernanceMessage(result) {
+  const recordLabel = result.governanceContract?.governanceRecordPathRelative
+    || result.governanceManifestArtifacts?.recordPathRelative
+    || result.releaseUnattendedGovernanceSummary?.recordPathRelative
+    || "manifest/release-unattended-governance-record.json";
+  const authorizationLabel = result.authorization?.present
+    ? `${result.authorization.authorizationId || "present"}:${result.authorization.status || "unknown"}`
+    : "none";
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release unattended governance plan: ${result.packageName}@${result.version}, status: ${result.status}, authorization: ${authorizationLabel}, blockers: ${result.blockers.length}, record: ${recordLabel}, ${nextActionSummary}. Unattended governance planning does not execute real publish.`;
+}
+
 export function formatExecuteReleaseOrchestrationMessage(result) {
   const stageSummary = result.stages.map((item) => `${item.id}:${item.status}`).join(", ") || "none";
   const recordLabel = result.orchestrationContract?.orchestrationRecordPathRelative
@@ -237,6 +261,21 @@ export function formatExecuteReleaseOrchestrationMessage(result) {
   const executedCommandCount = result.commandResults?.length || 0;
   const nextActionSummary = formatNextActionSummary(result.nextAction);
   return `Release orchestration execution: status ${result.status}, stages: ${result.stages.length} [${stageSummary}], commands executed: ${executedCommandCount}, record: ${recordLabel}, ${nextActionSummary}. This executor runs pre-publish orchestration steps only and stops before the real publish human gate.`;
+}
+
+export function formatExecuteReleaseUnattendedGovernanceMessage(result) {
+  const packageLabel = result.publishExecution?.targetPublish
+    ? `${result.publishExecution.targetPublish.packageName}@${result.publishExecution.targetPublish.version}`
+    : `${result.governancePlan?.packageName || "unknown-package"}@${result.governancePlan?.version || "unknown-version"}`;
+  const governanceRecordLabel = result.governancePlan?.governanceContract?.governanceRecordPathRelative
+    || result.governancePlan?.governanceManifestArtifacts?.recordPathRelative
+    || result.governancePlan?.releaseUnattendedGovernanceSummary?.recordPathRelative
+    || "manifest/release-unattended-governance-record.json";
+  const publishRecordLabel = result.publishExecution?.executionRecordPathRelative
+    || result.publishExecution?.manifestArtifacts?.recordPathRelative
+    || "none";
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  return `Release unattended governance execution: ${packageLabel}, governance status: ${result.governanceStatus}, final status: ${result.status}, publishExecuted: ${result.publishExecuted}, authorizationConsumed: ${result.authorizationConsumed}, governance record: ${governanceRecordLabel}, publish record: ${publishRecordLabel}, ${nextActionSummary}. This executor only delegates to real publish after the unattended governance planner reaches authorized-ready.`;
 }
 
 export function formatGenerateGovernanceSummaryMessage(result) {

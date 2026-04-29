@@ -22,6 +22,35 @@
 
 后续 `doctor` package-maintenance 与 `generate-upgrade-summary` 都优先读取这里的快照，而不是重新各自推导一套 release 状态。
 
+## 三层状态边界
+
+- 编排已 ready：
+  - 以 `manifest/release-orchestration-record.json` 或 `manifest/version-record.json.releaseOrchestrationSummary` 中的 `ready-for-controlled-publish` 为准。
+  - 只表示 pre-publish 步骤已经推进到真实 publish 人工闸口前。
+  - 不表示已经获得无人值守治理授权，也不表示真实 publish 已执行。
+- 已授权无人值守候选：
+  - 这是无人值守治理层的概念，详细设计见 `docs/technical-solutions/release-unattended-governance-design-1.4.7.md`。
+  - 当前由 `manifest/release-unattended-authorization.json` / `releaseUnattendedAuthorizationSummary` 声明；它表达的只是“当前版本在特定证据和约束下被允许进入无人值守候选窗口”。
+  - 它不声明真实 publish 已执行，也不能覆盖 `release-publish-record.json` 的最终状态语义。
+- 真实 publish 已执行：
+  - 以 `manifest/release-publish-record.json` 或 `manifest/version-record.json.publishExecutionSummary` 为准。
+  - 只有这一层负责声明真实 publish 是否尝试、是否成功，以及失败摘要。
+  - 如果这里不是 `published`，就不能把任何编排 ready 或治理授权状态解读为“已经发出去了”。
+
+当前仓库现在有两个真实发版相关入口：
+
+- `authorize-release-unattended-governance`
+  - 维护者显式创建或覆盖当前无人值守治理授权。
+  - 会写入当前授权 record、历史授权归档以及 `version-record.json.releaseUnattendedAuthorizationSummary`。
+- `execute-release-publish`
+  - 维护者显式确认后直接执行真实 publish。
+- `execute-release-unattended-governance`
+  - 先重新跑无人值守治理 planner。
+  - 只有在治理状态达到 `authorized-ready` 时，才会继续代理调用真实 publish executor。
+  - 如果治理条件不满足，它只会记录当前阻断状态，不会触发真实 publish。
+
+但这仍不等于“默认自动发版”已经启用。当前仓库还没有把无人值守治理接成 cron、CI 定时器或 webhook 自动触发入口；所有真实发版动作仍然需要维护者显式运行命令。
+
 ## 中心仓库发布
 
 1. 修改 skill、脚本、模板或文档。
@@ -148,7 +177,7 @@ npx power-ai-skills execute-release-orchestration --json
 - 如果当前状态是：
   - `prepare-failed`：先按 orchestration record 里的失败步骤和 `nextAction` 处理，不进入真实 publish
   - `blocked`：说明 pre-publish 步骤虽然跑完，但最新 orchestration planner 仍然阻断，先处理 blocker
-  - `ready-for-controlled-publish`：说明已经安全推进到真实 publish 人工闸口前，可以继续进入下一步受控 publish executor
+  - `ready-for-controlled-publish`：说明已经安全推进到真实 publish 人工闸口前，可以继续进入下一步受控 publish executor；这仍不是“已授权无人值守候选”或“真实 publish 已执行”
   - `published-awaiting-follow-up`：说明最近一次真实 publish 已完成，应先做 follow-up，而不是重复发版
 
 21. 如需只读确认当前编排层状态，也可以单独再看一次 dry-run：
@@ -157,7 +186,32 @@ npx power-ai-skills execute-release-orchestration --json
 npx power-ai-skills plan-release-orchestration --json
 ```
 
-22. 再运行一次受控 publish executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
+22. 如当前编排层与治理 planner 都已就绪，可先显式写入无人值守治理授权：
+
+```bash
+npx power-ai-skills authorize-release-unattended-governance --authorized-by <maintainer> --json
+```
+
+- 这一步会：
+  - 把当前授权写入 `manifest/release-unattended-authorization.json`
+  - 归档历史授权到 `manifest/release-unattended-authorizations/`
+  - 如存在旧的 active 授权，则先把它标记为 `superseded`
+- 这一步仍不触发真实 publish；它只是在当前证据快照上声明“允许进入无人值守候选窗口”。
+
+23. 如已具备有效治理授权，且希望通过治理入口代理执行真实 publish，可执行：
+
+```bash
+npx power-ai-skills execute-release-unattended-governance --json
+```
+
+- 这一步会先重新检查：
+  - 当前编排层是否仍是 `ready-for-controlled-publish`
+  - 当前 publish planner 是否仍是 `eligible`
+  - 当前版本是否存在有效且未消费的无人值守授权
+- 只有治理状态达到 `authorized-ready` 时，它才会继续调用真实 publish executor。
+- 如果返回 `blocked`、`execution-locked`、`follow-up-blocked` 或 `authorization-expired`，说明这一步没有触发真实 publish，应先处理治理 blocker。
+
+24. 再运行一次受控 publish executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
 
 ```bash
 npx power-ai-skills execute-release-publish --confirm --json
@@ -177,7 +231,7 @@ npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --j
   - `manifest/version-record.json.publishExecutionSummary`
   - 失败时额外写出 `manifest/release-publish-failure-summary.md`
 
-23. 真实 publish 结束后，刷新维护视图并确认 follow-up：
+24. 真实 publish 结束后，刷新维护视图并确认 follow-up：
 
 ```bash
 npx power-ai-skills generate-upgrade-summary --json
@@ -195,6 +249,12 @@ npx power-ai-skills doctor
 - 想知道“当前编排层建议我做什么”：
   - 看 `manifest/release-orchestration-record.json`
   - 或看 `manifest/version-record.json.releaseOrchestrationSummary`
+- 想知道“当前是否只是推进到了人工闸口前”：
+  - 看编排层状态是不是 `ready-for-controlled-publish`
+  - 这只表示可以进入受控 publish executor，不表示已经发版
+- 想知道“未来如果接入无人值守治理，这份状态算不算已授权候选”：
+  - 不能只看 orchestration ready
+  - 需要单独看治理授权记录；详细 contract 见 `docs/technical-solutions/release-unattended-governance-design-1.4.7.md`
 - 想知道“刚才到底有没有真的发出去”：
   - 看 `manifest/release-publish-record.json`
   - 或看 `manifest/version-record.json.publishExecutionSummary`

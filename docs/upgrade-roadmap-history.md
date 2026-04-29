@@ -1967,3 +1967,91 @@ pnpm release:prepare
 结论：
 
 - `P6-6` 已按原阶段定义收口；下一阶段应先明确是否正式立项“无人值守发布治理”，或改为别的后续主题，而不是继续把已完成的编排阶段挂在当前路线图中。
+
+## 1.4.7 / P6-7 无人值守发布治理第一版
+
+阶段目标：
+
+- 在 `P6-6` 已完成自动发布编排第一版的基础上，继续向上补“无人值守发布治理”这一层，但先补治理 contract，不直接跳到定时自动发版。
+- 明确什么条件下当前版本才具备“允许无人值守发布”的资格，避免把“编排层已 ready”误读成“可以随时自动 publish”。
+- 把编排层状态、真实 publish 执行状态、治理授权、失败锁定和 follow-up 收口为一套可审计的治理语义，而不是继续依赖维护者记忆流程。
+- 保持现有 `plan-release-orchestration`、`execute-release-orchestration`、`plan-release-publish`、`execute-release-publish`、package-maintenance `doctor`、upgrade summary 与 manifest record contract 语义稳定，不在这一阶段直接引入默认开启的定时任务。
+
+已完成：
+
+- 已把无人值守发布治理的资格模型、授权 artifact、治理 planner contract、失败锁定 / 冷却 / follow-up gate 设计沉淀到 `docs/technical-solutions/release-unattended-governance-design-1.4.7.md`。
+- 已新增无人值守治理 planner 与 record persistence skeleton：
+  - `src/release-unattended-governance-planner.mjs`
+  - `src/release-unattended-governance-record.mjs`
+- 已新增命令入口 `plan-release-unattended-governance [--json]`，并把命令注册表片段同步回 `docs/command-manual.md`。
+- 已在维护文档中固定三层状态边界：
+  - 编排已 ready
+  - 已授权无人值守候选
+  - 真实 publish 已执行
+  - 已同步 `docs/release-process.md`
+  - 已同步 `docs/maintenance-guide.md`
+- 已补充自动化测试，覆盖：
+  - 授权缺失
+  - 有效授权下的 `authorized-ready`
+  - warn-level 阻断
+  - `publish-failed-lock`
+  - `follow-up-pending`
+  - 版本变化导致的授权失效
+  - 新增测试：`tests/release-unattended-governance-planner.test.mjs`
+
+阶段收口判断：
+
+- 无人值守治理已经不再停留在纯文档设想，而是具备可运行的 planner skeleton、record contract 和第一批关键治理场景测试。
+- 编排 ready、治理授权候选和真实 publish 执行三层状态边界已经被写清楚，不会再把任意一层误读成另一层。
+- 失败锁定、人工解锁、follow-up gate 和授权失效这些高风险状态已经有明确阻断语义，不会默认朝自动重试或自动继续推进滑动。
+- 当前实现仍然保持了“先做治理判定与授权，再决定是否进入真正托管执行入口”的节奏，没有提前把设计稿误接成默认自动发版。
+
+结论：
+
+- `P6-7` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实托管执行入口或 CI / cron 执行边界，而不是回退到治理 contract 的重定义。
+
+## 1.4.7 / P6-8 无人值守治理授权入口第一版
+
+阶段目标：
+
+- 在 `P6-7` 已完成无人值守治理 planner、record contract 和执行锁定语义的基础上，补齐“治理授权如何被正式发出”的第一版入口，而不是继续依赖手工编写 authorization fixture 或临时 JSON。
+- 把当前治理 planner、authorization record、历史授权归档、`version-record.json.releaseUnattendedAuthorizationSummary` 和执行入口收口成一条可运行链路，但仍保持默认自动触发关闭。
+- 明确“授权已发出”“治理状态已 ready”和“真实 publish 已执行”三层语义边界，避免后续把授权 record 误读成已经自动发版。
+- 保持现有 `plan-release-unattended-governance`、`execute-release-unattended-governance`、`execute-release-publish`、doctor、upgrade summary 与 manifest record contract 语义稳定，不在这一阶段直接接入 cron、CI 或 webhook 自动触发。
+
+已完成：
+
+- 已新增 `src/release-unattended-authorization-service.mjs`，统一承接无人值守治理授权的正式写入：
+  - 当前授权写入 `manifest/release-unattended-authorization.json`
+  - 历史授权归档到 `manifest/release-unattended-authorizations/`
+  - `manifest/version-record.json.releaseUnattendedAuthorizationSummary` 回填
+- 已新增命令入口 `authorize-release-unattended-governance [--authorized-by <actor>] [--display-name <name>] [--reason <text>] [--expires-at <iso>] [--max-execution-count <n>] [--json]`，用于：
+  - 在当前 release evidence 满足治理前提时正式发放授权
+  - 复用现有 unattended governance planner 做前置资格复核
+  - 输出下一步建议，明确继续走 `execute-release-unattended-governance`
+- 已固定授权入口第一版生命周期规则：
+  - 当前 active 授权存在时，新授权会先把旧授权标记为 `superseded`
+  - 已消费或非 active 授权不会被误改写
+  - 非法 `--expires-at` 会直接阻断，不写入脏 record
+- 已把 CLI wiring、project output summary 与命令注册表同步到新授权入口，并补齐 `cwd` 解析规则。
+- 已同步更新 `docs/maintenance-guide.md`、`docs/release-process.md`、`docs/upgrade-roadmap.md`，收口：
+  - `plan -> authorize -> execute-release-unattended-governance` 的推荐顺序
+  - authorization record 与 publish record 的语义边界
+  - “当前已有授权入口，但仍未默认接入自动触发”的维护口径
+- 已补充自动化测试，覆盖：
+  - 首次授权创建
+  - 旧 active 授权 supersede
+  - warn-level 仍需人工 acknowledgement 时的阻断
+  - 新命令的 `project root` 解析策略
+  - 原有 unattended governance planner / executor 回归场景
+
+阶段收口判断：
+
+- 无人值守治理授权已经不再停留在设计稿或测试 fixture，而是具备正式 CLI 入口、稳定 record contract 和版本记录回填链路。
+- `planner -> authorization -> executor -> publish record` 的职责边界已经被写清楚，不会再把“授权已发出”误读成“真实 publish 已执行”。
+- 当前实现仍然保持了默认自动触发关闭、人工显式运行命令的边界，没有为了补授权入口提前滑向 cron / CI 自动发版。
+- 维护文档、路线图和现有 unattended governance 测试已经同步到同一口径，后续可以在这个基础上继续讨论托管执行边界，而不是回退到 authorization contract 的缺口。
+
+结论：
+
+- `P6-8` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实托管执行入口或 CI / cron 托管执行边界，而不是继续停留在授权 record 的手工补写。

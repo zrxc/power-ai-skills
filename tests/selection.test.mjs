@@ -264,12 +264,24 @@ const resolveProjectRootCwdCases = [
     argv: ["node", "power-ai-skills", "plan-release-orchestration", "--json"]
   },
   {
+    title: "resolveProjectRoot keeps cwd for authorize-release-unattended-governance",
+    argv: ["node", "power-ai-skills", "authorize-release-unattended-governance", "--authorized-by", "alice", "--json"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for plan-release-unattended-governance",
+    argv: ["node", "power-ai-skills", "plan-release-unattended-governance", "--json"]
+  },
+  {
     title: "resolveProjectRoot keeps cwd for execute-release-orchestration",
     argv: ["node", "power-ai-skills", "execute-release-orchestration", "--json"]
   },
   {
     title: "resolveProjectRoot keeps cwd for execute-release-publish",
     argv: ["node", "power-ai-skills", "execute-release-publish", "--confirm", "--json"]
+  },
+  {
+    title: "resolveProjectRoot keeps cwd for execute-release-unattended-governance",
+    argv: ["node", "power-ai-skills", "execute-release-unattended-governance", "--json"]
   },
   {
     title: "resolveProjectRoot keeps cwd for generate-governance-summary",
