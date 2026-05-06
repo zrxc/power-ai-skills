@@ -37,11 +37,17 @@
   - 只有这一层负责声明真实 publish 是否尝试、是否成功，以及失败摘要。
   - 如果这里不是 `published`，就不能把任何编排 ready 或治理授权状态解读为“已经发出去了”。
 
-当前仓库现在有两个真实发版相关入口：
+当前仓库现在有四个发布治理相关入口：
 
 - `authorize-release-unattended-governance`
   - 维护者显式创建或覆盖当前无人值守治理授权。
   - 会写入当前授权 record、历史授权归档以及 `version-record.json.releaseUnattendedAuthorizationSummary`。
+- `execute-release-unattended-hosted`
+  - 托管执行边界入口，要求显式 `--runtime-source ci|cron`。
+  - 当前只接受两类运行时证据：
+    - `ci`：`CI=true`
+    - `cron`：`POWER_AI_RELEASE_CRON=1`
+  - 会把托管执行快照写入 `manifest/release-unattended-hosted-record.json`、`manifest/release-unattended-hosted-records/` 和 `version-record.json.releaseUnattendedHostedExecutionSummary`。
 - `execute-release-publish`
   - 维护者显式确认后直接执行真实 publish。
 - `execute-release-unattended-governance`
@@ -49,7 +55,7 @@
   - 只有在治理状态达到 `authorized-ready` 时，才会继续代理调用真实 publish executor。
   - 如果治理条件不满足，它只会记录当前阻断状态，不会触发真实 publish。
 
-但这仍不等于“默认自动发版”已经启用。当前仓库还没有把无人值守治理接成 cron、CI 定时器或 webhook 自动触发入口；所有真实发版动作仍然需要维护者显式运行命令。
+但这仍不等于“默认自动发版”已经启用。当前仓库只是补齐了“托管执行边界入口”和运行时证据校验；真正的 cron、CI 定时器或 webhook 自动触发编排仍需要单独配置，且所有真实发版动作依然受现有 unattended governance 与 publish contract 约束。
 
 ## 中心仓库发布
 
@@ -198,7 +204,26 @@ npx power-ai-skills authorize-release-unattended-governance --authorized-by <mai
   - 如存在旧的 active 授权，则先把它标记为 `superseded`
 - 这一步仍不触发真实 publish；它只是在当前证据快照上声明“允许进入无人值守候选窗口”。
 
-23. 如已具备有效治理授权，且希望通过治理入口代理执行真实 publish，可执行：
+23. 如当前准备从托管运行时推进这次发布，可先通过 hosted 边界入口校验运行时来源和 trigger 元数据：
+
+```bash
+npx power-ai-skills execute-release-unattended-hosted --runtime-source ci --json
+```
+
+- 如是 cron 包装层，改为：
+
+```bash
+POWER_AI_RELEASE_CRON=1 npx power-ai-skills execute-release-unattended-hosted --runtime-source cron --json
+```
+
+- 这一步会先检查：
+  - 是否显式提供 `--runtime-source ci|cron`
+  - `ci` 场景是否存在 `CI=true`
+  - `cron` 场景是否存在 `POWER_AI_RELEASE_CRON=1`
+- 只有托管来源边界成立后，它才会继续代理调用 `execute-release-unattended-governance`。
+- 即使这一步通过，它也不会绕过治理授权、失败锁定或真实 publish contract；它只是把“从什么托管来源触发”也写进 release audit trail。
+
+24. 如已具备有效治理授权，且希望直接通过治理入口代理执行真实 publish，可执行：
 
 ```bash
 npx power-ai-skills execute-release-unattended-governance --json
@@ -211,7 +236,7 @@ npx power-ai-skills execute-release-unattended-governance --json
 - 只有治理状态达到 `authorized-ready` 时，它才会继续调用真实 publish executor。
 - 如果返回 `blocked`、`execution-locked`、`follow-up-blocked` 或 `authorization-expired`，说明这一步没有触发真实 publish，应先处理治理 blocker。
 
-24. 再运行一次受控 publish executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
+25. 再运行一次受控 publish executor，确保本次发版使用的是最新证据，而不是旧 dry-run：
 
 ```bash
 npx power-ai-skills execute-release-publish --confirm --json
@@ -231,7 +256,7 @@ npx power-ai-skills execute-release-publish --confirm --acknowledge-warnings --j
   - `manifest/version-record.json.publishExecutionSummary`
   - 失败时额外写出 `manifest/release-publish-failure-summary.md`
 
-24. 真实 publish 结束后，刷新维护视图并确认 follow-up：
+26. 真实 publish 结束后，刷新维护视图并确认 follow-up：
 
 ```bash
 npx power-ai-skills generate-upgrade-summary --json

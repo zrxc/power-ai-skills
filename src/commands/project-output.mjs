@@ -278,6 +278,19 @@ export function formatExecuteReleaseUnattendedGovernanceMessage(result) {
   return `Release unattended governance execution: ${packageLabel}, governance status: ${result.governanceStatus}, final status: ${result.status}, publishExecuted: ${result.publishExecuted}, authorizationConsumed: ${result.authorizationConsumed}, governance record: ${governanceRecordLabel}, publish record: ${publishRecordLabel}, ${nextActionSummary}. This executor only delegates to real publish after the unattended governance planner reaches authorized-ready.`;
 }
 
+export function formatExecuteReleaseUnattendedHostedMessage(result) {
+  const packageLabel = result.publishExecution?.targetPublish
+    ? `${result.publishExecution.targetPublish.packageName}@${result.publishExecution.targetPublish.version}`
+    : `${result.packageName || "unknown-package"}@${result.version || "unknown-version"}`;
+  const hostedRecordLabel = result.hostedContract?.hostedRecordPathRelative
+    || result.hostedManifestArtifacts?.recordPathRelative
+    || result.releaseUnattendedHostedExecutionSummary?.recordPathRelative
+    || "manifest/release-unattended-hosted-record.json";
+  const nextActionSummary = formatNextActionSummary(result.nextAction);
+  const triggerLabel = result.trigger?.triggerLabel || result.trigger?.triggerId || "none";
+  return `Release unattended hosted execution: ${packageLabel}, runtime source: ${result.runtimeSource || "missing"}, trigger: ${triggerLabel}, governance status: ${result.governanceStatus || "not-run"}, final status: ${result.status}, publishExecuted: ${result.publishExecuted}, authorizationConsumed: ${result.authorizationConsumed}, hosted record: ${hostedRecordLabel}, ${nextActionSummary}. This executor adds CI / cron runtime boundary checks before delegating to unattended governance execution.`;
+}
+
 export function formatGenerateGovernanceSummaryMessage(result) {
   return `Generated governance summary: ${result.reportPath}, status: ${result.status}, overdue reviews: ${result.summary.overdueGovernanceReviews}, pending conversation reviews: ${result.summary.pendingConversationReviews}, pending wrapper proposals: ${result.summary.pendingWrapperProposals}.`;
 }

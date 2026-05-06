@@ -39,6 +39,7 @@ import { createReportCommands } from "./report-commands.mjs";
  * @param {Object} params.releaseUnattendedAuthorizationService - 无人值守治理授权服务
  * @param {Object} params.releaseUnattendedGovernancePlannerService - 无人值守治理规划服务
  * @param {Object} params.releaseUnattendedGovernanceExecutorService - 无人值守治理执行服务
+ * @param {Object} params.releaseUnattendedHostedExecutorService - 无人值守托管执行服务
  * @param {Object} params.governanceSummaryService - 治理摘要服务
  * @param {Object} params.governanceHistoryService - 治理历史服务
  * @param {Object} params.promotionTraceService - 晋升追踪服务
@@ -63,6 +64,7 @@ export function createProjectCommands({
   releaseUnattendedAuthorizationService,
   releaseUnattendedGovernancePlannerService,
   releaseUnattendedGovernanceExecutorService,
+  releaseUnattendedHostedExecutorService,
   governanceSummaryService,
   governanceHistoryService,
   promotionTraceService,
@@ -130,6 +132,7 @@ export function createProjectCommands({
     releaseUnattendedAuthorizationService,
     releaseUnattendedGovernancePlannerService,
     releaseUnattendedGovernanceExecutorService,
+    releaseUnattendedHostedExecutorService,
     governanceSummaryService,
     governanceHistoryService
   });
@@ -234,6 +237,7 @@ export function createProjectCommands({
     executeReleaseOrchestrationCommand: reportCommands.executeReleaseOrchestrationCommand,
     executeReleasePublishCommand: reportCommands.executeReleasePublishCommand,
     executeReleaseUnattendedGovernanceCommand: reportCommands.executeReleaseUnattendedGovernanceCommand,
+    executeReleaseUnattendedHostedCommand: reportCommands.executeReleaseUnattendedHostedCommand,
     generateGovernanceSummaryCommand: reportCommands.generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand: reportCommands.showGovernanceHistoryCommand
   };

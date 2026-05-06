@@ -104,7 +104,7 @@ function createAuthorizationRecord({
   version,
   targetPublish,
   orchestrationExecutionId = "release_orchestration_20260428120000000",
-  expiresAt = "2026-04-29T12:00:00.000Z",
+  expiresAt = "2026-05-29T12:00:00.000Z",
   status = "active"
 }) {
   const recordPath = path.join(manifestDir, "release-unattended-authorization.json");

@@ -2055,3 +2055,56 @@ pnpm release:prepare
 结论：
 
 - `P6-8` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实托管执行入口或 CI / cron 托管执行边界，而不是继续停留在授权 record 的手工补写。
+
+## 1.4.7 / P6-9 托管执行边界第一版
+
+阶段目标：
+
+- 在 `P6-8` 已补齐无人值守治理授权入口的基础上，继续向前补“托管执行边界”这一层，但先补 hosted runtime source / trigger contract，而不是直接把 cron、CI 或 webhook 自动调度默认接通。
+- 给 `CI / cron` 场景一个可运行、可审计、不会绕过现有治理和 publish contract 的托管执行入口，避免后续把“从哪里触发”继续写成隐含约定。
+- 把 hosted runtime source、trigger 元数据、unattended governance 执行结果和 `version-record.json` 摘要收口为一条 record chain，保持默认自动触发仍然关闭。
+- 保持现有 `authorize-release-unattended-governance`、`plan-release-unattended-governance`、`execute-release-unattended-governance`、`execute-release-publish`、doctor、upgrade summary 与 manifest record contract 语义稳定，不在这一阶段直接接入具体 CI workflow、cron 定时器或 webhook 注册。
+
+已完成：
+
+- 已新增 `src/release-unattended-hosted-executor.mjs`，把托管执行边界从治理执行入口中拆出，单独承接：
+  - `--runtime-source ci|cron` 显式来源声明
+  - `CI=true` / `POWER_AI_RELEASE_CRON=1` 运行时证据校验
+  - trigger 元数据解析：`--trigger-id`、`--trigger-label` 以及常见 CI 环境变量回退
+  - 通过边界校验后再代理调用 `execute-release-unattended-governance`
+- 已新增 `src/release-unattended-hosted-record.mjs`，把托管执行快照落到：
+  - `manifest/release-unattended-hosted-record.json`
+  - `manifest/release-unattended-hosted-records/`
+  - `manifest/version-record.json.releaseUnattendedHostedExecutionSummary`
+- 已新增命令入口 `execute-release-unattended-hosted --runtime-source ci|cron [--trigger-id <id>] [--trigger-label <label>] [--json]`，用于：
+  - 先校验托管来源边界
+  - 再代理运行 unattended governance executor
+  - 输出 hosted record 与下一步建议，而不是直接跳过治理层
+- 已固定托管执行边界第一版规则：
+  - `ci` 只接受 `CI=true`
+  - `cron` 只接受 `POWER_AI_RELEASE_CRON=1`
+  - 缺少 `--runtime-source` 或缺少运行时证据时，直接返回 blocker 并落 hosted record
+  - hosted executor 只包装“来源和触发元数据”这一层，不绕过授权、失败锁定、follow-up gate 或真实 publish contract
+- 已把 CLI wiring、project output summary、命令注册表和 `cwd` 解析规则同步到 hosted 执行入口。
+- 已同步更新 `docs/maintenance-guide.md`、`docs/release-process.md`、`docs/upgrade-roadmap.md`，收口：
+  - `plan -> authorize -> execute-release-unattended-hosted -> execute-release-unattended-governance` 的推荐顺序
+  - hosted record、authorization record 与 publish record 的语义边界
+  - “当前已有托管执行边界入口，但仍未默认接入自动调度”的维护口径
+- 已补充自动化测试，覆盖：
+  - 缺少 runtime source 的阻断
+  - `ci` 缺少环境证据时的阻断
+  - `ci` 场景下 hosted record / trigger 元数据落盘
+  - `cron` 场景下显式环境证据通过
+  - 新命令的 `project root` 解析策略
+  - 原有 unattended authorization / governance executor 回归场景
+
+阶段收口判断：
+
+- 托管执行边界已经不再停留在文档方向或局部代码草稿，而是具备正式 CLI 入口、hosted runtime source contract、trigger audit trail 和版本记录回填链路。
+- `hosted boundary -> unattended governance -> publish record` 的职责边界已经被写清楚，不会再把“从 CI / cron 触发”误读成“绕过治理直接发版”。
+- 当前实现仍然保持了默认自动调度关闭、显式命令和显式运行时证据的边界，没有为了补 hosted 入口提前滑向默认自动发版。
+- 维护文档、路线图和现有 unattended governance / hosted execution 测试已经同步到同一口径，后续可以在这个基础上继续讨论真实自动调度接线，而不是回退到 hosted boundary contract 的缺口。
+
+结论：
+
+- `P6-9` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实自动调度接线或托管 runbook / wrapper，而不是继续停留在 hosted runtime source 边界本身。

@@ -284,6 +284,10 @@ const resolveProjectRootCwdCases = [
     argv: ["node", "power-ai-skills", "execute-release-unattended-governance", "--json"]
   },
   {
+    title: "resolveProjectRoot keeps cwd for execute-release-unattended-hosted",
+    argv: ["node", "power-ai-skills", "execute-release-unattended-hosted", "--runtime-source", "ci", "--json"]
+  },
+  {
     title: "resolveProjectRoot keeps cwd for generate-governance-summary",
     argv: ["node", "power-ai-skills", "generate-governance-summary"]
   },

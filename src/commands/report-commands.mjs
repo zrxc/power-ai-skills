@@ -16,6 +16,7 @@ import {
   formatExecuteReleaseOrchestrationMessage,
   formatExecuteReleasePublishMessage,
   formatExecuteReleaseUnattendedGovernanceMessage,
+  formatExecuteReleaseUnattendedHostedMessage,
   formatGenerateGovernanceSummaryMessage,
   formatShowGovernanceHistoryMessage
 } from "./project-output.mjs";
@@ -47,6 +48,7 @@ export function createReportCommands({
   releaseUnattendedAuthorizationService,
   releaseUnattendedGovernancePlannerService,
   releaseUnattendedGovernanceExecutorService,
+  releaseUnattendedHostedExecutorService,
   governanceSummaryService,
   governanceHistoryService
 }) {
@@ -148,6 +150,16 @@ export function createReportCommands({
     console.log(formatExecuteReleaseUnattendedGovernanceMessage(result));
   }
 
+  function executeReleaseUnattendedHostedCommand() {
+    const result = releaseUnattendedHostedExecutorService.executeReleaseUnattendedHosted({
+      runtimeSource: getSingleOption("--runtime-source"),
+      triggerId: getSingleOption("--trigger-id"),
+      triggerLabel: getSingleOption("--trigger-label")
+    });
+    if (printJsonAndExit(result)) return;
+    console.log(formatExecuteReleaseUnattendedHostedMessage(result));
+  }
+
   /**
    * 生成治理摘要命令 - 汇总项目治理状态信息
    */
@@ -179,6 +191,7 @@ export function createReportCommands({
     executeReleaseOrchestrationCommand,
     executeReleasePublishCommand,
     executeReleaseUnattendedGovernanceCommand,
+    executeReleaseUnattendedHostedCommand,
     generateGovernanceSummaryCommand,
     showGovernanceHistoryCommand
   };

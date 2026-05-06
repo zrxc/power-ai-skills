@@ -57,6 +57,7 @@ const commandDefinitions = [
   { name: "execute-release-orchestration", scope: "project", method: "executeReleaseOrchestrationCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "execute-release-publish", scope: "project", method: "executeReleasePublishCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "execute-release-unattended-governance", scope: "project", method: "executeReleaseUnattendedGovernanceCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
+  { name: "execute-release-unattended-hosted", scope: "project", method: "executeReleaseUnattendedHostedCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "generate-governance-summary", scope: "project", method: "generateGovernanceSummaryCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "show-evolution-policy", scope: "project", method: "showEvolutionPolicyCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },
   { name: "validate-evolution-policy", scope: "project", method: "validateEvolutionPolicyCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.CWD },

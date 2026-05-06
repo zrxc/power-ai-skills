@@ -1,7 +1,7 @@
 {
   "packageName": "@power/power-ai-skills",
   "version": "1.4.7",
-  "generatedAt": "2026-04-29T09:35:30.457Z",
+  "generatedAt": "2026-05-06T03:27:46.821Z",
   "skills": [
     {
       "name": "advanced-search-skill",

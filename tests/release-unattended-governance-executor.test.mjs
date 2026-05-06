@@ -113,7 +113,7 @@ function createAuthorizationRecord({
     version,
     targetPublish,
     constraints: {
-      expiresAt: "2026-04-29T12:00:00.000Z",
+      expiresAt: "2026-05-29T12:00:00.000Z",
       maxExecutionCount: 1,
       allowWarnGate: false,
       requireNoPendingFollowUp: true,

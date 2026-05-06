@@ -57,7 +57,7 @@
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
-### project 命令（88）
+### project 命令（89）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
@@ -109,6 +109,7 @@
 | `execute-release-orchestration` | `executeReleaseOrchestrationCommand` | `cwd` |
 | `execute-release-publish` | `executeReleasePublishCommand` | `cwd` |
 | `execute-release-unattended-governance` | `executeReleaseUnattendedGovernanceCommand` | `cwd` |
+| `execute-release-unattended-hosted` | `executeReleaseUnattendedHostedCommand` | `cwd` |
 | `generate-governance-summary` | `generateGovernanceSummaryCommand` | `cwd` |
 | `show-evolution-policy` | `showEvolutionPolicyCommand` | `cwd` |
 | `validate-evolution-policy` | `validateEvolutionPolicyCommand` | `cwd` |

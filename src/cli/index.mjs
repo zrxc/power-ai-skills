@@ -14,6 +14,7 @@ import { createReleaseOrchestrationExecutorService } from "../release-orchestrat
 import { createReleaseOrchestrationPlannerService } from "../release-orchestration-planner.mjs";
 import { createReleasePublishPlannerService } from "../release-publish-planner.mjs";
 import { createReleaseUnattendedAuthorizationService } from "../release-unattended-authorization-service.mjs";
+import { createReleaseUnattendedHostedExecutorService } from "../release-unattended-hosted-executor.mjs";
 import { createReleaseUnattendedGovernanceExecutorService } from "../release-unattended-governance-executor.mjs";
 import { createReleaseUnattendedGovernancePlannerService } from "../release-unattended-governance-planner.mjs";
 import { createRenderingService } from "../rendering/index.mjs";
@@ -128,6 +129,11 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     releaseUnattendedGovernancePlannerService,
     releasePublishExecutorService
   });
+  const releaseUnattendedHostedExecutorService = createReleaseUnattendedHostedExecutorService({
+    context,
+    projectRoot,
+    releaseUnattendedGovernanceExecutorService
+  });
   const governanceSummaryService = createGovernanceSummaryService({
     context,
     projectRoot,
@@ -177,6 +183,7 @@ export function createCliRuntime({ importMetaUrl, argv = process.argv } = {}) {
     releaseUnattendedAuthorizationService,
     releaseUnattendedGovernancePlannerService,
     releaseUnattendedGovernanceExecutorService,
+    releaseUnattendedHostedExecutorService,
     governanceSummaryService,
     governanceHistoryService,
     evolutionService
