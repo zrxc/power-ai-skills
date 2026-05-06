@@ -55,6 +55,30 @@ node ./scripts/verify-consumer.mjs --commands init,sync,doctor D:/path/to/projec
   - `generate-impact-task`
 - `consumer`
   - `verify-consumer`
+- `hosted-release`
+  - `pnpm release:hosted -- --expect-status published`
+
+## Hosted 调用壳
+
+如果你们已经准备把仓库维护侧发布挂到托管运行时，但还不想直接把“自动触发默认开启”写死到仓库里，优先接这一层：
+
+```bash
+pnpm release:hosted -- --expect-status published
+```
+
+说明：
+
+- `release:hosted` 是维护侧 wrapper，会代理到 `execute-release-unattended-hosted --json`。
+- 未显式传 `--runtime-source` 时，它会优先读 `POWER_AI_RELEASE_RUNTIME_SOURCE`，否则按 `POWER_AI_RELEASE_CRON=1` / `CI=true` 推断。
+- 模板里的 hosted release job 还会额外要求 `POWER_AI_ENABLE_HOSTED_RELEASE=1`，避免 tag 一出现就默认露出发布入口。
+- 默认只把 hosted runtime contract 失败视为流水线失败：
+  - `hosted-runtime-source-required`
+  - `hosted-runtime-evidence-missing`
+- 如果你希望托管 job 只在“这次真的发布成功”时通过，应显式加：
+
+```bash
+pnpm release:hosted -- --expect-status published
+```
 
 ## 产物建议
 

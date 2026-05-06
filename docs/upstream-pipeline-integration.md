@@ -52,12 +52,31 @@ node ./scripts/generate-upgrade-payload.mjs
 3. 调用 `run-upgrade-automation.mjs`
 4. 触发 skill 仓库或相关 owner 处理升级任务
 
+## 托管发布调用壳
+
+当上游流水线已经准备好从托管环境推进 skill 仓库自己的发布时，优先调用维护侧 wrapper，而不是直接在模板里散写 `execute-release-unattended-hosted`：
+
+```bash
+pnpm release:hosted -- --runtime-source ci --expect-status published --trigger-id "$CI_PIPELINE_ID" --trigger-label "$CI_PIPELINE_SOURCE"
+```
+
+这条壳子的作用是：
+
+1. 统一 `runtime source / trigger` 传参方式
+2. 继续复用现有 hosted boundary -> unattended governance -> publish contract
+3. 让流水线显式决定“只校验 hosted contract”还是“必须等到 published 才算成功”
+
+如果只想把托管环境证据和 hosted record 落盘，但不把 `not-authorized` / `follow-up-blocked` 直接视为 job 失败，可以去掉 `--expect-status published`。
+模板里同时建议用 `POWER_AI_ENABLE_HOSTED_RELEASE=1` 做显式开关，避免 tag / release pipeline 默认露出 hosted publish job。
+
 ## 建议变量
 
 - `UPGRADE_BASE_SHA`
 - `UPGRADE_HEAD_SHA`
 - `UPGRADE_REPO_PATH`
 - `UPGRADE_CONSUMER_PROJECT`
+- `POWER_AI_RELEASE_RUNTIME_SOURCE`
+- `POWER_AI_ENABLE_HOSTED_RELEASE`
 
 ## 模板文件
 

@@ -63,6 +63,7 @@ const requiredScripts = [
   "ci:check",
   "verify:consumer",
   "release:notes",
+  "release:hosted",
   "sync",
   "init:project",
   "tools:list",

@@ -86,6 +86,7 @@ node ./scripts/verify-consumer.mjs <project-path>
 ```bash
 node ./scripts/run-upgrade-automation.mjs --base <git-base> --head <git-head> --repo <upstream-repo-path> --consumer <project-path>
 node ./scripts/generate-upgrade-payload.mjs
+pnpm release:hosted -- --runtime-source ci --expect-status published
 ```
 
 ## 注释要求

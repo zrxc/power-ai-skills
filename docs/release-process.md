@@ -57,6 +57,19 @@
 
 但这仍不等于“默认自动发版”已经启用。当前仓库只是补齐了“托管执行边界入口”和运行时证据校验；真正的 cron、CI 定时器或 webhook 自动触发编排仍需要单独配置，且所有真实发版动作依然受现有 unattended governance 与 publish contract 约束。
 
+在这之上，仓库维护侧现在还提供了一个更适合托管环境直接调用的 wrapper：
+
+```bash
+pnpm release:hosted -- --runtime-source ci --expect-status published
+```
+
+这条壳子会：
+
+- 代理调用 `execute-release-unattended-hosted --json`
+- 统一 runtime source 与 trigger 参数透传
+- 默认只把 hosted runtime contract 失败视为 job 失败
+- 在显式传入 `--expect-status published` 时，把成功语义收口为“这次托管执行最终真的发布成功”
+
 ## 中心仓库发布
 
 1. 修改 skill、脚本、模板或文档。
@@ -222,6 +235,19 @@ POWER_AI_RELEASE_CRON=1 npx power-ai-skills execute-release-unattended-hosted --
   - `cron` 场景是否存在 `POWER_AI_RELEASE_CRON=1`
 - 只有托管来源边界成立后，它才会继续代理调用 `execute-release-unattended-governance`。
 - 即使这一步通过，它也不会绕过治理授权、失败锁定或真实 publish contract；它只是把“从什么托管来源触发”也写进 release audit trail。
+
+如当前是在 CI / cron wrapper 里执行，推荐优先调用维护侧壳子，而不是在宿主脚本里手工拼 CLI：
+
+```bash
+pnpm release:hosted -- --runtime-source ci --expect-status published
+```
+
+- 不传 `--expect-status` 时：
+  - wrapper 默认只把 `hosted-runtime-source-required` / `hosted-runtime-evidence-missing` 视为失败
+  - `not-authorized`、`follow-up-blocked` 这类治理结果会原样返回，但不会被壳子强行改写成流水线失败
+- 传 `--expect-status published` 时：
+  - 只有 hosted 执行最终落到 `published`，wrapper 才会返回成功
+  - 适合真正的 tag / release job 收口
 
 24. 如已具备有效治理授权，且希望直接通过治理入口代理执行真实 publish，可执行：
 

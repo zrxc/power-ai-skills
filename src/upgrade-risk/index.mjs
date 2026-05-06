@@ -106,7 +106,7 @@ const categoryDefinitions = [
     riskLevel: "medium",
     releaseHint: "minor",
     matchers: [
-      /^scripts\/(impact-check|run-upgrade-automation|generate-impact-task|generate-upgrade-payload|refresh-release-artifacts|clean-release-artifacts|check-release-consistency|generate-release-notes|generate-upgrade-risk-report)\.mjs$/i,
+      /^scripts\/(impact-check|run-upgrade-automation|generate-impact-task|generate-upgrade-payload|refresh-release-artifacts|clean-release-artifacts|check-release-consistency|generate-release-notes|generate-upgrade-risk-report|run-release-unattended-hosted)\.mjs$/i,
       /^src\/upgrade-summary\//,
       /^src\/doctor\/release-checks\.mjs$/i,
       /^src\/upgrade-risk\//,

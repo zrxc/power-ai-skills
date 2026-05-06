@@ -68,6 +68,7 @@
     "upgrade:payload": "node ./scripts/generate-upgrade-payload.mjs",
     "check:release-gates": "node ./scripts/check-release-gates.mjs",
     "release:consumer-inputs": "node ./scripts/release-consumer-inputs.mjs",
+    "release:hosted": "node ./scripts/run-release-unattended-hosted.mjs",
     "release:validate": "pnpm ci:check",
     "release:generate": "pnpm upgrade:advice -- --automation-report manifest/automation-report.json && pnpm governance:operations -- --automation-report manifest/automation-report.json && pnpm upgrade:payload -- --automation-report manifest/automation-report.json",
     "release:check": "node ./scripts/run-release-check.mjs",

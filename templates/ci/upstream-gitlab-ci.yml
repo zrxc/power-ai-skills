@@ -1,6 +1,7 @@
 stages:
   - build
   - skill-impact
+  - skill-release
 
 variables:
   POWER_AI_SKILLS_REPO: "D:/webCode/Myd/power-ai-skills"
@@ -28,3 +29,16 @@ upstream_skill_impact:
       - manifest/impact-tasks/
       - manifest/automation-report.json
       - manifest/notifications/
+
+upstream_skill_release_hosted:
+  stage: skill-release
+  script:
+    - corepack enable
+    - corepack prepare pnpm@10.28.2 --activate
+    - cd "$POWER_AI_SKILLS_REPO"
+    - pnpm install --frozen-lockfile
+    - pnpm release:hosted -- --runtime-source ci --expect-status published --trigger-id "$CI_PIPELINE_ID" --trigger-label "$CI_PIPELINE_SOURCE"
+  rules:
+    - if: '$POWER_AI_ENABLE_HOSTED_RELEASE == "1" && $CI_COMMIT_TAG'
+      when: manual
+    - when: never

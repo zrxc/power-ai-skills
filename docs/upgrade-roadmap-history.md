@@ -2108,3 +2108,47 @@ pnpm release:prepare
 结论：
 
 - `P6-9` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实自动调度接线或托管 runbook / wrapper，而不是继续停留在 hosted runtime source 边界本身。
+
+## 1.4.7 / P6-10 hosted 调用壳第一版
+
+阶段目标：
+
+- 在 `P6-9` 已收口 hosted runtime source / trigger / hosted record contract 的基础上，补一层真正给 CI / cron 宿主环境复用的“调用壳”，而不是现在就把默认自动触发打开。
+- 让托管运行时不必自己散写 `execute-release-unattended-hosted` 的参数拼装、runtime source 推断和成功/失败语义，而是统一复用仓库维护侧 wrapper。
+- 保持现有 `execute-release-unattended-hosted`、`execute-release-unattended-governance`、`execute-release-publish` 和 manifest record contract 语义稳定，不新造第二套发布状态模型。
+- 保持默认自动调度仍然关闭；这一阶段只补调用壳、模板与维护文档，不直接注册 webhook、定时任务或默认 release job。
+
+已完成：
+
+- 已新增维护侧 wrapper 脚本 `scripts/run-release-unattended-hosted.mjs`，并通过 `pnpm release:hosted` 暴露稳定入口，用于：
+  - 代理调用 `execute-release-unattended-hosted --json`
+  - 在未显式传 `--runtime-source` 时，优先读取 `POWER_AI_RELEASE_RUNTIME_SOURCE`，否则按 `POWER_AI_RELEASE_CRON=1` / `CI=true` 推断 runtime source
+  - 继续透传 `--trigger-id`、`--trigger-label`
+- 已固定 wrapper 第一版失败语义：
+  - 默认只把 `hosted-runtime-source-required` / `hosted-runtime-evidence-missing` 视为 wrapper 失败
+  - 其他治理结果如 `not-authorized`、`follow-up-blocked` 会保留原状态返回，不被壳子私自改写成“自动发版失败”
+  - 如显式传 `--expect-status <status>`，wrapper 才会把最终状态收口为宿主 job 的成功条件；第一版重点支持 `--expect-status published`
+- 已同步更新 CI / 上游流水线模板：
+  - `templates/ci/gitlab-ci.yml`
+  - `templates/ci/upstream-gitlab-ci.yml`
+  - 模板现在都优先示范调用 `pnpm release:hosted -- --expect-status published`，而不是在 YAML 里直接散写 hosted executor 命令
+- 已同步更新维护文档，明确：
+  - hosted boundary 与 hosted wrapper 的职责边界
+  - `release:hosted` 只是宿主调用壳，不是默认自动调度开关
+  - 什么时候适合只校验 hosted runtime contract，什么时候适合加 `--expect-status published` 收口真实发布成功
+- 已补充 focused tests，覆盖：
+  - 缺少 runtime source 时 wrapper 失败
+  - `CI=true` 场景下自动推断 runtime source
+  - `--expect-status published` 的失败收口
+  - 原有 hosted executor 回归场景继续通过
+
+阶段收口判断：
+
+- 托管发布入口已经不再只有底层 service / CLI contract，而是具备了一层真正适合 CI / cron 宿主环境复用的维护侧调用壳。
+- `hosted wrapper -> hosted boundary -> unattended governance -> publish` 的职责边界已经写清楚，不会把“补一层调用壳”误读成“默认自动发版已经开启”。
+- 当前实现保持了显式 runtime source、显式运行时证据、显式 expect-status 的边界，没有为了方便接流水线而偷偷放开默认自动调度。
+- 模板、维护文档、路线图与 focused tests 已对齐到同一口径，后续可以在这个壳子之上继续讨论真实自动调度接线，而不是回退到 hosted 入口拼装细节。
+
+结论：
+
+- `P6-10` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实自动调度接线、托管 runbook 编排或默认策略评估，而不是继续停留在 hosted 调用壳缺口本身。
