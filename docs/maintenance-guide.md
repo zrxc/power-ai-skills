@@ -78,6 +78,15 @@
 - `execute-release-unattended-governance` 现在已经是可用的治理执行入口，但它不是独立的第二套 publish 实现；它会先跑治理 planner，只有在状态为 `authorized-ready` 时才继续代理调用 `execute-release-publish`。
 - `execute-release-unattended-hosted` 现在是托管执行边界入口：它要求显式 `--runtime-source ci|cron`，并校验运行时证据（`CI=true` 或 `POWER_AI_RELEASE_CRON=1`）后，才继续代理调用 `execute-release-unattended-governance`。
 - `pnpm release:hosted` 现在是维护侧 hosted 调用壳：它会统一 runtime source 推断、trigger 透传和流水线失败语义，适合给 CI / cron wrapper 直接调用。
+- 当前推荐优先读取 `wrapper.scheduleContract` 作为统一宿主调度视图；`ciReleaseContract` / `cronReleaseContract` 继续保留，主要用于宿主特定排障补充。
+- 如需统一高层严格策略，优先用 `--strict`，而不是分别在宿主脚本里散写 `--expect-status published` 和 `--require-manual-trigger`。
+- `P6-11` 第一版里，如果 `release:hosted` 走的是 `ci` 路径，它还会强制校验：
+  - `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - 当前运行时存在 tag 证据
+  - 如显式传了 `--require-manual-trigger`，还要检测到手工触发证据
+- `P6-12` 第一版里，如果 `release:hosted` 走的是 `cron` 路径，它还会强制校验：
+  - `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - 显式提供 `--trigger-label` 或 `POWER_AI_RELEASE_TRIGGER_LABEL`
 - `manifest/release-publish-record.json` 继续是单次真实受控 publish 的权威记录；如果需要判断“到底有没有真的发出去”，优先看它，而不是 orchestration record。
 - `doctor` package-maintenance 与 `generate-upgrade-summary` 现在会同时消费 orchestration snapshot 和 publish execution snapshot，方便把“编排层结论”和“真实执行状态”放在一起看。
 - 即使已经接入真实 publish，这一层仍不是无人值守自动发版：维护者仍需要显式运行命令，并在 warn-level 情况下显式给出 `--acknowledge-warnings`。
@@ -87,8 +96,12 @@
   - `published / publish-failed`：只由 `manifest/release-publish-record.json` / `publishExecutionSummary` 声明，才是“真实 publish 已执行”的权威语义
 - 当前仓库还没有把无人值守治理接成默认自动执行入口；即使 `execute-release-unattended-hosted` 已可用，它也仍然要求显式命令、显式运行时来源和环境证据。在这层真正接入自动调度配置前，不要把治理 record、授权 record、hosted record 或 orchestration ready 状态误读成“已经自动发版”。
 - `pnpm release:hosted` 也不会替你默认打开自动发版：
-  - 不传 `--expect-status` 时，它默认只把 hosted runtime contract 问题视为失败
+  - 不传 `--expect-status` 时，它会默认把 hosted runtime contract、`publish-failed`、`execution-locked` 视为失败
+  - `blocked`、`not-authorized`、`authorization-expired`、`follow-up-blocked` 仍按 record-only 结果返回，不会被 wrapper 擅自改写成 job fail
   - 传 `--expect-status published` 时，才会把最终状态收口成“必须真的发出去才算 job 成功”
+  - 即使传了 `--expect-status published`，`ci` 路径仍然必须先满足显式 enable + tag 证据，才允许继续进入 hosted boundary
+  - 如当前 job 还想把“必须人工点击触发”一起收口，追加 `--require-manual-trigger`
+  - 如传 `--strict`，则 `ci` 自动叠加 manual trigger 要求，`ci` / `cron` 都自动要求最终状态为 `published`
 - `scripts/shared.mjs` 现在统一承接仓库维护侧的 `npm pack` 定位与 JSON 解析 helper；如果继续扩发布边界脚本或 smoke 测试，优先复用这里，不要在脚本和测试里各自再写一套 pack 调用逻辑。
 - `manifest/notifications/` 默认只保留最近 3 组通知载荷；更旧的通知会归档到 `manifest/archive/notifications/`，不会直接删除。
 - 如只想单独归档旧通知，可执行 `pnpm clean:release-artifacts`。
@@ -111,7 +124,8 @@ pnpm refresh:release-artifacts
 npx power-ai-skills plan-release-orchestration --json
 npx power-ai-skills execute-release-orchestration --json
 npx power-ai-skills authorize-release-unattended-governance --authorized-by <maintainer> --json
-pnpm release:hosted -- --runtime-source ci --expect-status published
+pnpm release:hosted -- --runtime-source ci --strict
+POWER_AI_RELEASE_CRON=1 POWER_AI_ENABLE_HOSTED_RELEASE=1 POWER_AI_RELEASE_TRIGGER_LABEL=nightly-release-window pnpm release:hosted -- --runtime-source cron --strict
 npx power-ai-skills execute-release-unattended-hosted --runtime-source ci --json
 npx power-ai-skills execute-release-unattended-governance --json
 npx power-ai-skills plan-release-publish --json
@@ -145,11 +159,50 @@ pnpm release:prepare
   - `execute-release-unattended-hosted` 只负责校验 `ci|cron` 来源和运行时证据，不会绕过现有 unattended governance 或 publish contract
 - 需要给流水线一个稳定调用壳时：
   - 优先用 `pnpm release:hosted`
+  - 需要多宿主统一严格策略时，优先用 `--strict`
   - 需要“只有真实 publish 成功才通过 job”时，追加 `-- --expect-status published`
+  - 需要把“只允许人工点击的 tag release job”一起固化时，再追加 `--require-manual-trigger`
   - 需要只验证 hosted boundary / trigger record 落盘时，可以不传 `--expect-status`
 - 需要统一视图时：
   - 运行 `npx power-ai-skills generate-upgrade-summary --json`
   - 或 `npx power-ai-skills doctor`
+
+Hosted wrapper 排障补充：
+
+- `wrapperStatus=hosted-schedule-contract-failed`
+  - 先看 `wrapper.scheduleContract`
+  - 先检查 `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - `ci` 路径再检查 tag 证据和 manual trigger 证据是否真的出现在当前 CI job
+  - `cron` 路径再检查 `POWER_AI_RELEASE_TRIGGER_LABEL` 或 `--trigger-label` 是否真的显式传入
+  - 这一类失败发生在进入 hosted boundary 之前，不要先从 publish record 开始排
+- `wrapperStatus=hosted-runtime-contract-failed`
+  - 先看 `manifest/release-unattended-hosted-record.json`
+  - 再确认 wrapper 推断出来的 `runtimeSource` 与底层证据是否一致
+- `wrapperStatus=default-final-status-failed`
+  - 如 `wrapper.finalStatusPolicy.status=execution-locked`，优先看 `manifest/release-publish-record.json` 与 `manifest/release-publish-failure-summary.md`
+  - 如 `wrapper.finalStatusPolicy.status=publish-failed`，按真实 publish 失败收口
+- `wrapperStatus=hosted-wrapper-complete`
+  - 如果最终状态仍是 `blocked`、`not-authorized`、`authorization-expired`、`follow-up-blocked`，说明当前应该继续处理治理 blocker，而不是继续调 wrapper
+
+Hosted 调度接线验证清单：
+
+- 先确认 CI 模板里仍保留：
+  - `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - `--require-manual-trigger`
+  - `--expect-status published`
+- 如是 cron 宿主：
+  - 同样保留 `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - 额外显式提供 `POWER_AI_RELEASE_TRIGGER_LABEL` 或 `--trigger-label`
+- 先在手工 tag job 中验证，而不是普通 branch pipeline
+- cron 路径则优先在单一命名的 schedule / task 上验证，不要一开始就铺多条计划任务
+- 至少保留这些 artifact：
+  - `manifest/release-unattended-hosted-record.json`
+  - `manifest/release-unattended-governance-record.json`
+  - `manifest/release-publish-record.json`
+  - `manifest/version-record.json`
+- 如果第一轮只验证接线：
+  - 可以先去掉 `--expect-status published`
+  - 重点看 `wrapperStatus`、`wrapper.scheduleContract`、`wrapper.finalStatusPolicy` 和 hosted / governance record 是否符合预期
 
 ## 消费项目维护
 

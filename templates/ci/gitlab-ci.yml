@@ -43,7 +43,7 @@ skill_consumer_verify:
 skill_release_hosted_wrapper:
   stage: hosted-release
   script:
-    - pnpm release:hosted -- --expect-status published
+    - pnpm release:hosted -- --runtime-source ci --require-manual-trigger --expect-status published --trigger-id "$CI_PIPELINE_ID" --trigger-label "$CI_PIPELINE_SOURCE"
   rules:
     - if: '$POWER_AI_ENABLE_HOSTED_RELEASE == "1" && $CI_COMMIT_TAG'
       when: manual

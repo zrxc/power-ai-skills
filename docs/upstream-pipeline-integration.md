@@ -57,7 +57,7 @@ node ./scripts/generate-upgrade-payload.mjs
 当上游流水线已经准备好从托管环境推进 skill 仓库自己的发布时，优先调用维护侧 wrapper，而不是直接在模板里散写 `execute-release-unattended-hosted`：
 
 ```bash
-pnpm release:hosted -- --runtime-source ci --expect-status published --trigger-id "$CI_PIPELINE_ID" --trigger-label "$CI_PIPELINE_SOURCE"
+pnpm release:hosted -- --runtime-source ci --strict --trigger-id "$CI_PIPELINE_ID" --trigger-label "$CI_PIPELINE_SOURCE"
 ```
 
 这条壳子的作用是：
@@ -65,9 +65,21 @@ pnpm release:hosted -- --runtime-source ci --expect-status published --trigger-i
 1. 统一 `runtime source / trigger` 传参方式
 2. 继续复用现有 hosted boundary -> unattended governance -> publish contract
 3. 让流水线显式决定“只校验 hosted contract”还是“必须等到 published 才算成功”
+4. 在需要时把“必须是手工触发的 tag release job”也收口为 wrapper contract，或直接统一收口为 `--strict`
 
-如果只想把托管环境证据和 hosted record 落盘，但不把 `not-authorized` / `follow-up-blocked` 直接视为 job 失败，可以去掉 `--expect-status published`。
+如果只想把托管环境证据和 hosted record 落盘，而不是强制收口成 `published`，可以去掉 `--expect-status published`。在默认策略下，`blocked` / `not-authorized` / `authorization-expired` / `follow-up-blocked` 会按 record-only 结果返回；`publish-failed` / `execution-locked` 仍会直接让 job 失败。
 模板里同时建议用 `POWER_AI_ENABLE_HOSTED_RELEASE=1` 做显式开关，避免 tag / release pipeline 默认露出 hosted publish job。
+当前第一版 `ci` 接线还要求运行时存在 tag 证据；没有 tag 时，`release:hosted` 会直接在 wrapper 层返回失败。模板当前还显式加了 `--require-manual-trigger`，把“手工触发”也纳入推荐 contract。
+
+推荐最小排障顺序：
+
+1. 先看 wrapper 输出中的 `wrapperStatus`
+2. 再看 `wrapper.finalStatusPolicy`
+3. 然后按状态去看：
+   - `hosted-schedule-contract-failed`：检查 CI 显式变量门、tag 证据、manual trigger 证据
+   - `hosted-runtime-contract-failed`：检查 hosted record 和 runtime source / runtime evidence
+   - `default-final-status-failed`：检查 publish record / failure summary
+   - `hosted-wrapper-complete`：继续看 governance / authorization / orchestration record
 
 ## 建议变量
 

@@ -13,19 +13,19 @@
 
 ## 当前阶段
 
-### P6-11 下一阶段壳子（待定义）
+### P6-14 下一阶段壳子（待定义）
 阶段状态：
-- `P6-10` 已正式迁移到 `docs/upgrade-roadmap-history.md`。
-- 当前文档只保留新的活动阶段壳子，避免继续停留在已经收口的 hosted 调用壳第一版内容。
-- 下一轮进入时，应先确认 `P6-11` 的真实主题，再把完整阶段定义补回本文。
+- `P6-13` 已正式迁移到 `docs/upgrade-roadmap-history.md`。
+- 当前文档只保留新的活动阶段壳子，避免继续停留在已经收口的多宿主统一治理第一版内容。
+- 下一轮进入时，应先确认 `P6-14` 的真实主题，再把完整阶段定义补回本文。
 
 阶段目标（待补）：
-- 待补：明确下一阶段是进入真实自动调度接线、托管 runbook 编排、还是转向别的后续主题。
-- 待补：明确它与 `P6-10` 已沉淀的 hosted wrapper / runtime source / unattended executor 边界的承接关系。
+- 待补：明确下一阶段是进入默认策略评估、宿主共享 policy 配置，还是转向别的后续主题。
+- 待补：明确它与 `P6-11` / `P6-12` / `P6-13` 已沉淀的 hosted wrapper contract、统一视图和 strict mode 的承接关系。
 
 本阶段只做（待补）：
 - 待补：下一阶段正式启动时，在这里补齐范围、完成标准和可执行清单。
-- 待补：优先基于 `P6-10` 已沉淀的 hosted wrapper、hosted boundary contract 和执行入口定义后续方向。
+- 待补：优先基于 `P6-11` / `P6-12` / `P6-13` 已沉淀的宿主 contract、strict mode 和 record chain 定义后续方向。
 
 本阶段不做（待补）：
 - 待补：在阶段目标正式写清前，不预设新的默认自动执行入口。
@@ -33,7 +33,7 @@
 
 ## 未完成项
 
-- [ ] 明确 `P6-11` 是否正式立项为真实自动调度接线、托管 runbook 编排，还是改为别的后续阶段主题。
+- [ ] 明确 `P6-14` 是否正式立项为默认策略评估、宿主共享 policy 配置，还是改为别的后续阶段主题。
 - [ ] 补齐下一阶段的目标、范围边界、record contract 复用策略和完成标准。
 - [ ] 如确认开新阶段，再把未完成项细化为可执行清单。
 
@@ -43,6 +43,6 @@
 
 ## 下一次进入本文档时的动作
 
-- 先确认 `P6-11` 的真实主题，再补齐完整阶段定义。
-- 优先复用现有 planner / executor / release artifacts / orchestration / publish record / unattended governance contract，不要推倒重建发布状态模型。
-- 如果下一阶段最终不叫“托管执行入口”，直接在当前壳子上改名并补全内容即可。
+- 先确认 `P6-14` 的真实主题，再补齐完整阶段定义。
+- 优先复用现有 planner / executor / release artifacts / orchestration / publish record / unattended governance / hosted wrapper contract，不要推倒重建发布状态模型。
+- 如果下一阶段最终不叫“下一阶段壳子”，直接在当前壳子上改名并补全内容即可。

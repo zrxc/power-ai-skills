@@ -60,15 +60,21 @@
 在这之上，仓库维护侧现在还提供了一个更适合托管环境直接调用的 wrapper：
 
 ```bash
-pnpm release:hosted -- --runtime-source ci --expect-status published
+pnpm release:hosted -- --runtime-source ci --strict
 ```
 
 这条壳子会：
 
 - 代理调用 `execute-release-unattended-hosted --json`
 - 统一 runtime source 与 trigger 参数透传
-- 默认只把 hosted runtime contract 失败视为 job 失败
+- 当 runtime source 为 `ci` 时，先校验 `POWER_AI_ENABLE_HOSTED_RELEASE=1` 和 tag 证据
+- 如显式传 `--require-manual-trigger`，继续校验手工触发证据
+- 默认会把 hosted runtime contract、`publish-failed`、`execution-locked` 视为 job 失败
 - 在显式传入 `--expect-status published` 时，把成功语义收口为“这次托管执行最终真的发布成功”
+- 如显式传 `--strict`：
+  - `ci` 路径会自动要求 manual trigger
+  - `ci` / `cron` 都会自动把最终状态收口为 `published`
+  - 仍不会绕过显式 enable、tag 证据、trigger label 或底层 hosted runtime evidence
 
 ## 中心仓库发布
 
@@ -239,15 +245,67 @@ POWER_AI_RELEASE_CRON=1 npx power-ai-skills execute-release-unattended-hosted --
 如当前是在 CI / cron wrapper 里执行，推荐优先调用维护侧壳子，而不是在宿主脚本里手工拼 CLI：
 
 ```bash
-pnpm release:hosted -- --runtime-source ci --expect-status published
+pnpm release:hosted -- --runtime-source ci --strict
+```
+
+如是显式 cron 包装层，推荐把调度标签一并收口：
+
+```bash
+POWER_AI_RELEASE_CRON=1 POWER_AI_ENABLE_HOSTED_RELEASE=1 POWER_AI_RELEASE_TRIGGER_LABEL=nightly-release-window pnpm release:hosted -- --runtime-source cron --strict
 ```
 
 - 不传 `--expect-status` 时：
-  - wrapper 默认只把 `hosted-runtime-source-required` / `hosted-runtime-evidence-missing` 视为失败
-  - `not-authorized`、`follow-up-blocked` 这类治理结果会原样返回，但不会被壳子强行改写成流水线失败
+  - wrapper 会默认把 `hosted-runtime-source-required` / `hosted-runtime-evidence-missing`、`publish-failed`、`execution-locked` 视为失败
+  - `blocked`、`not-authorized`、`authorization-expired`、`follow-up-blocked` 会原样返回，并按 record-only 语义保留给宿主继续判断
 - 传 `--expect-status published` 时：
   - 只有 hosted 执行最终落到 `published`，wrapper 才会返回成功
   - 适合真正的 tag / release job 收口
+- 传 `--strict` 时：
+  - 等价于在 `ci` 路径下追加 `--require-manual-trigger`
+  - 等价于对 `ci` / `cron` 都追加 `--expect-status published`
+  - 适合作为多宿主统一的高层严格策略入口
+- 但在这之前：
+  - `ci` 路径还必须满足显式 enable flag
+  - 并且当前运行时必须携带 tag 证据
+  - 如果传了 `--require-manual-trigger`，还必须检测到手工触发证据
+  - `cron` 路径还必须满足显式 enable flag，并显式提供 `--trigger-label` 或 `POWER_AI_RELEASE_TRIGGER_LABEL`
+  - 否则 wrapper 会先在调度 contract 层失败，不会继续进入 hosted boundary
+- 对脚本 / 流水线的推荐读取口径：
+  - 优先看 `wrapper.scheduleContract`
+  - `ciReleaseContract` / `cronReleaseContract` 继续保留，但更适合做宿主特定排障补充，而不是一线判定入口
+
+### Hosted CI runbook
+
+- 推荐验证顺序：
+  - 先确认 `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - 再确认模板命令带 `--require-manual-trigger --expect-status published`
+  - 再确认当前 job 真的是 tag + manual 触发，而不是普通 branch pipeline
+- 推荐保留的最小 artifact：
+  - `manifest/release-unattended-hosted-record.json`
+  - `manifest/release-unattended-governance-record.json`
+  - `manifest/release-publish-record.json`
+  - `manifest/version-record.json`
+- 如只想验证调度接线，不想让治理 blocker 直接打红：
+  - 临时去掉 `--expect-status published`
+  - 保留 wrapper 输出中的 `wrapperStatus`、`wrapper.finalStatusPolicy` 和 hosted record
+
+### Hosted troubleshooting
+
+- `wrapperStatus=hosted-schedule-contract-failed`
+  - 先看 `wrapper.scheduleContract`
+  - 再查 `POWER_AI_ENABLE_HOSTED_RELEASE=1` 是否真的出现在当前 job
+  - `ci` 路径再查 tag 证据和 manual trigger 证据是否由当前 CI 平台暴露
+  - `cron` 路径再查 `POWER_AI_RELEASE_TRIGGER_LABEL` 或 `--trigger-label` 是否真的显式传入
+  - 这一层失败时，不必先怀疑 governance 或 publish record
+- `wrapperStatus=hosted-runtime-contract-failed`
+  - 先看 `manifest/release-unattended-hosted-record.json`
+  - 再确认 wrapper 传入的 `runtimeSource` 与底层 `CI=true` / `POWER_AI_RELEASE_CRON=1` 证据是否一致
+- `wrapperStatus=default-final-status-failed`
+  - 如果 `wrapper.finalStatusPolicy.status=execution-locked`，优先看 `manifest/release-publish-record.json` 和 `manifest/release-publish-failure-summary.md`
+  - 如果 `wrapper.finalStatusPolicy.status=publish-failed`，按真实 publish 失败处理，不要再把它当成单纯 wrapper 问题
+- `wrapperStatus=hosted-wrapper-complete`
+  - 如果 hosted 最终状态是 `blocked`、`not-authorized`、`authorization-expired` 或 `follow-up-blocked`，说明接线已通，但治理边界仍未放行
+  - 这时应优先看 `manifest/release-unattended-governance-record.json`、authorization record 和 orchestration / publish summary
 
 24. 如已具备有效治理授权，且希望直接通过治理入口代理执行真实 publish，可执行：
 

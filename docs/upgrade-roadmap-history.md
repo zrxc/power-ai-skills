@@ -2152,3 +2152,132 @@ pnpm release:prepare
 结论：
 
 - `P6-10` 已按原阶段定义收口；下一阶段如继续推进，应单独立项真实自动调度接线、托管 runbook 编排或默认策略评估，而不是继续停留在 hosted 调用壳缺口本身。
+
+## 1.4.7 / P6-11 CI 自动调度接线第一版
+
+阶段目标：
+
+- 在 `P6-10` 已收口 hosted wrapper 的基础上，把真实 CI 自动调度接线的第一版 contract 固化下来，而不是继续把宿主行为留在模板注释或人工约定里。
+- 只接 `ci` 这一条真实托管发布链路，明确“何时允许出现发布 job、何时允许真正尝试 hosted release、何时必须继续停留在人工治理边界”。
+- 继续复用现有 `release:hosted -> execute-release-unattended-hosted -> execute-release-unattended-governance -> execute-release-publish` 链路，不新造第三套发布状态模型。
+- 保持默认自动调度仍然关闭；本阶段只做显式开启的 CI 调度接线，不直接放开 cron 默认执行、webhook 自动发布或多平台并行发布策略。
+
+已完成：
+
+- 已把 `release:hosted` 的 `ci` 第一版调度前置条件固化到维护侧 wrapper：
+  - `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - tag 证据
+  - `--require-manual-trigger` 下的 manual trigger 证据
+- 已把模板、维护文档和路线图统一到同一口径，避免仓库脚本和 CI 示例分叉：
+  - `templates/ci/gitlab-ci.yml`
+  - `docs/release-process.md`
+  - `docs/ci-integration.md`
+  - `docs/upstream-pipeline-integration.md`
+  - `docs/maintenance-guide.md`
+- 已固定 hosted wrapper 的默认最终状态语义：
+  - 默认失败：`hosted-runtime-source-required`、`hosted-runtime-evidence-missing`、`publish-failed`、`execution-locked`
+  - 默认 record-only：`blocked`、`not-authorized`、`authorization-expired`、`follow-up-blocked`
+  - 如显式传 `--expect-status published`，继续把成功语义收口到“必须真的发布成功”
+- 已在 wrapper 输出中补 `wrapper.finalStatusPolicy`，方便 CI / upstream pipeline 快速判断当前是调度 contract 问题、runtime evidence 问题，还是治理 / publish 失败语义。
+- 已补 focused tests，覆盖：
+  - 未开启显式开关时的阻断
+  - 缺少 tag 证据时的阻断
+  - manual trigger 证据缺失时的阻断
+  - contract 成立但治理层返回 record-only 状态时的非 fatal 语义
+  - 命中 `execution-locked` 时的默认失败语义
+- 已补维护 runbook / troubleshooting / 调度接线验证清单，明确：
+  - wrapperStatus 的最小排障顺序
+  - 建议保留的 hosted / governance / publish artifact
+  - 什么时候适合临时去掉 `--expect-status published` 先验证接线
+
+阶段收口判断：
+
+- `ci` 第一版调度 contract 已有正式代码落点，不再只依赖 CI 模板自觉。
+- `release:hosted`、CI 模板、维护文档和阶段路线图对“显式 enable + tag 证据 + hosted boundary + governance boundary”的职责边界表述一致。
+- focused tests 已能覆盖最小调度接线风险，并明确区分“record-only 治理结果”与“默认应 fail 的失败锁定 / publish 失败状态”。
+- 当前实现仍保持默认自动调度关闭，没有因为进入 `P6-11` 而滑向默认自动发版。
+
+结论：
+
+- `P6-11` 已按原阶段定义收口；下一阶段如继续推进，应单独立项非 CI 宿主扩展、默认策略评估或更深的托管运行治理，而不是回退到已完成的 CI 接线 contract 本身。
+
+## 1.4.7 / P6-12 cron 宿主接线第一版
+
+阶段目标：
+
+- 在 `P6-11` 已收口 CI 调度 contract、默认失败语义和 runbook 的基础上，继续向非 CI 宿主扩展，但先只补 `cron` 这一路的维护侧 wrapper contract，而不是直接开放默认自动发版。
+- 让 `release:hosted` 在 `cron` 场景下也有清晰的宿主前置条件、推荐触发标签和审计口径，避免把“定时任务怎么调用”继续留给人工约定。
+- 继续复用现有 `release:hosted -> execute-release-unattended-hosted -> execute-release-unattended-governance -> execute-release-publish` record chain，不新造第四套调度状态模型。
+- 保持默认自动调度仍然关闭；本阶段只补 `cron` 宿主接线 contract、focused tests 和维护 runbook，不直接增加平台专用 scheduler 模板或默认 schedule 策略。
+
+已完成：
+
+- 已把 `release:hosted` 的 `cron` 第一版宿主前置条件固化到 wrapper：
+  - `POWER_AI_ENABLE_HOSTED_RELEASE=1`
+  - 显式提供 `--trigger-label` 或 `POWER_AI_RELEASE_TRIGGER_LABEL`
+- 已保留现有 runtime boundary 分层：
+  - wrapper 先做 `cron` 宿主 contract 校验
+  - 底层 hosted executor 继续负责 `POWER_AI_RELEASE_CRON=1` 的 runtime evidence 校验
+  - governance / publish 语义保持不变
+- 已补 focused tests，覆盖：
+  - `cron` 运行时推断与显式 trigger label 透传
+  - 缺少显式 enable flag 时的阻断
+  - 缺少显式 trigger label 时的阻断
+- 已同步维护文档，明确：
+  - `cron` 推荐调用方式
+  - `hosted-schedule-contract-failed` 在 `cron` 场景下的最小排障顺序
+  - `cron` 宿主接线验证清单与最小 artifact 保留建议
+
+阶段收口判断：
+
+- `cron` 第一版宿主接线不再只是底层 runtime boundary，而是具备正式 wrapper contract、focused test 和维护 runbook。
+- `ci` 与 `cron` 两类宿主现在都通过 `release:hosted` 统一承接，但各自的前置条件和审计要求仍保持显式，不会互相混淆。
+- 当前实现仍保持默认自动调度关闭，没有因为补 `cron` contract 而滑向默认 schedule publish。
+
+结论：
+
+- `P6-12` 已按原阶段定义收口；下一阶段如继续推进，应单独立项默认策略评估、多宿主统一治理或更深的 hosted scheduling contract，而不是回退到已完成的 `cron` wrapper contract 本身。
+
+## 1.4.7 / P6-13 多宿主统一治理第一版
+
+阶段目标：
+
+- 在 `P6-11` / `P6-12` 已分别收口 `ci` / `cron` 宿主 contract 的基础上，给 `release:hosted` 补一层统一可消费的调度治理视图，避免上游系统继续分别猜测该读哪一段 host-specific contract。
+- 继续保持默认自动调度关闭；本阶段只统一多宿主 contract 的表达、验证和 runbook，不直接放开默认 schedule policy。
+- 保持现有 hosted boundary、governance boundary、publish contract 和 final status policy 不变，不新造第五套发布状态模型。
+
+已完成：
+
+- 已给 `release:hosted` 补统一的 `wrapper.scheduleContract` 视图，覆盖：
+  - 当前宿主类型
+  - 是否 required / allowed
+  - 当前状态
+  - blockers
+  - 最小证据摘要
+- 已保留 `ciReleaseContract` / `cronReleaseContract` 兼容字段，但把维护文档和 focused tests 的推荐读取口径切到统一视图。
+- 已补统一高层严格策略入口 `--strict`：
+  - `ci` 路径自动要求 manual trigger
+  - `ci` / `cron` 都自动把最终状态收口为 `published`
+  - 仍不会绕过显式 enable、tag 证据、trigger label 或底层 hosted runtime evidence
+- 已同步更新维护文档与上游接线说明：
+  - `docs/release-process.md`
+  - `docs/maintenance-guide.md`
+  - `docs/ci-integration.md`
+  - `docs/upstream-pipeline-integration.md`
+  - `docs/governance.md`
+- 已补 focused tests，覆盖：
+  - `scheduleContract` 在 `ci` / `cron` 成功与阻断场景下的一致输出
+  - `--strict` 在 `ci` 下自动要求 manual trigger
+  - `--strict` 在 `cron` 下自动要求最终状态为 `published`
+  - host-specific contract 字段继续保留并与统一视图对齐
+
+阶段收口判断：
+
+- `release:hosted` 已提供统一多宿主调度治理视图，不再强迫上游分别判断 `ciReleaseContract` / `cronReleaseContract`。
+- `--strict` 已作为多宿主统一高层严格策略入口落地，不再要求宿主分别拼接 `--expect-status published` 与 `--require-manual-trigger`。
+- focused tests 能同时覆盖 `ci` / `cron` 成功与阻断场景，并验证统一视图与 host-specific 细节保持一致。
+- 当前实现仍保持默认自动调度关闭，没有因为进入 `P6-13` 而滑向默认 schedule publish。
+
+结论：
+
+- `P6-13` 已按原阶段定义收口；下一阶段如继续推进，应单独立项默认策略评估、宿主共享 policy 配置或更高层 hosted scheduling governance，而不是回退到已完成的统一视图 / strict mode contract 本身。
