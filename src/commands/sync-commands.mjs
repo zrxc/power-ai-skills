@@ -33,6 +33,7 @@ import {
   resolveRequestedToolSelection,
   syncToolEntrypointSelection
 } from "./project-tool-selection.mjs";
+import { buildSyncFollowUpRecommendation } from "../shared/sync-follow-up-recommendation.mjs";
 
 function toTimestamp(value) {
   const parsed = Date.parse(value || "");
@@ -270,6 +271,14 @@ function buildSyncEvolutionFollowUpHistoryMarkdown(historyPayload) {
 
 function buildSyncEvolutionFollowUpMarkdown(payload) {
   const followUp = payload.followUp || {};
+  const recommendation = payload.recommendation || buildSyncFollowUpRecommendation({
+    available: true,
+    ...followUp,
+    recommendedCheckCommand: payload.recommendedCheckCommand,
+    optOutEnvVar: payload.optOutEnvVar,
+    reportPath: payload.artifactPaths?.reportPath || "",
+    history: null
+  });
   const lines = [
     "# Sync Evolution Follow-Up",
     "",
@@ -286,11 +295,20 @@ function buildSyncEvolutionFollowUpMarkdown(payload) {
     `- opt-out: ${payload.optOutEnvVar}`,
     `- recommended check command: \`${payload.recommendedCheckCommand}\``,
     `- history report: \`${payload.artifactPaths?.historyReportPath || ""}\``,
-    `- summary: ${payload.summary}`
+    `- summary: ${payload.summary}`,
+    `- recommendation: ${recommendation.level}`,
+    `- recommendation summary: ${recommendation.summary}`
   ];
 
   if (followUp.error) {
     lines.push(`- error: ${followUp.error}`);
+  }
+
+  if ((recommendation.nextActions || []).length > 0) {
+    lines.push("", "## Recommendation Next Actions");
+    for (const item of recommendation.nextActions) {
+      lines.push(`- ${item}`);
+    }
   }
 
   return `${lines.join("\n")}\n`;
@@ -451,6 +469,14 @@ export function createSyncCommands({
         historyReportPath
       }
     };
+    payload.recommendation = buildSyncFollowUpRecommendation({
+      available: true,
+      ...payload.followUp,
+      recommendedCheckCommand: payload.recommendedCheckCommand,
+      optOutEnvVar: payload.optOutEnvVar,
+      reportPath,
+      history: null
+    });
     const maxHistoryEntries = 5;
     const previousEntries = readSyncEvolutionFollowUpHistory(historyJsonPath);
     const historyPayload = {

@@ -19,6 +19,11 @@ function createTempConsumerProject(t) {
   return projectRoot;
 }
 
+function writeJson(filePath, payload) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
 function runCli(projectRoot, command, extraArgs = [], options = {}) {
   return spawnSync(
     process.execPath,
@@ -111,6 +116,7 @@ test("status shows the latest silent sync follow-up artifact after sync runs", (
   assert.equal(payload.habitCapture.latestSyncFollowUp.status, "skipped");
   assert.equal(payload.habitCapture.latestSyncFollowUp.mode, "gate-skip");
   assert.equal(payload.habitCapture.latestSyncFollowUp.skipReason, "env-disabled");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.level, "info-only");
   assert.equal(payload.habitCapture.latestSyncFollowUp.triggerSource.type, "manual-sync");
   assert.equal(payload.habitCapture.latestSyncFollowUp.history.available, true);
   assert.equal(payload.habitCapture.latestSyncFollowUp.history.entries.length, 1);
@@ -139,6 +145,7 @@ test("status summarizes recent silent sync follow-up history and trigger sources
   const result = runCli(projectRoot, "status", ["--format", "summary"]);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.includes("Recent silent follow-ups: 2"), true);
+  assert.equal(result.stdout.includes("Silent follow-up recommendation: info-only"), true);
   assert.equal(result.stdout.includes("Recent Silent Follow-Up Sources:"), true);
   assert.equal(result.stdout.includes("Recent Silent Follow-Ups:"), true);
   assert.equal(result.stdout.includes("postinstall"), true);
@@ -172,6 +179,58 @@ test("status json exposes recent silent follow-up source breakdown", (t) => {
   );
   assert.equal(
     payload.habitCapture.latestSyncFollowUp.history.summary.sourceBreakdown.some((item) => item.type === "manual-sync" && item.count >= 1),
+    true
+  );
+});
+
+test("status surfaces review-needed recommendation when the latest silent follow-up failed", (t) => {
+  const projectRoot = createTempConsumerProject(t);
+  assert.equal(runCli(projectRoot, "init", ["--tool", "codex", "--no-project-scan"]).status, 0);
+
+  writeJson(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.json"), {
+    schemaVersion: 1,
+    generatedAt: "2026-05-08T10:00:00.000Z",
+    projectRoot,
+    trigger: "sync",
+    triggerSource: {
+      type: "postinstall",
+      label: "postinstall",
+      detection: "npm-lifecycle"
+    },
+    recommendedCheckCommand: "npx power-ai-skills status --format summary",
+    optOutEnvVar: "POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1",
+    summary: "Silent evolution follow-up failed during error: simulated failure.",
+    followUp: {
+      status: "failed",
+      mode: "error",
+      triggered: false,
+      triggerReason: "",
+      skipReason: "",
+      error: "simulated failure",
+      newConversationCount: 0,
+      minNewConversations: 3,
+      actionableCandidateCount: 0,
+      executedActionCount: 0,
+      skippedActionCount: 0,
+      failedActionCount: 1
+    },
+    artifactPaths: {
+      jsonPath: path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.json"),
+      reportPath: path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.md"),
+      historyJsonPath: path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up-history.json"),
+      historyReportPath: path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up-history.md")
+    }
+  });
+
+  const result = runCli(projectRoot, "status", ["--json"]);
+  assert.equal(result.status, 0, result.stderr);
+
+  const payload = JSON.parse(result.stdout);
+  assert.equal(payload.status, "attention");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.level, "review-needed");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.requiresAttention, true);
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.nextActions.some((item) => item.includes("npx power-ai-skills doctor")),
     true
   );
 });

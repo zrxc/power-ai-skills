@@ -2577,3 +2577,46 @@ pnpm release:prepare
 结论：
 
 - `P6-20` 已按原阶段定义收口；下一阶段如继续推进，应优先把这些 latest/history/source 结果再往前收成“结果分级建议”，告诉普通使用者哪些 recent follow-up 只需要忽略、哪些需要 review、哪些需要继续执行低风险后续动作，而不是回退到已完成的 history/source contract 本身。
+
+## 1.4.7 / P6-21 静默 follow-up 结果分级建议第一版
+
+阶段目标：
+
+- 让普通使用者不只看到 latest/history/source，还能快速知道哪些 recent follow-up 只是信息型结果、哪些需要 review、哪些可以继续执行低风险后续动作。
+- 保持静默触发仍然非阻断、低风险、可追踪，但把“我现在要不要管它”收口成普通使用者可读的分级建议。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补结果分级建议，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已把静默 follow-up 的普通使用者 recommendation contract 收口成统一结构：
+  - `recommendation.level`
+  - `recommendation.summary`
+  - `recommendation.nextActions`
+  - `recommendation.requiresAttention`
+- recommendation 当前已覆盖三类稳定分级：
+  - `info-only`
+  - `low-risk-follow-up-available`
+  - `review-needed`
+- `status --json`、`status --format summary`、`status --format markdown` 现在都会同步带出这层 recommendation，不再要求普通使用者自己解读 `mode + reason`。
+- latest artifact `.power-ai/reports/sync-evolution-follow-up.md/json` 现在也会保留同一份 recommendation contract，保证 CLI 和 artifact 读取口径一致。
+- `status` 当前会基于 recommendation 的 `requiresAttention` 判断 latest follow-up 是否应抬升为普通使用者视角的 attention，而不是只看底层 `failed` 字段。
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - `status` 和 latest artifact 都会带 recommendation / nextActions
+  - 普通使用者可以直接知道“现在要不要处理它”
+  - 结果分级仍保持 consumer-side 视角，而不是回退到维护者调试语义
+- 已补 focused tests，覆盖：
+  - `run-evolution-cycle` 后的 `low-risk-follow-up-available`
+  - 显式 opt-out 下的 `info-only`
+  - latest follow-up 失败时的 `review-needed`
+  - `status` summary / json 对 recommendation contract 的输出
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，不只看到 latest/history/source，还能直接知道“现在是否需要处理它”。
+- recommendation contract 已同时存在于 `status` 和 latest artifact，不要求普通使用者依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-21` 已按原阶段定义收口；下一阶段如继续推进，应优先把这层 recommendation 再往前收成“最小打扰提示”，让 `sync/postinstall` 在必要时只暴露极短用户提示，而不是要求普通使用者总要主动执行 `status` 才能知道有没有新 follow-up 需要处理。

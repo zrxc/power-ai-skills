@@ -342,7 +342,7 @@ npx power-ai-skills quickstart --format summary
 npx power-ai-skills status --format summary
 \`\`\`
 
-如果你想快速知道当前项目下一步最推荐跑什么，可以直接执行 \`npx power-ai-skills quickstart --format summary\`；如果想连同 workspace 健康度、habit capture 状态以及最近一次静默 follow-up 一起看，直接执行 \`npx power-ai-skills status --format summary\`。
+如果你想快速知道当前项目下一步最推荐跑什么，可以直接执行 \`npx power-ai-skills quickstart --format summary\`；如果想连同 workspace 健康度、habit capture 状态以及最近一次静默 follow-up 一起看，直接执行 \`npx power-ai-skills status --format summary\`。\`P6-21\` 起，\`status\` 和 latest follow-up artifact 还会继续带出稳定的 \`recommendation\` / \`nextActions\` contract，把结果区分成 \`info-only\`、\`low-risk-follow-up-available\`、\`review-needed\`，不要求普通使用者自己解读 \`mode + reason\`。
 
 ### 5. 团队治理与项目画像
 
@@ -445,6 +445,7 @@ npx power-ai-skills doctor
 - shared skill、wrapper proposal、release 动作和所有人工 review 边界仍不会被 \`sync\` 自动推进
 - \`P6-19\` 起，最近一次静默 follow-up 结果会额外写入 \`.power-ai/reports/sync-evolution-follow-up.md/json\`，普通使用者可以直接跑 \`npx power-ai-skills status --format summary\` 查看，而不必依赖当次 \`sync\` 输出
 - \`P6-20\` 起，最近 5 次静默 follow-up 会额外保留到 \`.power-ai/reports/sync-evolution-follow-up-history.md/json\`，并区分 \`manual-sync\`、\`postinstall\` 和其他 npm script 来源
+- \`P6-21\` 起，latest artifact 和 \`status\` 都会带出 \`recommendation.level\`、\`recommendation.summary\` 与 \`recommendation.nextActions\`，普通使用者可以直接知道“现在要不要处理它”
 
 ### 8. 增减工具
 

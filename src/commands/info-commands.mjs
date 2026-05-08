@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { buildDoctorMarkdown, buildDoctorSummary } from "../doctor/reporting.mjs";
 import { readJson } from "../shared/fs.mjs";
+import { buildSyncFollowUpRecommendation } from "../shared/sync-follow-up-recommendation.mjs";
 
 /**
  * 创建信息命令处理器
@@ -144,6 +145,14 @@ export function createInfoCommands({
     const { jsonPath, reportPath, historyJsonPath, historyReportPath } = getSyncEvolutionFollowUpArtifactPaths();
     const history = buildSyncFollowUpHistoryPayload();
     if (!fs.existsSync(jsonPath)) {
+      const recommendation = buildSyncFollowUpRecommendation({
+        available: false,
+        status: "not-recorded",
+        mode: "not-recorded",
+        recommendedCheckCommand: "npx power-ai-skills status --format summary",
+        optOutEnvVar: "POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1",
+        reportPath
+      });
       return {
         available: false,
         status: "not-recorded",
@@ -166,13 +175,32 @@ export function createInfoCommands({
         reportPath,
         historyJsonPath,
         historyReportPath,
-        history
+        history,
+        recommendation
       };
     }
 
     const payload = safeReadJson(jsonPath) || {};
     const followUp = payload.followUp || {};
     const reason = followUp.triggerReason || followUp.skipReason || "none";
+    const recommendation = buildSyncFollowUpRecommendation({
+      available: true,
+      status: followUp.status || "unknown",
+      mode: followUp.mode || "unknown",
+      triggerReason: followUp.triggerReason || "",
+      skipReason: followUp.skipReason || "",
+      error: followUp.error || "",
+      newConversationCount: Number(followUp.newConversationCount || 0),
+      minNewConversations: Number(followUp.minNewConversations || 0),
+      actionableCandidateCount: Number(followUp.actionableCandidateCount || 0),
+      executedActionCount: Number(followUp.executedActionCount || 0),
+      skippedActionCount: Number(followUp.skippedActionCount || 0),
+      failedActionCount: Number(followUp.failedActionCount || 0),
+      recommendedCheckCommand: payload.recommendedCheckCommand || "npx power-ai-skills status --format summary",
+      optOutEnvVar: payload.optOutEnvVar || "POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1",
+      reportPath: payload.artifactPaths?.reportPath || reportPath,
+      history
+    });
     return {
       available: true,
       status: followUp.status || "unknown",
@@ -203,7 +231,8 @@ export function createInfoCommands({
       reportPath: payload.artifactPaths?.reportPath || reportPath,
       historyJsonPath: payload.artifactPaths?.historyJsonPath || historyJsonPath,
       historyReportPath: payload.artifactPaths?.historyReportPath || historyReportPath,
-      history
+      history,
+      recommendation
     };
   }
 
@@ -862,10 +891,7 @@ export function createInfoCommands({
       projectLocalDraftCount: quickstart.workspace.projectLocalDraftCount
     });
     const latestSyncFollowUpNeedsAttention = habitCapture.latestSyncFollowUp.available
-      && (
-        habitCapture.latestSyncFollowUp.status === "failed"
-        || habitCapture.latestSyncFollowUp.failedActionCount > 0
-      );
+      && habitCapture.latestSyncFollowUp.recommendation?.requiresAttention;
     const needsAttention = !doctor.ok || quickstart.status !== "ready" || latestSyncFollowUpNeedsAttention;
     const title = doctor.mode === "package-maintenance"
       ? "Current project is in package-maintenance mode; use this view mainly for consumer projects."
@@ -926,6 +952,7 @@ export function createInfoCommands({
       `Evolution proposals: ${payload.habitCapture.evolution.proposals?.total || 0}`,
       `Silent automation boundary: ${payload.habitCapture.automationBoundary.summaryStatus}`,
       `Latest silent follow-up: ${payload.habitCapture.latestSyncFollowUp.available ? `${payload.habitCapture.latestSyncFollowUp.status} / ${payload.habitCapture.latestSyncFollowUp.mode}` : "not recorded"}`,
+      `Silent follow-up recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`,
       `Recent silent follow-ups: ${payload.habitCapture.latestSyncFollowUp.history.available ? payload.habitCapture.latestSyncFollowUp.history.entries.length : 0}`,
       `Conversation-mined drafts: ${payload.habitCapture.drafts.projectLocalDraftCount}`,
       `Workspace health: ${payload.workspace.doctorOk ? "ok" : "attention"}`,
@@ -974,10 +1001,19 @@ export function createInfoCommands({
       lines.push(`- generated at: ${payload.habitCapture.latestSyncFollowUp.generatedAt || "unknown"}`);
       lines.push(`- source: ${payload.habitCapture.latestSyncFollowUp.triggerSource?.display || "unknown"}`);
       lines.push(`- summary: ${payload.habitCapture.latestSyncFollowUp.summary}`);
+      lines.push(`- recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`);
+      lines.push(`- recommendation summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.summary || "none"}`);
       lines.push(`- report: ${payload.habitCapture.latestSyncFollowUp.reportPath}`);
       lines.push(`- json: ${payload.habitCapture.latestSyncFollowUp.jsonPath}`);
       lines.push(`- history report: ${payload.habitCapture.latestSyncFollowUp.historyReportPath}`);
       lines.push(`- opt-out: ${payload.habitCapture.latestSyncFollowUp.optOutEnvVar}`);
+    }
+
+    if ((payload.habitCapture.latestSyncFollowUp.recommendation?.nextActions || []).length > 0) {
+      lines.push("", "Silent Follow-Up Next Actions:");
+      for (const step of payload.habitCapture.latestSyncFollowUp.recommendation.nextActions) {
+        lines.push(`- ${step}`);
+      }
     }
 
     if (payload.habitCapture.latestSyncFollowUp.history.available) {
@@ -1016,6 +1052,7 @@ export function createInfoCommands({
       `- evolution proposals: ${payload.habitCapture.evolution.proposals?.total || 0}`,
       `- silent automation boundary: ${payload.habitCapture.automationBoundary.summaryStatus}`,
       `- latest silent follow-up: ${payload.habitCapture.latestSyncFollowUp.available ? `${payload.habitCapture.latestSyncFollowUp.status} / ${payload.habitCapture.latestSyncFollowUp.mode}` : "not recorded"}`,
+      `- silent follow-up recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`,
       `- recent silent follow-ups: ${payload.habitCapture.latestSyncFollowUp.history.available ? payload.habitCapture.latestSyncFollowUp.history.entries.length : 0}`,
       `- conversation-mined drafts: ${payload.habitCapture.drafts.projectLocalDraftCount}`,
       `- workspace health: ${payload.workspace.doctorOk ? "ok" : "attention"}`,
@@ -1063,10 +1100,18 @@ export function createInfoCommands({
       lines.push(`- generated at: ${payload.habitCapture.latestSyncFollowUp.generatedAt || "unknown"}`);
       lines.push(`- source: ${payload.habitCapture.latestSyncFollowUp.triggerSource?.display || "unknown"}`);
       lines.push(`- summary: ${payload.habitCapture.latestSyncFollowUp.summary}`);
+      lines.push(`- recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`);
+      lines.push(`- recommendation summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.summary || "none"}`);
       lines.push(`- report: \`${payload.habitCapture.latestSyncFollowUp.reportPath}\``);
       lines.push(`- json: \`${payload.habitCapture.latestSyncFollowUp.jsonPath}\``);
       lines.push(`- history report: \`${payload.habitCapture.latestSyncFollowUp.historyReportPath}\``);
       lines.push(`- opt-out: \`${payload.habitCapture.latestSyncFollowUp.optOutEnvVar}\``);
+      if ((payload.habitCapture.latestSyncFollowUp.recommendation?.nextActions || []).length > 0) {
+        lines.push("", "### Silent Follow-Up Next Actions");
+        for (const step of payload.habitCapture.latestSyncFollowUp.recommendation.nextActions) {
+          lines.push(`- ${step}`);
+        }
+      }
     }
 
     if (payload.habitCapture.latestSyncFollowUp.history.available) {

@@ -199,6 +199,11 @@ test("sync silently triggers low-risk evolution follow-up when enough captured c
   assert.equal(followUpArtifact.followUp.mode, "run-evolution-cycle");
   assert.equal(followUpArtifact.triggerSource.type, "manual-sync");
   assert.equal(followUpArtifact.recommendedCheckCommand, "npx power-ai-skills status --format summary");
+  assert.equal(followUpArtifact.recommendation.level, "low-risk-follow-up-available");
+  assert.equal(
+    fs.readFileSync(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.md"), "utf8").includes("## Recommendation Next Actions"),
+    true
+  );
   const historyArtifact = JSON.parse(
     fs.readFileSync(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up-history.json"), "utf8")
   );
@@ -233,6 +238,11 @@ test("sync allows an explicit environment opt-out for silent evolution follow-up
   assert.equal(followUpArtifact.followUp.status, "skipped");
   assert.equal(followUpArtifact.followUp.skipReason, "env-disabled");
   assert.equal(followUpArtifact.triggerSource.type, "manual-sync");
+  assert.equal(followUpArtifact.recommendation.level, "info-only");
+  assert.equal(
+    followUpArtifact.recommendation.nextActions.some((item) => item.includes("POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1")),
+    true
+  );
 });
 
 test("sync records recent follow-up history with source breakdown and a five-entry cap", (t) => {

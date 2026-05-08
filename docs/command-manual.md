@@ -352,6 +352,7 @@ npx power-ai-skills status --format summary
 - `status` 会把当前实际选择、默认推荐、workspace health、quickstart 推荐链路和 doctor next steps 汇总到一份结果里。
 - 如果最近一次 `postinstall -> sync` 或手动 `sync` 触发了静默 follow-up，`status` 也会带出最新结果摘要，并指向 `.power-ai/reports/sync-evolution-follow-up.md/json`。
 - 如果最近几次静默 follow-up 混合了手动 `sync`、`postinstall` 和其他 npm script，`status` 会同时展示 recent history 与 source summary，来源字段会区分 `manual-sync`、`postinstall` 或 `npm-script (<event>)`。
+- `P6-21` 起，`status` 和 latest follow-up artifact 还会继续带出稳定的 `recommendation` / `nextActions` contract，把结果区分成 `info-only`、`low-risk-follow-up-available`、`review-needed`，不要求普通使用者自己解读 `mode + reason`。
 
 自检：
 
@@ -1452,6 +1453,7 @@ npx power-ai-skills apply-evolution-proposal --from-status accepted --type proje
   - 条件不足或内部失败时，仍不会让 `sync` 失败
 - `P6-19` 起，这条安装后静默触发的最新结果也会同步沉淀到 `.power-ai/reports/sync-evolution-follow-up.md/json`，推荐直接用 `npx power-ai-skills status --format summary` 查看摘要口径。
 - `P6-20` 起，最近 5 次安装后/手动同步结果会继续沉淀到 `.power-ai/reports/sync-evolution-follow-up-history.md/json`，并带 source summary，方便普通使用者区分最近几次结果是手动 `sync`、`postinstall` 还是其他 npm script 触发。
+- `P6-21` 起，latest artifact 和 `status` 都会带出 `recommendation.level`、`recommendation.summary` 与 `recommendation.nextActions`，普通使用者可以直接知道“现在要不要处理它”。
 - 当前这一版还不会自动生成 shared skill、Wrapper 正式注册或 release 动作；定位是"先完成自动分析调度和治理报告"，后续再继续扩展 evolution policy、candidate generation 和低风险自动落地。
 
 ## Capture Safety Policy Baseline
