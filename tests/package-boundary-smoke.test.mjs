@@ -25,9 +25,15 @@ function runCommand(command, args, options = {}) {
 
 function createPackedPackageSnapshot(t) {
   const tempRoot = fs.mkdtempSync(path.join(root, ".tmp-package-boundary-"));
+  const npmCacheRoot = path.join(tempRoot, ".npm-cache");
   t.after(() => fs.rmSync(tempRoot, { recursive: true, force: true }));
 
-  const packResult = runNpmPackJson(root, ["--pack-destination", tempRoot]);
+  fs.mkdirSync(npmCacheRoot, { recursive: true });
+  const packResult = runNpmPackJson(root, ["--pack-destination", tempRoot], {
+    env: {
+      npm_config_cache: npmCacheRoot
+    }
+  });
   assert.equal(packResult.ok, true, packResult.error || packResult.stderr || packResult.stdout);
 
   const packPayload = packResult.payload[0];
@@ -103,6 +109,33 @@ test("unpacked tarball can boot runtime entrypoints and initialize a consumer fi
     true
   );
 
+  const quickstartBeforeInit = runCommand(process.execPath, [
+    binPath,
+    "quickstart",
+    "--project",
+    consumerProjectRoot,
+    "--format",
+    "summary"
+  ], {
+    cwd: unpackedPackageRoot
+  });
+  assert.equal(quickstartBeforeInit.status, 0, quickstartBeforeInit.stderr);
+  assert.equal(quickstartBeforeInit.stdout.includes("npx power-ai-skills init"), true);
+
+  const statusBeforeInit = runCommand(process.execPath, [
+    binPath,
+    "status",
+    "--project",
+    consumerProjectRoot,
+    "--format",
+    "summary"
+  ], {
+    cwd: unpackedPackageRoot
+  });
+  assert.equal(statusBeforeInit.status, 0, statusBeforeInit.stderr);
+  assert.equal(statusBeforeInit.stdout.includes("Recommended Path:"), true);
+  assert.equal(statusBeforeInit.stdout.includes("npx power-ai-skills init"), true);
+
   const initResult = runCommand(process.execPath, [
     binPath,
     "init",
@@ -116,6 +149,8 @@ test("unpacked tarball can boot runtime entrypoints and initialize a consumer fi
   });
   assert.equal(initResult.status, 0, initResult.stderr);
   assert.equal(initResult.stdout.includes("Initialized project AI skills"), true);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills scan-project"), true);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills generate-project-local-skills"), true);
 
   const doctorResult = runCommand(process.execPath, [
     binPath,
@@ -133,6 +168,11 @@ test("unpacked tarball can boot runtime entrypoints and initialize a consumer fi
   assert.equal(doctorPayload.packageName, packageJson.name);
   assert.equal(doctorPayload.version, packageJson.version);
   assert.deepEqual(doctorPayload.selectedTools, ["codex"]);
+  assert.equal(Array.isArray(doctorPayload.nextSteps), true);
+  assert.equal(
+    doctorPayload.nextSteps.some((step) => step.includes("npx power-ai-skills scan-project")),
+    true
+  );
   assert.equal(
     doctorPayload.entrypointStates.some((entrypointState) => entrypointState.target === "AGENTS.md" && entrypointState.ok),
     true

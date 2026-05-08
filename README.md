@@ -105,6 +105,30 @@ pnpm add -D @power/power-ai-skills
 npx power-ai-skills init
 ```
 
+如果你只想先看当前项目最短推荐路径，也可以直接执行：
+
+```bash
+npx power-ai-skills quickstart --format summary
+npx power-ai-skills status --format summary
+```
+
+第一次接入，推荐先走这条最短路径：
+
+```bash
+npx power-ai-skills init
+npx power-ai-skills doctor
+npx power-ai-skills list-project-local-skills
+```
+
+如果这次先用 `--no-project-scan` 跳过扫描，推荐紧接着补这条短路径：
+
+```bash
+npx power-ai-skills init --tool codex --no-project-scan
+npx power-ai-skills scan-project
+npx power-ai-skills generate-project-local-skills
+npx power-ai-skills doctor
+```
+
 默认还会追加一轮项目扫描，生成：
 
 ```text
@@ -200,7 +224,11 @@ npx power-ai-skills promote-project-local-skill basic-list-page-project
 ```bash
 npx power-ai-skills list-tools
 npx power-ai-skills show-defaults
+npx power-ai-skills quickstart --format summary
+npx power-ai-skills status --format summary
 ```
+
+如果你想快速知道当前项目下一步最推荐跑什么，可以直接执行 `npx power-ai-skills quickstart --format summary`；如果想连同 workspace 健康度、habit capture 状态以及最近一次静默 follow-up 一起看，直接执行 `npx power-ai-skills status --format summary`。
 
 ### 5. 团队治理与项目画像
 
@@ -288,6 +316,22 @@ npx power-ai-skills generate-upgrade-summary --json
 npx power-ai-skills sync
 ```
 
+业务项目升级依赖或重新拉取模板后，推荐至少补一轮：
+
+```bash
+npx power-ai-skills sync
+npx power-ai-skills doctor
+```
+
+`P6-18` 起，`sync` 会在不阻断主流程的前提下，静默尝试复用现有低风险 evolution follow-up：
+- 如果当前已采集的 conversations 达到 evolution policy 阈值，就会自动尝试 `run-evolution-cycle`
+- 如果还没达到 analyze 阈值，但已经存在可低风险刷新的 project-local draft candidate，就改走 `apply-evolution-actions`
+- 如果显式设置 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`，本次 `sync` 会跳过这条静默链
+- 如果条件不足或内部失败，`sync` 仍然成功，不会把正常升级流程打断
+- shared skill、wrapper proposal、release 动作和所有人工 review 边界仍不会被 `sync` 自动推进
+- `P6-19` 起，最近一次静默 follow-up 结果会额外写入 `.power-ai/reports/sync-evolution-follow-up.md/json`，普通使用者可以直接跑 `npx power-ai-skills status --format summary` 查看，而不必依赖当次 `sync` 输出
+- `P6-20` 起，最近 5 次静默 follow-up 会额外保留到 `.power-ai/reports/sync-evolution-follow-up-history.md/json`，并区分 `manual-sync`、`postinstall` 和其他 npm script 来源
+
 ### 8. 增减工具
 
 ```bash
@@ -314,6 +358,8 @@ npx power-ai-skills version
   }
 }
 ```
+
+如果你已经把 `postinstall` 指到 `power-ai-skills sync`，这条静默低风险 follow-up 也会随依赖安装一起尝试触发，不需要用户再单独记一次 evolution 命令；如需临时关闭，可设置 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`。安装后如果想确认最近一次或最近几次静默 follow-up 发生了什么，推荐直接执行 `npx power-ai-skills status --format summary`，或查看 `.power-ai/reports/sync-evolution-follow-up.md` 与 `.power-ai/reports/sync-evolution-follow-up-history.md`。
 
 ## 支持的工具
 

@@ -13,6 +13,8 @@ test("command registry keeps unique command names and known root strategies", ()
   assert.equal(new Set(commandNames).size, commandNames.length);
   assert.equal(commandNames.includes("init"), true);
   assert.equal(commandNames.includes("doctor"), true);
+  assert.equal(commandNames.includes("quickstart"), true);
+  assert.equal(commandNames.includes("status"), true);
   assert.equal(commandNames.includes("review-wrapper-promotion"), true);
 
   for (const definition of definitions) {

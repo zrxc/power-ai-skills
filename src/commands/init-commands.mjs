@@ -119,8 +119,9 @@ export function createInitCommands({
     evolutionService.syncEvolutionPolicy({ trigger: "init" });
 
     // 执行项目扫描（如果启用）
+    const ranProjectScan = shouldRunProjectScan();
     let scanSummary = "";
-    if (shouldRunProjectScan()) {
+    if (ranProjectScan) {
       const { scanResult, generationResult } = runProjectScanPipeline();
       scanSummary = formatInitScanSuffix({ scanResult, generationResult });
     }
@@ -137,7 +138,8 @@ export function createInitCommands({
     console.log(formatInitializedProjectMessage({
       projectRoot,
       selectionSummary: selectionService.getSelectionSummary(selection),
-      scanSummary
+      scanSummary,
+      ranProjectScan
     }));
   }
 

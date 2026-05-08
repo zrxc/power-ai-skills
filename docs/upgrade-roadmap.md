@@ -13,36 +13,46 @@
 
 ## 当前阶段
 
-### P6-14 下一阶段壳子（待定义）
+### P6-21 静默 follow-up 结果分级建议第一版
 阶段状态：
-- `P6-13` 已正式迁移到 `docs/upgrade-roadmap-history.md`。
-- 当前文档只保留新的活动阶段壳子，避免继续停留在已经收口的多宿主统一治理第一版内容。
-- 下一轮进入时，应先确认 `P6-14` 的真实主题，再把完整阶段定义补回本文。
+- `P6-20` 已正式迁移到 `docs/upgrade-roadmap-history.md`。
+- 当前阶段从“latest/history/source contract 已有稳定 artifact 和 `status` 入口”继续往前走，开始补普通使用者真正关心的结果分级建议。
+- 这一阶段仍优先复用现有 `postinstall -> sync -> run-evolution-cycle / apply-evolution-actions` 链，不新造 daemon，也不新造平行自动入口。
 
-阶段目标（待补）：
-- 待补：明确下一阶段是进入默认策略评估、宿主共享 policy 配置，还是转向别的后续主题。
-- 待补：明确它与 `P6-11` / `P6-12` / `P6-13` 已沉淀的 hosted wrapper contract、统一视图和 strict mode 的承接关系。
+阶段目标：
+- 让普通使用者不只看到 latest/history/source，还能快速知道哪些 recent follow-up 只是信息型结果、哪些需要 review、哪些需要继续执行低风险后续动作。
+- 保持静默触发仍然非阻断、低风险、可追踪，但把“我现在要不要管它”收口成普通使用者可读的分级建议。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补结果分级建议，就默认放开 shared skill、wrapper、release 等自动推进。
 
-本阶段只做（待补）：
-- 待补：下一阶段正式启动时，在这里补齐范围、完成标准和可执行清单。
-- 待补：优先基于 `P6-11` / `P6-12` / `P6-13` 已沉淀的宿主 contract、strict mode 和 record chain 定义后续方向。
+本阶段只做：
+- 继续复用现有 latest/history artifact 和 `status`，不新造新的 consumer-side 命令。
+- 评估并收口静默 follow-up 的结果分级，例如：
+  - info-only
+  - review-needed
+  - low-risk-follow-up-available
+- 如果需要推荐动作，优先从现有 `mode`、`status`、`reason`、history/source contract 推导，而不是再引入平行状态模型。
 
-本阶段不做（待补）：
-- 待补：在阶段目标正式写清前，不预设新的默认自动执行入口。
-- 待补：不在当前壳子里继续堆叠已经收口阶段的实现细节。
+本阶段不做：
+- 不新增后台常驻 watcher、daemon 或 OS 级服务。
+- 不自动 accept / reject conversation decision。
+- 不自动推进 shared skill promotion、wrapper proposal / registration、release-facing actions。
+- 不把 `postinstall` 或其他后续触发点变成一个因为静默 follow-up 内部失败就整体失败的重流程。
 
 ## 未完成项
 
-- [ ] 明确 `P6-14` 是否正式立项为默认策略评估、宿主共享 policy 配置，还是改为别的后续阶段主题。
-- [ ] 补齐下一阶段的目标、范围边界、record contract 复用策略和完成标准。
-- [ ] 如确认开新阶段，再把未完成项细化为可执行清单。
+- [ ] 决定 latest/history follow-up 结果的普通使用者分级口径。
+- [ ] 给 `status` 或 artifact 补一份稳定的 next-action / recommendation contract，不要求用户自己解读 `mode + reason`。
+- [ ] 保持现有 latest/history/source contract、显式 opt-out 和非阻断边界在结果分级后仍然成立。
 
-## 完成标准（待补）
+## 完成标准
 
-- 待补：下一阶段正式立项后，在这里补齐收口判断。
+- 普通使用者在 `postinstall -> sync` 之后，不只看到 latest/history/source，还能直接知道“现在是否需要处理它”。
+- 分级建议仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
 
 ## 下一次进入本文档时的动作
 
-- 先确认 `P6-14` 的真实主题，再补齐完整阶段定义。
-- 优先复用现有 planner / executor / release artifacts / orchestration / publish record / unattended governance / hosted wrapper contract，不要推倒重建发布状态模型。
-- 如果下一阶段最终不叫“下一阶段壳子”，直接在当前壳子上改名并补全内容即可。
+- 先看 latest/history/source contract 是否已经足够稳定，再决定结果分级建议落在 `status`、artifact，还是两者都保留。
+- 继续复用 `status`、`doctor`、`quickstart`、`sync` 和现有 evolution 链，不要新造平行自动入口。
+- 如果进入下一批实现，优先补结果分级建议、next-action contract 和 consumer-side 说明，而不是回退到重新解释 history/source 本身。

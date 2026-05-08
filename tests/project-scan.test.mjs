@@ -1171,6 +1171,9 @@ test("init runs project scan by default and writes analysis plus auto-generated 
   const projectRoot = createProjectScanFixture(t);
   const initResult = runCli(projectRoot, "init", ["--tool", "codex"]);
   assert.equal(initResult.status, 0, initResult.stderr);
+  assert.equal(initResult.stdout.includes("Next steps:"), true);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills doctor"), true);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills list-project-local-skills"), true);
 
   assert.equal(fs.existsSync(path.join(projectRoot, ".power-ai", "selected-tools.json")), true);
   assert.equal(fs.existsSync(path.join(projectRoot, ".power-ai", "analysis", "project-profile.json")), true);
@@ -1216,6 +1219,8 @@ test("init respects --no-project-scan and keeps legacy behavior", (t) => {
   const projectRoot = createProjectScanFixture(t);
   const initResult = runCli(projectRoot, "init", ["--tool", "codex", "--no-project-scan"]);
   assert.equal(initResult.status, 0, initResult.stderr);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills scan-project"), true);
+  assert.equal(initResult.stdout.includes("npx power-ai-skills generate-project-local-skills"), true);
 
   assert.equal(fs.existsSync(path.join(projectRoot, ".power-ai", "selected-tools.json")), true);
   assert.equal(fs.existsSync(path.join(projectRoot, ".power-ai", "analysis")), false);

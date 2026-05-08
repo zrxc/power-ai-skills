@@ -9,6 +9,39 @@ import { summarizeAppliedEvolutionArtifacts } from "../evolution/proposals.mjs";
 export function createDoctorService({ context, projectRoot, selectionService, workspaceService, teamPolicyService, governanceContextService, conversationMinerService }) {
   const releaseManifestDir = path.resolve(process.env.POWER_AI_RELEASE_MANIFEST_DIR || path.join(context.packageRoot, "manifest"));
 
+  function buildDoctorNextSteps({ mode, ok, hasProjectScanArtifacts, hasProjectLocalDrafts }) {
+    if (mode === "package-maintenance") {
+      return [];
+    }
+
+    if (!ok) {
+      const steps = [
+        "Apply the suggestions below, then rerun `npx power-ai-skills doctor --format summary`."
+      ];
+      if (!hasProjectScanArtifacts) {
+        steps.push("After the workspace is healthy, run `npx power-ai-skills scan-project` to create project analysis artifacts.");
+      }
+      return steps;
+    }
+
+    if (!hasProjectScanArtifacts) {
+      return [
+        "Run `npx power-ai-skills scan-project` to create project analysis artifacts for this repo.",
+        "Run `npx power-ai-skills generate-project-local-skills` after the scan to draft project-local skills.",
+        "Run `npx power-ai-skills show-defaults --format summary` to review the current tool and project-profile defaults."
+      ];
+    }
+
+    const draftStep = hasProjectLocalDrafts
+      ? "Run `npx power-ai-skills list-project-local-skills` to review the generated project-local drafts."
+      : "Run `npx power-ai-skills generate-project-local-skills` to refresh project-local drafts from the latest scan.";
+    return [
+      draftStep,
+      "Run `npx power-ai-skills show-defaults --format summary` to review the current tool and project-profile defaults.",
+      "Run `npx power-ai-skills scan-project` again after major repo changes to refresh analysis artifacts."
+    ];
+  }
+
   function resolveDoctorArtifactPaths({ packageMaintenance = false } = {}) {
     if (packageMaintenance) {
       return {
@@ -400,6 +433,7 @@ export function createDoctorService({ context, projectRoot, selectionService, wo
       checks,
       checkGroups,
       failureCodes,
+      nextSteps: [],
       remediationTips,
       warnings: []
     };
@@ -526,6 +560,10 @@ export function createDoctorService({ context, projectRoot, selectionService, wo
       selectedToolsTarget,
       projectGovernanceContextTarget
     } = workspaceService.getPowerAiPaths();
+    const analysisRoot = path.join(powerAiRoot, "analysis");
+    const hasProjectScanArtifacts = fs.existsSync(path.join(analysisRoot, "project-profile.json"))
+      && fs.existsSync(path.join(analysisRoot, "patterns.json"));
+    const hasProjectLocalDrafts = fs.existsSync(path.join(powerAiRoot, "skills", "project-local", "auto-generated"));
     const existingGovernanceContext = governanceContextService?.loadProjectGovernanceContext() || null;
     const governanceContext = governanceContextService?.refreshProjectGovernanceContext
       ? governanceContextService.refreshProjectGovernanceContext({
@@ -606,6 +644,7 @@ export function createDoctorService({ context, projectRoot, selectionService, wo
     }
     warnings.push(...collectWrapperPromotionWarnings(powerAiRoot));
     warnings.push(...collectEvolutionAppliedProposalWarnings(powerAiRoot));
+    const ok = checks.every((check) => check.ok || check.severity === "warning");
     const report = {
       generatedAt: new Date().toISOString(),
       packageName: context.packageJson.name,
@@ -619,10 +658,16 @@ export function createDoctorService({ context, projectRoot, selectionService, wo
       selectionSource: selection.mode,
       governanceContext,
       entrypointStates,
-      ok: checks.every((check) => check.ok || check.severity === "warning"),
+      ok,
       checks,
       checkGroups,
       failureCodes,
+      nextSteps: buildDoctorNextSteps({
+        mode: hasSelectedToolsConfig ? "single-source" : "legacy-compatible",
+        ok,
+        hasProjectScanArtifacts,
+        hasProjectLocalDrafts
+      }),
       remediationTips,
       warnings
     };

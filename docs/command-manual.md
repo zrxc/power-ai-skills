@@ -16,7 +16,7 @@
 - 仓库维护
   `doctor`、`ci:check`、`refresh:release-artifacts`、`check:release-consistency`、`release:prepare`
 - 项目初始化与同步
-  `init`、`sync`、`list-tools`、`show-defaults`、`add-tool`、`remove-tool`
+  `init`、`sync`、`quickstart`、`list-tools`、`show-defaults`、`add-tool`、`remove-tool`
 - 项目扫描与 project-local
   `scan-project`、`diff-project-scan`、`generate-project-local-skills`、`list-project-local-skills`、`plan-project-local-promotions`、`promote-project-local-skill`
 - 团队治理与项目画像
@@ -48,13 +48,15 @@
 - `first-positional-or-cwd`：优先使用第一个位置参数，否则退回当前工作目录。
 - `init-target-or-cwd`：优先使用 `init` / `add-tool` / `remove-tool` 的目标目录参数，否则退回当前工作目录。
 
-### info 命令（4）
+### info 命令（6）
 
 | Command | Handler | Project Root Strategy |
 | --- | --- | --- |
 | `list-tools` | `listToolsCommand` | `first-positional-or-cwd` |
 | `version` | `versionCommand` | `first-positional-or-cwd` |
 | `show-defaults` | `showDefaultsCommand` | `first-positional-or-cwd` |
+| `quickstart` | `quickstartCommand` | `first-positional-or-cwd` |
+| `status` | `statusCommand` | `first-positional-or-cwd` |
 | `doctor` | `doctorCommand` | `first-positional-or-cwd` |
 
 ### project 命令（89）
@@ -331,8 +333,25 @@ npx power-ai-skills remove-tool --tool trae
 ```bash
 npx power-ai-skills list-tools
 npx power-ai-skills show-defaults
+npx power-ai-skills quickstart --format summary
+npx power-ai-skills status --format summary
 npx power-ai-skills show-defaults --project-profile terminal-governance --format summary
 ```
+
+如果你只想快速知道“当前项目下一步最推荐跑什么”，可以直接执行：
+
+```bash
+npx power-ai-skills quickstart --format summary
+npx power-ai-skills status --format summary
+```
+
+说明：
+- 未初始化项目会优先提示 `init -> doctor`。
+- 已初始化但未扫描的项目会优先提示 `scan-project -> generate-project-local-skills`。
+- 已扫描项目会优先提示 `doctor -> list-project-local-skills -> show-defaults`。
+- `status` 会把当前实际选择、默认推荐、workspace health、quickstart 推荐链路和 doctor next steps 汇总到一份结果里。
+- 如果最近一次 `postinstall -> sync` 或手动 `sync` 触发了静默 follow-up，`status` 也会带出最新结果摘要，并指向 `.power-ai/reports/sync-evolution-follow-up.md/json`。
+- 如果最近几次静默 follow-up 混合了手动 `sync`、`postinstall` 和其他 npm script，`status` 会同时展示 recent history 与 source summary，来源字段会区分 `manual-sync`、`postinstall` 或 `npm-script (<event>)`。
 
 自检：
 
@@ -594,6 +613,14 @@ npx power-ai-skills doctor
 - 新增的脚手架包括 `.power-ai/shared/conversation-capture.md`、`.power-ai/references/conversation-capture-contract.md`、`.power-ai/adapters/codex-capture.example.ps1`、`.power-ai/adapters/trae-capture.example.ps1`、`.power-ai/adapters/cursor-capture.example.ps1`、`.power-ai/adapters/claude-code-capture.example.ps1`、`.power-ai/adapters/windsurf-capture.example.ps1`、`.power-ai/adapters/gemini-cli-capture.example.ps1`、`.power-ai/adapters/github-copilot-capture.example.ps1`、`.power-ai/adapters/cline-capture.example.ps1`、`.power-ai/adapters/aider-capture.example.ps1`、`.power-ai/adapters/custom-tool-capture.example.ps1`、`.power-ai/adapters/trae-host-bridge.example.ps1`、`.power-ai/adapters/cursor-host-bridge.example.ps1`、`.power-ai/adapters/windsurf-host-bridge.example.ps1`、`.power-ai/adapters/cline-host-bridge.example.ps1` 和 `.power-ai/adapters/github-copilot-host-bridge.example.ps1`。
 - 入口模板现在会直接注入 conversation capture 规则，要求 AI 只在“任务真正完成且值得沉淀”时询问用户是否收集；用户确认后只输出 `<<<POWER_AI_SESSION_SUMMARY_V1 ... >>>` 标记块。
 - `doctor` 新增 conversation capture 检查项，会验证 contract、guidance、adapter 示例和 conversation 目录是否完整。
+- `P6-18` 起，`sync` 还会在不阻断主流程的前提下静默尝试一轮低风险 evolution follow-up：
+  - 如果新增 conversations 已达到 policy 阈值，就直接复用 `run-evolution-cycle`
+  - 如果还没达到 analyze 阈值，但已经存在可低风险刷新的 project-local draft candidate，就改走 `apply-evolution-actions`
+  - 如果显式设置 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`，则本次 `sync` 会跳过这条静默链
+  - 条件不足或内部失败时，`sync` 仍然成功
+  - `P6-19` 起，最近一次静默 follow-up 结果会额外写入 `.power-ai/reports/sync-evolution-follow-up.md/json`，普通使用者可以直接跑 `npx power-ai-skills status --format summary` 查看，而不必依赖当次 `sync` 输出
+- `P6-20` 起，最近 5 次静默 follow-up 会额外写入 `.power-ai/reports/sync-evolution-follow-up-history.md/json`，并记录 `manual-sync`、`postinstall` 或其他 npm script 来源
+  - history artifact 会额外带一份 source summary，方便普通使用者直接区分最近几次结果主要来自手动 `sync`、`postinstall` 还是其他 npm script
 ## 1.1.9 wrapper matrix
 
 ```bash
@@ -1418,6 +1445,13 @@ npx power-ai-skills apply-evolution-proposal --from-status accepted --type proje
 - `run-evolution-cycle` 是自进化第一版调度入口，会检查当前项目已采集的 conversations 数量，并根据"自上次 analyze-patterns 之后新增的会话数"决定是否触发一轮自动分析。
 - 第一版默认阈值是 `3` 条新增会话，也可以通过 `--min-new-conversations <n>` 临时覆盖；`--force` 会忽略阈值直接触发，`--dry-run` 只输出本轮 would-run 结果，不实际执行分析。
 - 当触发执行时，当前会自动串起 `analyze-patterns`、治理上下文刷新和 `generate-governance-summary`，并输出 `.power-ai/reports/evolution-cycle-report.md` 与 `.power-ai/reports/evolution-cycle-report.json`。
+- `P6-18` 起，如果消费项目把 `postinstall` 指向 `power-ai-skills sync`，这条低风险 evolution 链也会在同步后静默尝试一次：
+  - 达到阈值时走 `run-evolution-cycle`
+  - 只够低风险 draft refresh 时走 `apply-evolution-actions`
+  - 如需临时关闭这条静默触发，可设置 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`
+  - 条件不足或内部失败时，仍不会让 `sync` 失败
+- `P6-19` 起，这条安装后静默触发的最新结果也会同步沉淀到 `.power-ai/reports/sync-evolution-follow-up.md/json`，推荐直接用 `npx power-ai-skills status --format summary` 查看摘要口径。
+- `P6-20` 起，最近 5 次安装后/手动同步结果会继续沉淀到 `.power-ai/reports/sync-evolution-follow-up-history.md/json`，并带 source summary，方便普通使用者区分最近几次结果是手动 `sync`、`postinstall` 还是其他 npm script 触发。
 - 当前这一版还不会自动生成 shared skill、Wrapper 正式注册或 release 动作；定位是"先完成自动分析调度和治理报告"，后续再继续扩展 evolution policy、candidate generation 和低风险自动落地。
 
 ## Capture Safety Policy Baseline

@@ -33,8 +33,11 @@ export function createCommandRunner({
 
   const infoCommands = createInfoCommands({
     context,
+    projectRoot,
     selectionService,
+    workspaceService,
     doctorService,
+    conversationMinerService,
     governanceContextService,
     outputHelpers
   });

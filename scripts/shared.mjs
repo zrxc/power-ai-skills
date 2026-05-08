@@ -34,7 +34,7 @@ export function resolveNpmCliPath(rootDir) {
   return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 }
 
-export function runNpmPackJson(rootDir, args = []) {
+export function runNpmPackJson(rootDir, args = [], options = {}) {
   const npmCliPath = resolveNpmCliPath(rootDir);
   if (!npmCliPath) {
     return {
@@ -48,7 +48,11 @@ export function runNpmPackJson(rootDir, args = []) {
 
   const result = spawnSync(process.execPath, [npmCliPath, "pack", "--json", ...args], {
     cwd: rootDir,
-    encoding: "utf8"
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      ...(options.env || {})
+    }
   });
 
   if (result.status !== 0) {

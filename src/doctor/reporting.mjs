@@ -121,6 +121,11 @@ export function buildDoctorSummary(result) {
     lines.push(`- ${entrypointState.target}: ${entrypointState.state}`);
   }
 
+  if ((result.nextSteps || []).length > 0) {
+    lines.push("", "Next Steps:");
+    for (const step of result.nextSteps) lines.push(`- ${step}`);
+  }
+
   if ((result.remediationTips || []).length > 0) {
     lines.push("", "Suggestions:");
     for (const tip of result.remediationTips) lines.push(`- ${tip}`);
@@ -152,6 +157,11 @@ export function buildDoctorMarkdown(result) {
   lines.push("", "## Entrypoints");
   for (const entrypointState of result.entrypointStates || []) {
     lines.push(`- \`${entrypointState.target}\`: ${entrypointState.state}`);
+  }
+
+  if ((result.nextSteps || []).length > 0) {
+    lines.push("", "## Next Steps");
+    for (const step of result.nextSteps) lines.push(`- ${step}`);
   }
 
   if ((result.remediationTips || []).length > 0) {

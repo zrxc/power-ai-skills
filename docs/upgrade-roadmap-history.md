@@ -2281,3 +2281,299 @@ pnpm release:prepare
 结论：
 
 - `P6-13` 已按原阶段定义收口；下一阶段如继续推进，应单独立项默认策略评估、宿主共享 policy 配置或更高层 hosted scheduling governance，而不是回退到已完成的统一视图 / strict mode contract 本身。
+
+## 1.4.7 / P6-14 普通使用者接入与升级体验第一版
+
+阶段目标：
+
+- 让普通使用者在 `init`、`sync`、`doctor` 之后，立刻知道下一步该执行什么命令，而不是回 README 手动拼流程。
+- 把“项目还没扫描”“project-local 草案还没看”“默认选择还没确认”这些常见后续动作，直接暴露成命令输出和最小接入文档的一部分。
+- 保持现有能力边界不变，不把本阶段重新拉回 maintainer-side hosted release / default policy 方向。
+
+已完成：
+
+- 已给 `init` 和 `sync` 补用户侧 next steps 输出，覆盖：
+  - 默认 `init` 已扫描路径
+  - `init --no-project-scan` 未扫描路径
+  - `sync` 后的推荐自检路径
+- 已给 consumer `doctor` 补 `nextSteps` 字段，并同步到：
+  - `doctor --json`
+  - summary 输出
+  - markdown 报告
+- 已补 focused tests，覆盖：
+  - 默认 `init` 扫描路径会直接提示 `doctor` 和 `list-project-local-skills`
+  - `init --no-project-scan` 会直接提示 `scan-project` 和 `generate-project-local-skills`
+  - 打包后的 consumer `doctor` 仍能稳定输出 `nextSteps`
+- 已把这批普通使用者向 next steps 同步到 README 自动生成源，明确：
+  - 第一次接入的最短路径
+  - `--no-project-scan` 时的补扫短路径
+  - 升级依赖后的 `sync -> doctor` 推荐短路径
+
+阶段收口判断：
+
+- 普通使用者执行 `init`、`sync`、`doctor` 后，都能在终端直接看到至少一条清晰、可执行的下一步命令。
+- `doctor --json` 已稳定输出面向 consumer 的 `nextSteps`，并与 summary / markdown 呈现保持一致口径。
+- README 已同步这批最短接入路径，不再要求普通使用者只能从分散命令段落里自己拼顺序。
+- 当前实现没有扩 maintainer-side release governance，也没有重做 project scan / doctor 的底层状态模型。
+
+结论：
+
+- `P6-14` 已按原阶段定义收口；下一阶段如继续推进普通使用者方向，应优先考虑更高层的 quickstart / onboarding contract、一次性推荐链路整合或更强的 consumer-side 自解释输出，而不是回退到已完成的 first-step guidance 本身。
+
+## 1.4.7 / P6-15 普通使用者 quickstart / onboarding contract 第二版
+
+阶段目标：
+
+- 在 `P6-14` 已把 next steps 收进 `init` / `sync` / `doctor` 和 README 最短路径的基础上，再补一个真正的统一入口，让普通使用者不用自己拼命令顺序。
+- 让“未初始化”“已初始化但未扫描”“已扫描但还没产出 draft”这些常见状态，能直接映射到一条短而稳定的推荐链路。
+- 保持这条线继续面向普通使用者，不回退到 maintainer-side release governance 或新的发布边界扩展。
+
+已完成：
+
+- 已新增 `quickstart` 命令，作为普通使用者的统一入口：
+  - 支持 `--format summary`
+  - 支持 `--format markdown`
+  - 默认仍可输出 JSON，便于后续 GUI / wrapper 复用
+- `quickstart` 现在会根据当前项目状态给出不同的最短路径：
+  - 未初始化项目：优先提示 `init -> doctor -> list-project-local-skills`
+  - 已初始化但未扫描：优先提示 `scan-project -> generate-project-local-skills -> doctor`
+  - 已扫描但还没有 project-local drafts：优先提示 `generate-project-local-skills -> list-project-local-skills -> doctor`
+  - 已进入常规消费流：优先提示 `doctor -> list-project-local-skills -> show-defaults`
+- 已把 `quickstart` 同步进：
+  - 命令注册表
+  - README 自动生成源
+  - `docs/command-manual.md`
+- 已补 focused tests，覆盖：
+  - 未初始化 consumer 项目
+  - 已初始化但未扫描项目
+  - 已扫描但未产出 draft 项目
+  - 打包后的 consumer tarball 仍能稳定运行 `quickstart`
+
+阶段收口判断：
+
+- 普通使用者现在既可以从 `init` / `sync` / `doctor` 的 next steps 进入，也可以直接执行 `quickstart` 获取当前项目最短推荐链路。
+- `quickstart` 已经不是固定文案，而是会根据当前项目状态切换不同推荐路径。
+- README、命令手册、命令注册表和打包后的 consumer runtime 都已经对齐这条用户入口。
+- 当前实现仍保持用户侧范围，没有引入新的 maintainer-side release governance 主题。
+
+结论：
+
+- `P6-15` 已按原阶段定义收口；下一阶段如继续推进普通使用者方向，应优先考虑更强的 onboarding 聚合视图、consumer-side 状态摘要收口，或把 quickstart 与 doctor / defaults 做更统一的输出 contract，而不是回退到已完成的 quickstart 初版本身。
+
+## 1.4.7 / P6-16 普通使用者状态摘要统一视图第一版
+
+阶段目标：
+
+- 在 `P6-14` / `P6-15` 已分别把 CLI next steps 和 `quickstart` 入口补齐的基础上，再提供一份更统一的普通使用者状态摘要视图。
+- 把当前实际选择、默认推荐、workspace health、quickstart 推荐链路和 doctor next steps 收到一个入口里，减少普通使用者在多个命令之间来回切换。
+- 保持这条线继续面向普通使用者，不回退到 maintainer-side release governance 或新的宿主治理主题。
+
+已完成：
+
+- 已新增 `status` 命令，作为普通使用者状态摘要统一入口：
+  - 支持 `--format summary`
+  - 支持 `--format markdown`
+  - 默认仍可输出 JSON，便于后续脚本或 GUI 复用
+- `status` 当前会统一汇总：
+  - 当前实际选择摘要
+  - 默认推荐选择摘要
+  - 推荐 project profile
+  - doctor workspace health / failure codes / warnings
+  - quickstart 推荐链路
+  - doctor next steps
+- 已明确 `status` 的语义边界：
+  - `workspace.doctorOk` 只表示 doctor 健康状态
+  - 顶层 `status` 则表示当前普通使用者是否仍有 onboarding / workspace follow-up work
+- 已把 `status` 同步进：
+  - 命令注册表
+  - README 自动生成源
+  - `docs/command-manual.md`
+- 已补 focused tests，覆盖：
+  - 未初始化 consumer 项目
+  - 已初始化但未扫描 consumer 项目
+  - 已扫描 consumer 项目
+  - 打包后的 consumer tarball 仍能稳定运行 `status`
+
+阶段收口判断：
+
+- 普通使用者现在可以通过 `status` 一次性看到当前实际选择、默认推荐、workspace 健康度和下一步建议，而不必分别执行 `quickstart`、`show-defaults` 和 `doctor`。
+- `status` 的 summary / markdown / JSON 三种输出都已成型，且与现有 `quickstart`、`doctor nextSteps` 口径一致。
+- 命令注册表、命令手册、README 和打包后的 consumer runtime 已经对齐这条新入口。
+- 当前实现仍保持用户侧范围，没有把阶段重新拉回 release governance 或宿主调度方向。
+
+结论：
+
+- `P6-16` 已按原阶段定义收口；下一阶段如继续推进普通使用者方向，应优先考虑更高层的 onboarding 仪表板、consumer-side 状态 contract 复用，或把 `status` 与 upgrade / baseline 结果进一步收敛，而不是回退到已完成的统一摘要初版本身。
+
+## 1.4.7 / P6-17 静默习惯采集第一版
+
+阶段目标：
+
+- 把“用户日常习惯是否已被自动收集、是否已经形成 pattern、是否已经接近生成 project-local skill”收成一个统一用户视图。
+- 保持普通使用者入口连续性，优先复用 `status`、`quickstart`、CLI next steps 和 consumer doctor，而不是新造一套完全平行的入口。
+- 为后续真正的静默自动升级和静默自动产出 skill 铺底，但先把状态 contract、follow-up 路径和人工边界收稳。
+
+已完成：
+
+- 已把 `status` 扩成用户侧的 `habitCapture` 统一视图，覆盖：
+  - auto-capture runtime readiness
+  - conversation record / pattern 摘要
+  - decision backlog
+  - conversation-mined project-local drafts
+  - evolution policy / candidates / actions / proposals 摘要
+- 已让普通使用者能直接区分当前所处阶段：
+  - 还没开始采集
+  - 正在静默收集
+  - 已够条件进入 evolution cycle
+  - 已进入 review backlog
+  - 已进入 draft handoff follow-up
+  - 已产出 conversation-mined draft
+- 已明确下一批普通使用者 follow-up 入口优先复用现有 `run-evolution-cycle` / `apply-evolution-actions`，而不是新造一条平行自动链。
+- 已把“低风险静默动作 vs 必须人工 review 的边界”同步进 `status` 的 `automationBoundary` 视图，显式区分：
+  - 可继续走的低风险自动动作
+  - 必须停在 conversation review、evolution proposal、draft handoff、shared skill、wrapper、release 和 manual content 保护边界的动作
+- 已补 focused tests，覆盖：
+  - 未初始化 consumer 项目
+  - 已初始化但仍在静默收集
+  - 已达到 evolution cycle 条件但尚未分析 pattern
+  - 已形成 pattern 并生成 conversation-mined project-local draft
+
+阶段收口判断：
+
+- 普通使用者只看 `status`，就能知道自动习惯采集是否准备好、是否已经累计出可复用 pattern、是否卡在 review backlog，以及是否已经产出 conversation-mined draft。
+- `status` 的 JSON / summary / markdown 三种输出，对 habit-capture 都保持同一套 contract。
+- 用户侧状态入口已经不只是“告诉你下一步命令”，而是明确说明哪些动作属于低风险静默自动链，哪些必须停在人工 review 边界。
+- 当前实现仍保持普通使用者主线，没有滑回 maintainer-side release governance，也没有越界自动处理高风险治理动作。
+
+结论：
+
+- `P6-17` 已按原阶段定义收口；下一阶段如继续推进，应优先把这条低风险静默链路接到真实触发点上，例如 `sync` / `postinstall`，而不是回退到重新解释状态入口本身。
+
+## 1.4.7 / P6-18 静默触发入口第一版
+
+阶段目标：
+
+- 让消费项目在升级依赖或执行 `postinstall -> sync` 时，能够无感触发一轮低风险 evolution follow-up。
+- 保持自动触发非阻断、低风险、可追踪：能跑就顺手跑，条件不足就跳过，内部失败也不阻断正常 `sync`。
+- 继续把高风险动作留在人工 review 边界内，不因为进入触发阶段就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已把 `sync` 接成第一版静默触发入口，并保持默认复用现有低风险 evolution 链。
+- `sync` 现在会在真正触发前先做一层显式门禁判断：
+  - 如果新增 conversations 已达到 policy 阈值，就走 `run-evolution-cycle`
+  - 如果还没达到 analyze 阈值，但已经存在可低风险刷新的 project-local draft candidate，就改走 `apply-evolution-actions`
+  - 如果显式设置 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`，则本次 `sync` 直接跳过这条静默链
+- 已保持静默触发非阻断：
+  - 条件不足时跳过
+  - 内部失败时不让 `sync` 整体失败
+  - 高风险动作仍留在人工 review 边界外
+- 已把这批触发结果同步进用户侧输出：
+  - `mode run-evolution-cycle`
+  - `mode apply-evolution-actions`
+  - `mode gate-skip`
+  - 以及对应的 trigger / skip reason、conversation threshold 和 actionable candidate 摘要
+- 已把 README 自动生成源和 `docs/command-manual.md` 同步到这条触发口径，补充了：
+  - action-only fallback 的真实语义
+  - `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1` 的 opt-out 口径
+  - `postinstall -> sync` 同样复用这条静默低风险链
+- 已补 focused tests 覆盖这批场景：
+  - 有足够 conversations 时触发 `run-evolution-cycle`
+  - 显式环境变量 opt-out
+  - 阈值不足但已有低风险 project-local refresh candidate 时走 `apply-evolution-actions`
+
+阶段收口判断：
+
+- `sync` 已能在消费项目里静默尝试一轮低风险 evolution follow-up，不再只有单一路径的 `run-evolution-cycle` 调度。
+- 当 follow-up executed / skipped / failed 时，用户都能从 `sync` 输出判断发生了什么，并区分这是 full cycle、action-only fallback 还是 gate skip。
+- 文档已经明确 `postinstall -> sync` 会复用同一条非阻断静默链，并支持显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进 shared skill、wrapper、release 等高风险治理动作。
+
+结论：
+
+- `P6-18` 已按原阶段定义收口；下一阶段如继续推进，应优先收口 `postinstall` 路径下的结果查看方式和 consumer-side 摘要口径，而不是回退到已完成的 `sync` 静默触发初版本身。
+
+## 1.4.7 / P6-19 postinstall 静默触发收口第一版
+
+阶段目标：
+
+- 让消费项目在 `postinstall` 场景下，也能更稳定理解“刚才有没有发生静默 follow-up、属于哪一类低风险动作、是否需要继续关心”。
+- 保持静默触发仍然非阻断、低风险、可追踪，但把“安装后如何看结果”收口成更稳定的 consumer-side 路径。
+- 继续把高风险动作留在人工 review 边界内，不因为开始收口 `postinstall` 路径就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已继续复用 `sync` 作为真实执行器，不另起新的安装后自动入口。
+- 已给最近一次静默 follow-up 补稳定轻量 artifact：
+  - `.power-ai/reports/sync-evolution-follow-up.json`
+  - `.power-ai/reports/sync-evolution-follow-up.md`
+- `sync` 在静默 follow-up 执行、跳过或失败后，都会尽量写出这份轻量 artifact，同时继续保持整体同步非阻断。
+- 已把 `status` 扩成普通使用者可读的安装后结果入口，会直接带出：
+  - 最近一次静默 follow-up 的状态和 mode
+  - 摘要说明
+  - artifact 路径
+  - opt-out 环境变量口径
+- 已保持 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1` 在安装路径下同样成立，并把这条边界同步进 artifact 和 `status` 输出。
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - 安装后推荐用 `npx power-ai-skills status --format summary` 查看最近一次静默 follow-up
+  - 如需 deeper inspection，可直接查看 `.power-ai/reports/sync-evolution-follow-up.md/json`
+- 已补 focused tests，覆盖：
+  - `sync` 触发低风险 follow-up 后会写出 artifact
+  - 显式 opt-out 时 artifact 仍会记录 `env-disabled`
+  - `status` 能读取最近一次静默 follow-up artifact 并对外输出稳定字段
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，已经可以通过 `status` 这一稳定入口看懂最近一次静默 follow-up 的结果，而不必依赖当次 `sync` stdout。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 结果查看方式已经同步到用户文档和 focused validation，不要求用户依赖维护者视角的调试命令。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-19` 已按原阶段定义收口；下一阶段如继续推进，应优先评估最近几次静默 follow-up 的 history contract、触发来源区分和 consumer-side 轻量视图，而不是回退到已完成的 latest artifact / status 摘要本身。
+
+## 1.4.7 / P6-20 静默 follow-up 历史与触发来源收口第一版
+
+阶段目标：
+
+- 让消费项目不只看“最近一次结果”，还能够在需要时区分最近几次静默 follow-up 分别来自手动 `sync`、`postinstall` 还是其他后续复用触发点。
+- 保持静默触发仍然非阻断、低风险、可追踪，但把“近期发生过什么”收口成普通使用者可读、不会误导为高风险自动治理的 consumer-side 视图。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补历史和触发来源，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已在现有 latest artifact 基础上，补出最近 5 次静默 follow-up history artifact：
+  - `.power-ai/reports/sync-evolution-follow-up-history.json`
+  - `.power-ai/reports/sync-evolution-follow-up-history.md`
+- 已把触发来源最小 contract 收口到现有 artifact / status 口径，不新造新的 consumer-side 命令：
+  - `manual-sync`
+  - `postinstall`
+  - `npm-script (<event>)`
+  - 并同时保留 `label`、`detection` 等来源细节
+- history artifact 现在除了 entries，还会额外带一份 source summary / status summary，方便普通使用者快速看清最近几次主要来自哪些触发来源。
+- `status` 现在除了 latest follow-up 之外，也会同步带出：
+  - recent history 条目
+  - recent source summary
+  - 更完整的来源显示，例如 `npm-script (prepare)`
+- 已保持 `POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1`、现有非阻断边界和普通使用者查看入口在扩展 history 后仍然成立。
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - 最近 5 次静默 follow-up 会保留 history artifact
+  - `status` 不只显示 latest，还会显示 recent history 与 source summary
+  - 安装后可通过 `status --format summary` 或 history artifact 查看近期来源和摘要
+- 已补 focused tests，覆盖：
+  - history artifact 的最近 5 次保留上限
+  - `postinstall` / `manual-sync` / `npm-script` 来源区分
+  - history source summary
+  - `status` 对 recent history 和 source breakdown 的对外输出
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，不只知道最近一次结果，还能在需要时区分近期几次静默 follow-up 的来源和摘要。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 历史/来源查看方式已经同步到用户文档和 focused validation，不要求用户依赖维护者视角的调试命令。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-20` 已按原阶段定义收口；下一阶段如继续推进，应优先把这些 latest/history/source 结果再往前收成“结果分级建议”，告诉普通使用者哪些 recent follow-up 只需要忽略、哪些需要 review、哪些需要继续执行低风险后续动作，而不是回退到已完成的 history/source contract 本身。

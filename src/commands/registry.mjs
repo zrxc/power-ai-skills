@@ -8,6 +8,8 @@ const commandDefinitions = [
   { name: "list-tools", scope: "info", method: "listToolsCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
   { name: "version", scope: "info", method: "versionCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
   { name: "show-defaults", scope: "info", method: "showDefaultsCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
+  { name: "quickstart", scope: "info", method: "quickstartCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
+  { name: "status", scope: "info", method: "statusCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
   { name: "doctor", scope: "info", method: "doctorCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
   { name: "sync", scope: "project", method: "syncCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.FIRST_POSITIONAL_OR_CWD },
   { name: "init", scope: "project", method: "initCommand", projectRootStrategy: PROJECT_ROOT_STRATEGIES.INIT_TARGET_OR_CWD },

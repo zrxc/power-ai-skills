@@ -403,6 +403,7 @@ test("doctor reports a healthy single-source project after init", (t) => {
   const doctorJson = JSON.parse(fs.readFileSync(payload.jsonPath, "utf8"));
   assert.equal(doctorMarkdown.includes("## Summary"), true);
   assert.equal(doctorMarkdown.includes("## Checks"), true);
+  assert.equal(doctorMarkdown.includes("## Next Steps"), true);
   assert.equal(doctorJson.ok, true);
   assert.equal(doctorJson.mode, "single-source");
   assert.equal(typeof doctorJson.generatedAt, "string");
@@ -417,6 +418,11 @@ test("doctor reports a healthy single-source project after init", (t) => {
   assert.deepEqual(
     payload.checkGroups.map((group) => group.code),
     ["PAI-WORKSPACE", "PAI-SELECTION", "PAI-POLICY", "PAI-ENTRYPOINT", "PAI-CONVERSATION", "PAI-KNOWLEDGE"]
+  );
+  assert.equal(Array.isArray(payload.nextSteps), true);
+  assert.equal(
+    payload.nextSteps.some((step) => step.includes("npx power-ai-skills list-project-local-skills")),
+    true
   );
   assert.deepEqual(payload.remediationTips, []);
   assert.equal(
@@ -502,6 +508,26 @@ test("doctor warns when auto-capture failed queues contain pending failures", (t
   assert.equal(failedQueueCheck?.detail.failedRequestCount, 1);
   assert.equal(
     payload.checkGroups.find((group) => group.name === "conversation")?.warnings >= 1,
+    true
+  );
+});
+
+test("doctor suggests project scan next steps when init skipped project analysis", (t) => {
+  const projectRoot = createTempConsumerProject(t);
+  const initResult = runCli(projectRoot, "init", ["--tool", "codex", "--no-project-scan"]);
+  assert.equal(initResult.status, 0, initResult.stderr);
+
+  const doctorResult = runCli(projectRoot, "doctor");
+  assert.equal(doctorResult.status, 0, doctorResult.stderr);
+
+  const payload = JSON.parse(doctorResult.stdout);
+  assert.equal(payload.ok, true);
+  assert.equal(
+    payload.nextSteps.some((step) => step.includes("npx power-ai-skills scan-project")),
+    true
+  );
+  assert.equal(
+    payload.nextSteps.some((step) => step.includes("npx power-ai-skills generate-project-local-skills")),
     true
   );
 });
