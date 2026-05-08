@@ -68,6 +68,27 @@ function formatSyncEvolutionFollowUp(followUp) {
   return `, silent evolution follow-up: ${followUp.status} (mode ${modeLabel}, ${reason}, new conversations ${counts}, actionable candidates ${actionableCandidateCount}${actionSummary})`;
 }
 
+function formatSyncEvolutionFollowUpHint(followUp) {
+  const recommendation = followUp?.recommendation;
+  if (!recommendation || recommendation.level === "info-only") return "";
+  const firstAction = recommendation.primaryAction?.command || recommendation.nextActions?.[0] || "";
+  const summary = recommendation.headline?.summary
+    || recommendation.primaryAction?.summary
+    || recommendation.summary
+    || "A silent follow-up is available.";
+  const label = recommendation.headline?.label || recommendation.level;
+
+  if (recommendation.level === "review-needed") {
+    return `\nSilent follow-up hint: ${label}. ${summary}${firstAction ? ` Next action: ${firstAction}` : ""}`;
+  }
+
+  if (recommendation.level === "low-risk-follow-up-available") {
+    return `\nSilent follow-up hint: ${label}. ${summary}${firstAction ? ` Next action: ${firstAction}` : ""}`;
+  }
+
+  return "";
+}
+
 export function formatProjectScanOnlyMessage({ projectRoot, scanResult, generationResult }) {
   return `Scanned project only: ${projectRoot}, ${formatProjectScanGenerationSummary({ scanResult, generationResult })}.${formatNextStepsBlock(getProjectScanOnlyNextSteps())}`;
 }
@@ -81,7 +102,7 @@ export function formatInitializedProjectMessage({ projectRoot, selectionSummary,
 }
 
 export function formatSyncedProjectMessage({ projectRoot, selectionSummary, evolutionFollowUp }) {
-  return `Synced project AI skills: ${projectRoot}, ${selectionSummary}${formatSyncEvolutionFollowUp(evolutionFollowUp)}.${formatNextStepsBlock(getSyncNextSteps())}`;
+  return `Synced project AI skills: ${projectRoot}, ${selectionSummary}${formatSyncEvolutionFollowUp(evolutionFollowUp)}.${formatSyncEvolutionFollowUpHint(evolutionFollowUp)}${formatNextStepsBlock(getSyncNextSteps())}`;
 }
 
 export function formatScanProjectMessage({ projectRoot, result }) {

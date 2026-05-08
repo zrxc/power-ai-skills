@@ -117,6 +117,10 @@ test("status shows the latest silent sync follow-up artifact after sync runs", (
   assert.equal(payload.habitCapture.latestSyncFollowUp.mode, "gate-skip");
   assert.equal(payload.habitCapture.latestSyncFollowUp.skipReason, "env-disabled");
   assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.level, "info-only");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.primaryAction, null);
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.resolutionSignal.level, "can-ignore");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.finalStatus.code, "ignore");
+  assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.headline.label, "No action needed");
   assert.equal(payload.habitCapture.latestSyncFollowUp.triggerSource.type, "manual-sync");
   assert.equal(payload.habitCapture.latestSyncFollowUp.history.available, true);
   assert.equal(payload.habitCapture.latestSyncFollowUp.history.entries.length, 1);
@@ -146,6 +150,10 @@ test("status summarizes recent silent sync follow-up history and trigger sources
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.includes("Recent silent follow-ups: 2"), true);
   assert.equal(result.stdout.includes("Silent follow-up recommendation: info-only"), true);
+  assert.equal(result.stdout.includes("Silent follow-up primary action: none"), true);
+  assert.equal(result.stdout.includes("Silent follow-up resolution: can-ignore"), true);
+  assert.equal(result.stdout.includes("Silent follow-up final status: ignore"), true);
+  assert.equal(result.stdout.includes("Silent follow-up headline: No action needed"), true);
   assert.equal(result.stdout.includes("Recent Silent Follow-Up Sources:"), true);
   assert.equal(result.stdout.includes("Recent Silent Follow-Ups:"), true);
   assert.equal(result.stdout.includes("postinstall"), true);
@@ -229,6 +237,26 @@ test("status surfaces review-needed recommendation when the latest silent follow
   assert.equal(payload.status, "attention");
   assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.level, "review-needed");
   assert.equal(payload.habitCapture.latestSyncFollowUp.recommendation.requiresAttention, true);
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.primaryAction.summary,
+    "Review the latest silent follow-up result before continuing with normal usage."
+  );
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.primaryAction.command,
+    "npx power-ai-skills status --format summary"
+  );
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.resolutionSignal.level,
+    "still-needs-action"
+  );
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.finalStatus.code,
+    "handle-now"
+  );
+  assert.equal(
+    payload.habitCapture.latestSyncFollowUp.recommendation.headline.label,
+    "Needs action now"
+  );
   assert.equal(
     payload.habitCapture.latestSyncFollowUp.recommendation.nextActions.some((item) => item.includes("npx power-ai-skills doctor")),
     true

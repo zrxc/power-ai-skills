@@ -2620,3 +2620,213 @@ pnpm release:prepare
 结论：
 
 - `P6-21` 已按原阶段定义收口；下一阶段如继续推进，应优先把这层 recommendation 再往前收成“最小打扰提示”，让 `sync/postinstall` 在必要时只暴露极短用户提示，而不是要求普通使用者总要主动执行 `status` 才能知道有没有新 follow-up 需要处理。
+
+## 1.4.7 / P6-22 静默 follow-up 最小打扰提示第一版
+
+阶段目标：
+
+- 让普通使用者在不主动执行 `status` 的情况下，也能在 `sync` / `postinstall` 后收到一条极短、不会打断主流程的 follow-up 提示。
+- 保持默认体验仍然接近“无感知”，只有在 `review-needed` 或值得看的 `low-risk-follow-up-available` 场景下才暴露提示。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补最小打扰提示，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已复用现有 `recommendation` contract，不重新引入新的结果状态模型。
+- `sync` 当前会在控制台输出中只对两类 recommendation 追加极短提示：
+  - `review-needed`
+  - `low-risk-follow-up-available`
+- `info-only` 结果继续保持静默，不再因为最新 follow-up 只是阈值未到、显式 opt-out 或 policy-disabled 就额外打扰普通使用者。
+- 极短提示当前直接复用 recommendation 的现有摘要与首条 next action，不需要再维护平行提示语义。
+- 现有 `postinstall -> sync` 路径会天然复用同一条提示逻辑，不需要为 postinstall 再造第二套 consumer-side 入口。
+- 已保持 `sync` / `postinstall` 主流程仍然非阻断；提示层不会因为自身生成失败就让同步失败。
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - `sync` / `postinstall` 只在必要场景追加极短提示
+  - `info-only` 继续保持静默
+  - 更完整细节仍可回到 `status` 或 latest/history artifact 查看
+- 已补 focused tests，覆盖：
+  - 低风险 follow-up 场景会输出提示
+  - `info-only` 场景不会输出提示
+  - review-needed formatter 提示存在
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，就算不主动执行 `status`，也能在必要时看到一条极短的 follow-up 提示。
+- 提示仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-22` 已按原阶段定义收口；下一阶段如继续推进，应优先评估“最近一次极短提示是否还要继续沉淀成更显式的待办摘要”，也就是让普通使用者在必要时只看到最小待处理事项，而不是回退到重新解释 recommendation 或 latest/history contract 本身。
+
+## 1.4.7 / P6-23 静默 follow-up 待办摘要第一版
+
+阶段目标：
+
+- 让普通使用者在必要时看到的不是“又一条状态解释”，而是最小化的待处理事项摘要。
+- 保持默认体验仍然接近“无感知”，只有在确实需要用户处理时才显式暴露摘要。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补待办摘要，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已在现有 `recommendation` contract 上补出稳定的首要待办事项字段：
+  - `recommendation.primaryAction.summary`
+  - `recommendation.primaryAction.command`
+- `primaryAction` 当前不会替换原有 `nextActions`；它的职责是把最重要的一条用户动作压成更短、更稳定、更适合普通使用者读取的摘要。
+- `status` summary / markdown / json 现在都会继续带出这层 primary action，不再只显示 recommendation level 和整批 next actions。
+- latest artifact `.power-ai/reports/sync-evolution-follow-up.md/json` 现在也会保留同一层 primary action，保证 CLI、artifact 和静默提示读取口径一致。
+- `sync` / `postinstall` 当前的极短提示也已改为优先复用 `primaryAction.summary` 与 `primaryAction.command`，不再直接拼整条 next action 文本。
+- `info-only` recommendation 仍不会生成 primary action，继续保持静默，不额外打扰普通使用者。
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - `primaryAction` 是普通使用者视角的最小待办摘要
+  - 更完整细节仍保留在 recommendation summary / nextActions
+  - `sync`、`status` 和 artifact 读取的是同一套摘要层
+- 已补 focused tests，覆盖：
+  - `review-needed` 下的 primary action
+  - `low-risk-follow-up-available` 下的 primary action
+  - `info-only` 下 primary action 为空
+  - `sync` formatter 对 primary action 的复用
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，必要时看到的是最小待处理事项，而不是一段需要自己再解释的状态描述。
+- 摘要仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-23` 已按原阶段定义收口；下一阶段如继续推进，应优先评估“普通使用者是否还需要一层更稳定的收尾信号”，也就是让完成后的 follow-up 不只是告诉用户下一步做什么，还能告诉用户‘这次已经不用管了’。
+
+## 1.4.7 / P6-24 静默 follow-up 收尾信号第一版
+
+阶段目标：
+
+- 让普通使用者在看到 follow-up 结果时，不只知道下一步做什么，也知道哪些场景已经可以忽略。
+- 保持默认体验仍然接近“无感知”，只有在确实需要用户处理时才显式暴露收尾信号。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补收尾信号，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已在现有 recommendation contract 上补出稳定的收尾信号字段：
+  - `recommendation.resolutionSignal.level`
+  - `recommendation.resolutionSignal.summary`
+- `resolutionSignal` 当前已覆盖三类普通使用者判断：
+  - `can-ignore`
+  - `review-when-convenient`
+  - `still-needs-action`
+- `status` summary / markdown / json 现在都会同步带出这层收尾信号，不再只显示 recommendation level、primary action 和整批 next actions。
+- latest artifact `.power-ai/reports/sync-evolution-follow-up.md/json` 现在也会保留同一层 resolution signal，保证 CLI、artifact 和静默提示读取口径一致。
+- 现有 `info-only` recommendation 现在会明确映射到 `can-ignore`，普通使用者更容易判断“这次已经不用管了”。
+- `low-risk-follow-up-available` 和 `review-needed` 也分别映射到了：
+  - `review-when-convenient`
+  - `still-needs-action`
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - 收尾信号仍属于同一份 recommendation contract
+  - 普通使用者可以更快判断这次结果是不是已经可以忽略
+  - 更完整细节仍保留在 recommendation summary / primary action / nextActions
+- 已补 focused tests，覆盖：
+  - `can-ignore`
+  - `review-when-convenient`
+  - `still-needs-action`
+  - `status` 和 latest artifact 对 resolution signal 的输出
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，不只知道下一步做什么，也能更明确判断当前结果是不是已经可以忽略。
+- 收尾信号仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-24` 已按原阶段定义收口；下一阶段如继续推进，应优先评估“静默 follow-up 的普通使用者提示是否还需要更稳定的最终摘要入口”，也就是把 recommendation、primary action、resolution signal 进一步收成更短的最终状态口径，而不是回退到重新解释现有 contract。
+
+## 1.4.7 / P6-25 静默 follow-up 最终状态口径第一版
+
+阶段目标：
+
+- 让普通使用者在查看静默 follow-up 时，能更快读到一个最终判断，而不需要先理解 recommendation、primary action、resolution signal 三层字段。
+- 保持默认体验仍然接近“无感知”，只有在确实需要用户处理时才显式暴露更短的最终状态。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补最终状态口径，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已在现有 recommendation contract 上补出更短的最终状态字段：
+  - `recommendation.finalStatus.code`
+  - `recommendation.finalStatus.summary`
+- `finalStatus` 当前已覆盖三类普通使用者最终判断：
+  - `ignore`
+  - `review-later`
+  - `handle-now`
+- `status` summary / markdown / json 现在都会同步带出这层最终状态口径，不再只显示 recommendation、primary action 和 resolution signal。
+- latest artifact `.power-ai/reports/sync-evolution-follow-up.md/json` 现在也会保留同一层 final status，保证 CLI、artifact 和后续静默提示读取口径一致。
+- `finalStatus` 不是平行状态模型，而是从现有 `resolutionSignal` 压出来的更短 consumer-side 结论：
+  - `can-ignore -> ignore`
+  - `review-when-convenient -> review-later`
+  - `still-needs-action -> handle-now`
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - 普通使用者可以一眼看懂最终判断
+  - 更完整细节仍保留在 recommendation summary / primary action / resolution signal / nextActions
+  - `status`、latest artifact 读取的是同一套最终状态口径
+- 已补 focused tests，覆盖：
+  - `ignore`
+  - `review-later`
+  - `handle-now`
+  - `status` 和 latest artifact 对 final status 的输出
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，能更快读到一个最终判断，而不需要自己拼 recommendation、primary action 和 resolution signal。
+- 最终状态口径仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-25` 已按原阶段定义收口；下一阶段如继续推进，应优先评估“普通使用者是否还需要一个更短的统一 badge / headline”，也就是把 final status 再收成更适合所有入口共用的一句顶层口径，而不是回退到重新解释现有 contract。
+
+## 1.4.7 / P6-26 静默 follow-up 顶层口径第一版
+
+阶段目标：
+
+- 让普通使用者在不同入口里看到的是同一句更短的顶层判断，而不需要自己决定该读 recommendation、resolution 还是 final status。
+- 保持默认体验仍然接近“无感知”，只有在确实需要用户处理时才显式暴露这句顶层口径。
+- 继续把高风险动作留在人工 review 边界内，不因为开始补顶层口径，就默认放开 shared skill、wrapper、release 等自动推进。
+
+已完成：
+
+- 已在现有 recommendation contract 上补出更适合所有入口共用的顶层口径字段：
+  - `recommendation.headline.label`
+  - `recommendation.headline.summary`
+  - `recommendation.headline.tone`
+- `headline` 当前会基于现有 `finalStatus` 自动收成三类普通使用者顶层判断：
+  - `No action needed`
+  - `Review later`
+  - `Needs action now`
+- `status` summary / markdown / json 现在都会同步带出这层 headline，不再只显示 final status、resolution signal 和 primary action。
+- latest artifact `.power-ai/reports/sync-evolution-follow-up.md/json` 现在也会保留同一层 headline，保证 CLI、artifact 和 `sync/postinstall` 提示读取的是同一套顶层口径。
+- `sync` / `postinstall` 当前的极短提示也已改为优先复用 `headline.label` 与 `headline.summary`，不再直接暴露较底层的 recommendation level 文案。
+- `headline` 不是新的平行状态模型，而是从现有 `finalStatus` 压出来的更短 consumer-side 顶层判断：
+  - `ignore -> No action needed`
+  - `review-later -> Review later`
+  - `handle-now -> Needs action now`
+- 已同步更新 README 自动生成源和 `docs/command-manual.md`，明确：
+  - 顶层口径仍属于同一份 recommendation contract
+  - 普通使用者在不同入口里都能读到同一句更短判断
+  - 更完整细节仍保留在 final status / resolution signal / primary action / nextActions
+- 已补 focused tests，覆盖：
+  - latest artifact 下的 headline 输出
+  - `status` 下的 headline 输出
+  - `sync` formatter 对 headline 的复用
+
+阶段收口判断：
+
+- 普通使用者在 `postinstall -> sync` 之后，能在不同入口里看到同一句更短的顶层判断，而不需要自己再选择该读哪一层字段。
+- 顶层口径仍保持普通使用者视角，不要求用户依赖维护者侧调试命令。
+- 安装路径下的静默触发仍保持非阻断、低风险，并保留显式 opt-out。
+- 当前实现仍保持低风险、非阻断，没有越界自动推进高风险治理动作。
+
+结论：
+
+- `P6-26` 已按原阶段定义收口；下一阶段如继续推进，应优先评估“顶层口径是否还要进一步收成统一 badge/heading 输出层”，也就是让不同入口的标题样式和顶层判断更稳定，而不是回退到重新解释现有 contract。

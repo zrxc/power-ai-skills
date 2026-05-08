@@ -297,7 +297,15 @@ function buildSyncEvolutionFollowUpMarkdown(payload) {
     `- history report: \`${payload.artifactPaths?.historyReportPath || ""}\``,
     `- summary: ${payload.summary}`,
     `- recommendation: ${recommendation.level}`,
-    `- recommendation summary: ${recommendation.summary}`
+    `- recommendation summary: ${recommendation.summary}`,
+    `- primary action: ${recommendation.primaryAction?.summary || "none"}`,
+    `- primary action command: ${recommendation.primaryAction?.command || "none"}`,
+    `- resolution: ${recommendation.resolutionSignal?.level || "can-ignore"}`,
+    `- resolution summary: ${recommendation.resolutionSignal?.summary || "none"}`,
+    `- final status: ${recommendation.finalStatus?.code || "ignore"}`,
+    `- final status summary: ${recommendation.finalStatus?.summary || "none"}`,
+    `- headline: ${recommendation.headline?.label || "No action needed"}`,
+    `- headline summary: ${recommendation.headline?.summary || "none"}`
   ];
 
   if (followUp.error) {
@@ -658,12 +666,28 @@ export function createSyncCommands({
         skippedActionCount: evolutionFollowUpResult.skippedActionCount || 0,
         failedActionCount: evolutionFollowUpResult.failedActionCount || 0
       };
+      evolutionFollowUp.recommendation = buildSyncFollowUpRecommendation({
+        available: true,
+        ...evolutionFollowUp,
+        recommendedCheckCommand: "npx power-ai-skills status --format summary",
+        optOutEnvVar: "POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1",
+        reportPath: path.join(workspaceService.getReportsRoot(), "sync-evolution-follow-up.md"),
+        history: null
+      });
     } catch (error) {
       evolutionFollowUp = {
         status: "failed",
         mode: "error",
         error: error?.message || String(error)
       };
+      evolutionFollowUp.recommendation = buildSyncFollowUpRecommendation({
+        available: true,
+        ...evolutionFollowUp,
+        recommendedCheckCommand: "npx power-ai-skills status --format summary",
+        optOutEnvVar: "POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1",
+        reportPath: path.join(workspaceService.getReportsRoot(), "sync-evolution-follow-up.md"),
+        history: null
+      });
     }
     try {
       persistSyncEvolutionFollowUpArtifact(evolutionFollowUp);

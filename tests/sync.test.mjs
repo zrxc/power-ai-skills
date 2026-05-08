@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { copyDir } from "../src/shared/fs.mjs";
+import { formatSyncedProjectMessage } from "../src/commands/project-output.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(root, "bin", "power-ai-skills.mjs");
@@ -184,6 +185,8 @@ test("sync silently triggers low-risk evolution follow-up when enough captured c
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.includes("silent evolution follow-up: executed"), true);
   assert.equal(result.stdout.includes("mode run-evolution-cycle"), true);
+  assert.equal(result.stdout.includes("Silent follow-up hint: Review later."), true);
+  assert.equal(result.stdout.includes("npx power-ai-skills status --format summary"), true);
   assert.equal(
     fs.existsSync(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.json")),
     true
@@ -200,6 +203,26 @@ test("sync silently triggers low-risk evolution follow-up when enough captured c
   assert.equal(followUpArtifact.triggerSource.type, "manual-sync");
   assert.equal(followUpArtifact.recommendedCheckCommand, "npx power-ai-skills status --format summary");
   assert.equal(followUpArtifact.recommendation.level, "low-risk-follow-up-available");
+  assert.equal(
+    followUpArtifact.recommendation.primaryAction.summary,
+    "Inspect the refreshed habit-capture output when convenient."
+  );
+  assert.equal(
+    followUpArtifact.recommendation.primaryAction.command,
+    "npx power-ai-skills status --format summary"
+  );
+  assert.equal(
+    followUpArtifact.recommendation.resolutionSignal.level,
+    "review-when-convenient"
+  );
+  assert.equal(
+    followUpArtifact.recommendation.finalStatus.code,
+    "review-later"
+  );
+  assert.equal(
+    followUpArtifact.recommendation.headline.label,
+    "Review later"
+  );
   assert.equal(
     fs.readFileSync(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.md"), "utf8").includes("## Recommendation Next Actions"),
     true
@@ -232,6 +255,7 @@ test("sync allows an explicit environment opt-out for silent evolution follow-up
   assert.equal(result.stdout.includes("silent evolution follow-up: skipped"), true);
   assert.equal(result.stdout.includes("mode gate-skip"), true);
   assert.equal(result.stdout.includes("env-disabled"), true);
+  assert.equal(result.stdout.includes("Silent follow-up hint:"), false);
   const followUpArtifact = JSON.parse(
     fs.readFileSync(path.join(projectRoot, ".power-ai", "reports", "sync-evolution-follow-up.json"), "utf8")
   );
@@ -239,6 +263,10 @@ test("sync allows an explicit environment opt-out for silent evolution follow-up
   assert.equal(followUpArtifact.followUp.skipReason, "env-disabled");
   assert.equal(followUpArtifact.triggerSource.type, "manual-sync");
   assert.equal(followUpArtifact.recommendation.level, "info-only");
+  assert.equal(followUpArtifact.recommendation.primaryAction, null);
+  assert.equal(followUpArtifact.recommendation.resolutionSignal.level, "can-ignore");
+  assert.equal(followUpArtifact.recommendation.finalStatus.code, "ignore");
+  assert.equal(followUpArtifact.recommendation.headline.label, "No action needed");
   assert.equal(
     followUpArtifact.recommendation.nextActions.some((item) => item.includes("POWER_AI_SKIP_SYNC_EVOLUTION_FOLLOW_UP=1")),
     true
@@ -346,8 +374,113 @@ test("sync falls back to action-only silent follow-up when low-risk project-loca
   assert.equal(result.stdout.includes("silent evolution follow-up: skipped") || result.stdout.includes("silent evolution follow-up: executed"), true);
   assert.equal(result.stdout.includes("mode apply-evolution-actions"), true);
   assert.equal(result.stdout.includes("actionable-candidates-available"), true);
+  assert.equal(result.stdout.includes("Silent follow-up hint: Review later."), true);
   assert.equal(
     fs.existsSync(path.join(projectRoot, ".power-ai", "governance", "evolution-actions.json")),
     true
   );
+});
+
+test("sync formatter only emits the minimal hint for non-info recommendation levels", () => {
+  const readyMessage = formatSyncedProjectMessage({
+    projectRoot: "D:/example",
+    selectionSummary: "tools: agents-md, codex",
+    evolutionFollowUp: {
+      status: "executed",
+      mode: "run-evolution-cycle",
+      triggerReason: "threshold-reached",
+      newConversationCount: 3,
+      minNewConversations: 3,
+      actionableCandidateCount: 0,
+      recommendation: {
+        level: "low-risk-follow-up-available",
+        summary: "Low-risk artifacts were refreshed.",
+        nextActions: ["Run `npx power-ai-skills status --format summary` when convenient."],
+        primaryAction: {
+          summary: "Inspect the refreshed low-risk habit output when convenient.",
+          command: "npx power-ai-skills status --format summary"
+        },
+        resolutionSignal: {
+          level: "review-when-convenient",
+          summary: "Nothing is blocked, but a lightweight review is still worth doing when convenient."
+        },
+        finalStatus: {
+          code: "review-later",
+          summary: "Nothing is blocked, but this result is still worth reviewing later."
+        },
+        headline: {
+          tone: "notice",
+          label: "Review later",
+          summary: "Silent follow-up is fine for now, but worth reviewing later."
+        }
+      }
+    }
+  });
+  assert.equal(readyMessage.includes("Silent follow-up hint: Review later."), true);
+
+  const silentMessage = formatSyncedProjectMessage({
+    projectRoot: "D:/example",
+    selectionSummary: "tools: agents-md, codex",
+    evolutionFollowUp: {
+      status: "skipped",
+      mode: "gate-skip",
+      skipReason: "env-disabled",
+      newConversationCount: 0,
+      minNewConversations: 0,
+      actionableCandidateCount: 0,
+      recommendation: {
+        level: "info-only",
+        summary: "Silently skipped on purpose.",
+        nextActions: [],
+        primaryAction: null,
+        resolutionSignal: {
+          level: "can-ignore",
+          summary: "This result can be ignored."
+        },
+        finalStatus: {
+          code: "ignore",
+          summary: "This result can be ignored for now."
+        },
+        headline: {
+          tone: "quiet",
+          label: "No action needed",
+          summary: "Silent follow-up can be ignored for now."
+        }
+      }
+    }
+  });
+  assert.equal(silentMessage.includes("Silent follow-up hint:"), false);
+
+  const reviewMessage = formatSyncedProjectMessage({
+    projectRoot: "D:/example",
+    selectionSummary: "tools: agents-md, codex",
+    evolutionFollowUp: {
+      status: "failed",
+      mode: "error",
+      error: "simulated failure",
+      recommendation: {
+        level: "review-needed",
+        summary: "The latest silent follow-up needs attention.",
+        nextActions: ["Run `npx power-ai-skills status --format summary` to inspect the latest state."],
+        primaryAction: {
+          summary: "Review the latest silent follow-up result before continuing with normal usage.",
+          command: "npx power-ai-skills status --format summary"
+        },
+        resolutionSignal: {
+          level: "still-needs-action",
+          summary: "This result still needs user attention before it should be treated as settled."
+        },
+        finalStatus: {
+          code: "handle-now",
+          summary: "Handle this result before treating the silent follow-up as settled."
+        },
+        headline: {
+          tone: "attention",
+          label: "Needs action now",
+          summary: "Silent follow-up needs user attention now."
+        }
+      }
+    }
+  });
+  assert.equal(reviewMessage.includes("Silent follow-up hint: Needs action now."), true);
 });

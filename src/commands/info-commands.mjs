@@ -953,6 +953,10 @@ export function createInfoCommands({
       `Silent automation boundary: ${payload.habitCapture.automationBoundary.summaryStatus}`,
       `Latest silent follow-up: ${payload.habitCapture.latestSyncFollowUp.available ? `${payload.habitCapture.latestSyncFollowUp.status} / ${payload.habitCapture.latestSyncFollowUp.mode}` : "not recorded"}`,
       `Silent follow-up recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`,
+      `Silent follow-up primary action: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.summary || "none"}`,
+      `Silent follow-up resolution: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.level || "can-ignore"}`,
+      `Silent follow-up final status: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.code || "ignore"}`,
+      `Silent follow-up headline: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.label || "No action needed"}`,
       `Recent silent follow-ups: ${payload.habitCapture.latestSyncFollowUp.history.available ? payload.habitCapture.latestSyncFollowUp.history.entries.length : 0}`,
       `Conversation-mined drafts: ${payload.habitCapture.drafts.projectLocalDraftCount}`,
       `Workspace health: ${payload.workspace.doctorOk ? "ok" : "attention"}`,
@@ -1003,6 +1007,14 @@ export function createInfoCommands({
       lines.push(`- summary: ${payload.habitCapture.latestSyncFollowUp.summary}`);
       lines.push(`- recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`);
       lines.push(`- recommendation summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.summary || "none"}`);
+      lines.push(`- primary action: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.summary || "none"}`);
+      lines.push(`- primary action command: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.command || "none"}`);
+      lines.push(`- resolution: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.level || "can-ignore"}`);
+      lines.push(`- resolution summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.summary || "none"}`);
+      lines.push(`- final status: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.code || "ignore"}`);
+      lines.push(`- final status summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.summary || "none"}`);
+      lines.push(`- headline: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.label || "No action needed"}`);
+      lines.push(`- headline summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.summary || "none"}`);
       lines.push(`- report: ${payload.habitCapture.latestSyncFollowUp.reportPath}`);
       lines.push(`- json: ${payload.habitCapture.latestSyncFollowUp.jsonPath}`);
       lines.push(`- history report: ${payload.habitCapture.latestSyncFollowUp.historyReportPath}`);
@@ -1053,6 +1065,10 @@ export function createInfoCommands({
       `- silent automation boundary: ${payload.habitCapture.automationBoundary.summaryStatus}`,
       `- latest silent follow-up: ${payload.habitCapture.latestSyncFollowUp.available ? `${payload.habitCapture.latestSyncFollowUp.status} / ${payload.habitCapture.latestSyncFollowUp.mode}` : "not recorded"}`,
       `- silent follow-up recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`,
+      `- silent follow-up primary action: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.summary || "none"}`,
+      `- silent follow-up resolution: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.level || "can-ignore"}`,
+      `- silent follow-up final status: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.code || "ignore"}`,
+      `- silent follow-up headline: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.label || "No action needed"}`,
       `- recent silent follow-ups: ${payload.habitCapture.latestSyncFollowUp.history.available ? payload.habitCapture.latestSyncFollowUp.history.entries.length : 0}`,
       `- conversation-mined drafts: ${payload.habitCapture.drafts.projectLocalDraftCount}`,
       `- workspace health: ${payload.workspace.doctorOk ? "ok" : "attention"}`,
@@ -1102,6 +1118,14 @@ export function createInfoCommands({
       lines.push(`- summary: ${payload.habitCapture.latestSyncFollowUp.summary}`);
       lines.push(`- recommendation: ${payload.habitCapture.latestSyncFollowUp.recommendation?.level || "info-only"}`);
       lines.push(`- recommendation summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.summary || "none"}`);
+      lines.push(`- primary action: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.summary || "none"}`);
+      lines.push(`- primary action command: ${payload.habitCapture.latestSyncFollowUp.recommendation?.primaryAction?.command || "none"}`);
+      lines.push(`- resolution: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.level || "can-ignore"}`);
+      lines.push(`- resolution summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.resolutionSignal?.summary || "none"}`);
+      lines.push(`- final status: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.code || "ignore"}`);
+      lines.push(`- final status summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.finalStatus?.summary || "none"}`);
+      lines.push(`- headline: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.label || "No action needed"}`);
+      lines.push(`- headline summary: ${payload.habitCapture.latestSyncFollowUp.recommendation?.headline?.summary || "none"}`);
       lines.push(`- report: \`${payload.habitCapture.latestSyncFollowUp.reportPath}\``);
       lines.push(`- json: \`${payload.habitCapture.latestSyncFollowUp.jsonPath}\``);
       lines.push(`- history report: \`${payload.habitCapture.latestSyncFollowUp.historyReportPath}\``);

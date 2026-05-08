@@ -332,6 +332,11 @@ npx power-ai-skills doctor
 - `P6-19` 起，最近一次静默 follow-up 结果会额外写入 `.power-ai/reports/sync-evolution-follow-up.md/json`，普通使用者可以直接跑 `npx power-ai-skills status --format summary` 查看，而不必依赖当次 `sync` 输出
 - `P6-20` 起，最近 5 次静默 follow-up 会额外保留到 `.power-ai/reports/sync-evolution-follow-up-history.md/json`，并区分 `manual-sync`、`postinstall` 和其他 npm script 来源
 - `P6-21` 起，latest artifact 和 `status` 都会带出 `recommendation.level`、`recommendation.summary` 与 `recommendation.nextActions`，普通使用者可以直接知道“现在要不要处理它”
+- `P6-22` 起，`sync` / `postinstall` 控制台输出会继续复用这层 recommendation：只在 `review-needed` 或值得查看的 `low-risk-follow-up-available` 场景下追加一条极短提示；`info-only` 结果仍保持静默，不额外打扰用户
+- `P6-23` 起，`recommendation` 里会继续带出稳定的 `primaryAction.summary` 与 `primaryAction.command`，把“首要待办事项”从 next actions 里压出来；`status`、latest artifact 和 `sync` 的极短提示都会优先复用这层摘要
+- `P6-24` 起，`recommendation` 里还会继续带出 `resolutionSignal.level` 与 `resolutionSignal.summary`，把结果明确区分成 `can-ignore`、`review-when-convenient`、`still-needs-action`，让普通使用者更快判断“这次是不是已经不用管了”
+- `P6-25` 起，`recommendation` 里会继续带出更短的 `finalStatus.code` 与 `finalStatus.summary`，把最终判断压成 `ignore`、`review-later`、`handle-now` 三类，方便普通使用者一眼读懂当前结果
+- `P6-26` 起，`recommendation` 里还会继续带出更适合所有入口共用的 `headline.label` 与 `headline.summary`，把顶层判断收成 `No action needed`、`Review later`、`Needs action now` 这类一眼可读的 consumer-side 口径
 
 ### 8. 增减工具
 
